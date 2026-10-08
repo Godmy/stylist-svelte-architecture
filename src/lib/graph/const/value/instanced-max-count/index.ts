@@ -1,0 +1,1 @@
+export const INSTANCED_MAX_COUNT = 16384;

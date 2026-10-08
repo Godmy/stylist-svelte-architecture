@@ -1,0 +1,30 @@
+import type { Snippet } from 'svelte';
+export interface SlotWorkspaceNode {
+	id?: string;
+	name?: string;
+	title?: string;
+	type?: string;
+	label?: string;
+	description?: string;
+	icon?: string | Snippet;
+	color?: string;
+	category?: string;
+	value?: unknown;
+	options?: string[];
+	dataType?: string;
+	direction?: 'input' | 'output';
+	position?: { x: number; y: number };
+	x?: number;
+	y?: number;
+	width?: number;
+	height?: number | 'auto';
+	fields?: { name: string; type: string; isRequired?: boolean }[];
+	tooltip?: string;
+	active?: boolean;
+	selected?: boolean;
+	disabled?: boolean;
+	onclick?: () => void;
+	properties?: SlotWorkspaceNode[];
+	inputs?: SlotWorkspaceNode[];
+	outputs?: SlotWorkspaceNode[];
+}

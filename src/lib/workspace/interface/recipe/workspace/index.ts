@@ -1,0 +1,45 @@
+import type { Snippet } from 'svelte';
+import type { SlotChildren } from '$stylist/theme/interface/slot/children';
+import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-all';
+import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
+import type { SlotNodeConnection } from '$stylist/workspace/interface/slot/node-connection';
+import type { GraphGridMode } from '$stylist/graph/type/alias/graph-grid-mode';
+import type { TOKEN_PAN_MODES } from '$stylist/workspace/const/array/pan-mode';
+export interface RecipeWorkspace extends ComputeIntersectAll<[SlotChildren]> {
+	nodes?: readonly SlotWorkspaceNode[];
+	connections?: readonly SlotNodeConnection[];
+	selectedNodeIds?: readonly string[];
+	zoom?: number;
+	offset?: { x: number; y: number };
+	showGrid?: boolean;
+	gridMode?: GraphGridMode;
+	panMode?: (typeof TOKEN_PAN_MODES)[number];
+	showToolbar?: boolean;
+	showMiniMap?: boolean;
+	showWorkspacePalette?: boolean;
+	showPropertiesPanel?: boolean;
+	toolbarItems?: readonly SlotWorkspaceNode[];
+	toolbarContent?: Snippet;
+	palettePosition?: { x: number; y: number };
+	paletteNodes?: readonly SlotWorkspaceNode[];
+	allowAddNodes?: boolean;
+	allowDeleteNodes?: boolean;
+	allowDuplicateNodes?: boolean;
+	onNodeSelect?: (nodeId: string) => void;
+	onNodeDrag?: (nodeId: string, position: { x: number; y: number }) => void;
+	onNodeDelete?: (nodeId: string) => void;
+	onNodeDuplicate?: (nodeId: string) => void;
+	onNodeAdd?: (node: SlotWorkspaceNode) => void;
+	onConnectionStart?: (port: SlotWorkspaceNode, event: MouseEvent) => void;
+	onConnectionEnd?: (fromPort: SlotWorkspaceNode, toPort: SlotWorkspaceNode) => void;
+	onPropertyChange?: (nodeId: string, propertyId: string, value: unknown) => void;
+	onZoomChange?: (zoom: number) => void;
+	onOffsetChange?: (offset: { x: number; y: number }) => void;
+	onSave?: (data: {
+		nodes: readonly SlotWorkspaceNode[];
+		connections: readonly SlotNodeConnection[];
+	}) => void;
+	onExport?: () => void;
+	onImport?: (data: unknown) => void;
+	class?: string;
+}

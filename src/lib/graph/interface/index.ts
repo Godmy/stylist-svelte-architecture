@@ -1,0 +1,40 @@
+/** AREA: STYLIST CODER MODEL -> AUTO-GENERATED */
+export type {
+	RecipeFieldHighlighter,
+	RecipeGraph,
+	RecipeGraphEdge,
+	RecipeGraphNode,
+	RecipeGraphvizDirectedEdge,
+	RecipeNodeIcon,
+	RecipeOntologyEdgeComponent,
+	RecipeOntologyNodeComponent,
+	RecipeScene,
+	RecipeSceneCameraControl,
+	RecipeZwickyScene
+} from './recipe';
+export type {
+	ArchitectureScene,
+	GraphBounds3D,
+	GraphConnection,
+	GraphJsonInput,
+	GraphNode,
+	GraphPosition3D,
+	SceneAtom,
+	SceneAtomGeometry,
+	SceneAtomMetadata,
+	SceneAtomMotion,
+	SceneAtomTransform,
+	SceneBufferSet,
+	SceneCamera,
+	SceneDebugInfo,
+	SceneGeometry,
+	SceneGraph,
+	SceneMaterial,
+	SceneMolecule,
+	SlotFieldHighlighter,
+	SlotFieldHighlighterSelectedField,
+	SlotGraphEdge,
+	SlotGraphNode,
+	ZwickyFilterState,
+	ZwickyNode
+} from './slot';
