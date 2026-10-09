@@ -17,6 +17,7 @@ export {
 export {
 	Minimap,
 	StylistGraphWorkspace,
+	Workspace,
 	WorkspaceNode,
 	WorkspacePalette
 } from './organism';

@@ -16,6 +16,7 @@ export {
 	Stage,
 	StylistGraphWorkspace,
 	Viewport,
+	Workspace,
 	WorkspaceCanvas,
 	WorkspaceNode,
 	WorkspacePalette,
