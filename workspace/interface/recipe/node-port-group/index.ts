@@ -4,8 +4,9 @@ import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-
 import type { TokenRelationship } from '$stylist/workspace/type/alias/relationship';
 import type { TokenSize } from '$stylist/theme/type/alias/size';
 import type { RecipeNodePort } from '$stylist/workspace/interface/recipe/node-port';
-export interface RecipeNodePortGroup
-	extends ComputeIntersectAll<[SlotTheme, HTMLAttributes<HTMLDivElement>]> {
+export interface RecipeNodePortGroup extends ComputeIntersectAll<
+	[SlotTheme, HTMLAttributes<HTMLDivElement>]
+> {
 	title?: string;
 	direction?: TokenRelationship;
 	portSize?: TokenSize;

@@ -5,8 +5,9 @@ import type { SlotCanvasObject } from '$stylist/canvas/interface/slot/canvas-obj
 import type { TokenSize } from '$stylist/theme/type/alias/size';
 import type { SlotDimensionable } from '$stylist/layout/interface/slot/dimensionable';
 
-export interface RecipeSharedCanvas
-	extends ComputeIntersectAll<[LayoutHTMLAttributes<HTMLDivElement>, SlotDimensionable]> {
+export interface RecipeSharedCanvas extends ComputeIntersectAll<
+	[LayoutHTMLAttributes<HTMLDivElement>, SlotDimensionable]
+> {
 	objects?: SlotCanvasObject[];
 	users?: AnyProperty[];
 	currentUserId?: string;

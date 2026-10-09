@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import SchemaText from '$stylist/erd/component/organism/schema-text/index.svelte';
 	import SchemaHeader from '$stylist/erd/component/organism/schema-header/index.svelte';
 	import SchemaView from '$stylist/erd/component/organism/schema-view/index.svelte';

@@ -2,8 +2,9 @@
 import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-all';
 import type { SlotClass } from '$stylist/theme/interface/slot/class';
 
-export interface RecipeColorPalette
-	extends ComputeIntersectAll<[HTMLAttributes<HTMLDivElement>, SlotClass]> {
+export interface RecipeColorPalette extends ComputeIntersectAll<
+	[HTMLAttributes<HTMLDivElement>, SlotClass]
+> {
 	value?: string;
 	disabled?: boolean;
 	showInput?: boolean;

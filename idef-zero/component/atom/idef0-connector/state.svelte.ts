@@ -1,8 +1,9 @@
-import type { HTMLAttributes } from 'svelte/elements';
 import type { SVGAttributes } from 'svelte/elements';
 import type { RecipeIdef0Connector as Idef0ConnectorProps } from '$stylist/idef-zero/interface/recipe/idef0-connector';
 
-export function createIdef0ConnectorState(getProps: () => Idef0ConnectorProps & SVGAttributes<SVGGElement>) {
+export function createIdef0ConnectorState(
+	getProps: () => Idef0ConnectorProps & SVGAttributes<SVGGElement>
+) {
 	const props = $derived(getProps());
 	const groupClasses = $derived(
 		typeof props.class === 'string' ? `idef0-connector ${props.class}` : 'idef0-connector'

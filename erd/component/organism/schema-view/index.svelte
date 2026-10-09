@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import SchemaDependency from '$stylist/erd/component/atom/schema-dependency/index.svelte';
 	import SchemaTable from '$stylist/erd/component/molecule/schema-table/index.svelte';
 	import type { RecipeErdSchemaView } from '$stylist/erd/interface/recipe/erd-schema-view';

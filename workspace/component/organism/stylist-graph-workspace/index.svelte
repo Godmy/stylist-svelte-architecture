@@ -11,7 +11,6 @@
 	import type { GraphNodeCategory } from '$stylist/graph/type/alias/graph-node-category';
 	import type { GraphWorkspaceNode } from '$stylist/workspace/interface/slot/graph-workspace-node';
 	import type { GraphWorkspaceConnection } from '$stylist/workspace/interface/slot/graph-workspace-connection';
-	import type { GraphWorkspaceBounds } from '$stylist/workspace/interface/slot/graph-workspace-bounds';
 	import type { GraphWorkspaceConnectionInput } from '$stylist/workspace/type/alias/graph-workspace-connection-input';
 	import type { GraphNodeDraft } from '$stylist/workspace/interface/slot/graph-node-draft';
 	import type { RecipeStylistGraphWorkspace } from '$stylist/workspace/interface/recipe/stylist-graph-workspace';
@@ -727,8 +726,7 @@
 									...nodeDraft,
 									details: (event.target as HTMLTextAreaElement).value
 								};
-							}}
-						></textarea>
+							}}></textarea>
 					</label>
 				</div>
 				<div class="action-row">

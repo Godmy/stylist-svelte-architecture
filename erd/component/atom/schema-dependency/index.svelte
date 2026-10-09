@@ -1,7 +1,15 @@
 <script lang="ts">
 	import type { RecipeErdDependency } from '$stylist/erd/interface/recipe/erd-dependency';
 
-	let { dependency, x1, y1, x2, y2, active = false, dimmed = false }: RecipeErdDependency = $props();
+	let {
+		dependency,
+		x1,
+		y1,
+		x2,
+		y2,
+		active = false,
+		dimmed = false
+	}: RecipeErdDependency = $props();
 
 	// A horizontal S-curve instead of a straight diagonal: on a dense diagram
 	// (100+ tables, 200+ relations) straight lines criss-cross into an

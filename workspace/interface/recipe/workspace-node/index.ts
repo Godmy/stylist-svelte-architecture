@@ -5,8 +5,9 @@ import type { HTMLAttributes } from 'svelte/elements';
 import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-all';
 import type { TokenSize } from '$stylist/theme/type/alias/size';
 import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
-export interface RecipeWorkspaceNode
-	extends ComputeIntersectAll<[SlotWorkspaceNode, SlotTheme, HTMLAttributes<HTMLDivElement>]> {
+export interface RecipeWorkspaceNode extends ComputeIntersectAll<
+	[SlotWorkspaceNode, SlotTheme, HTMLAttributes<HTMLDivElement>]
+> {
 	x: number;
 	y: number;
 	type?: 'default' | 'custom' | 'source' | 'processor' | 'output' | 'gateway';

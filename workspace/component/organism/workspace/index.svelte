@@ -94,12 +94,7 @@
 							id={node.id}
 							title={node.title}
 							type={node.type as
-								| 'default'
-								| 'custom'
-								| 'source'
-								| 'processor'
-								| 'output'
-								| 'gateway'}
+								'default' | 'custom' | 'source' | 'processor' | 'output' | 'gateway'}
 							x={node.x ?? 0}
 							y={node.y ?? 0}
 							canvasZoom={state.internalZoom}

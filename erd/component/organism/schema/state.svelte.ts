@@ -30,10 +30,10 @@ export function createSchemaState(getProps: () => RecipeSchema) {
 	let schemaView: { saveLayout: () => void; resetLayout: () => void } | undefined = $state();
 
 	let scienceDomainSource = $state<string>(SCIENCE_DOMAIN_SCHEMA_TEXT);
-	let liveParseResult = $derived(schemaTextToDocument(liveSource));
-	let editParseResult = $derived(schemaTextToDocument(editSource));
-	let scienceDomainParseResult = $derived(schemaTextToDocument(scienceDomainSource));
-	let migrateParseResult = $derived.by(() => {
+	const liveParseResult = $derived(schemaTextToDocument(liveSource));
+	const editParseResult = $derived(schemaTextToDocument(editSource));
+	const scienceDomainParseResult = $derived(schemaTextToDocument(scienceDomainSource));
+	const migrateParseResult = $derived.by(() => {
 		const merged = mergeSchemaDocuments(
 			liveParseResult.document,
 			scienceDomainParseResult.document
@@ -44,7 +44,7 @@ export function createSchemaState(getProps: () => RecipeSchema) {
 			errors: [...liveParseResult.errors, ...scienceDomainParseResult.errors, ...merged.errors]
 		};
 	});
-	let parseResult = $derived.by(() => {
+	const parseResult = $derived.by(() => {
 		if (currentMode === 'edit') {
 			return editParseResult;
 		}
@@ -55,7 +55,7 @@ export function createSchemaState(getProps: () => RecipeSchema) {
 
 		return liveParseResult;
 	});
-	let activeSource = $derived.by(() => {
+	const activeSource = $derived.by(() => {
 		if (currentMode === 'edit') {
 			return editSource;
 		}

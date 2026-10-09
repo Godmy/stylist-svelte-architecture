@@ -132,7 +132,9 @@
 			value={mode}
 			onchange={(event) =>
 				dispatch('mode-change', {
-					mode: (event.currentTarget as HTMLSelectElement).value as NonNullable<RecipeSchemaTool['mode']>
+					mode: (event.currentTarget as HTMLSelectElement).value as NonNullable<
+						RecipeSchemaTool['mode']
+					>
 				})}
 		>
 			<option value="live">Live</option>

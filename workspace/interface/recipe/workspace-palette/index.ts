@@ -3,8 +3,9 @@ import type { SlotChildren } from '$stylist/theme/interface/slot/children';
 import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
 import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-all';
 import type { SlotDimensionable } from '$stylist/layout/interface/slot/dimensionable';
-export interface RecipeWorkspacePalette
-	extends ComputeIntersectAll<[HTMLAttributes<HTMLDivElement>, SlotChildren, SlotDimensionable]> {
+export interface RecipeWorkspacePalette extends ComputeIntersectAll<
+	[HTMLAttributes<HTMLDivElement>, SlotChildren, SlotDimensionable]
+> {
 	items?: readonly SlotWorkspaceNode[];
 	categories?: readonly string[];
 

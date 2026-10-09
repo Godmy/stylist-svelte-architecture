@@ -140,9 +140,6 @@ export class Matrix4 {
 		let x0: number;
 		let x1: number;
 		let x2: number;
-		let y0: number;
-		let y1: number;
-		let y2: number;
 		let z0: number;
 		let z1: number;
 		let z2: number;
@@ -175,9 +172,9 @@ export class Matrix4 {
 			x2 /= len;
 		}
 
-		y0 = z1 * x2 - z2 * x1;
-		y1 = z2 * x0 - z0 * x2;
-		y2 = z0 * x1 - z1 * x0;
+		const y0 = z1 * x2 - z2 * x1;
+		const y1 = z2 * x0 - z0 * x2;
+		const y2 = z0 * x1 - z1 * x0;
 
 		const matrix = new Matrix4();
 		matrix.elements.set([

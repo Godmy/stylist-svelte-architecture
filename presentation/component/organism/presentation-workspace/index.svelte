@@ -1296,8 +1296,7 @@
 						oninput={(event) => {
 							const target = event.currentTarget as HTMLTextAreaElement;
 							updateCurrentStepNote(target.value);
-						}}
-					></textarea>
+						}}></textarea>
 				{/if}
 			</div>
 
@@ -1421,8 +1420,7 @@
 						class="prezi-demo__notes-input"
 						rows="12"
 						placeholder="Export the current scenario or paste a JSON payload to import."
-						bind:value={importExportValue}
-					></textarea>
+						bind:value={importExportValue}></textarea>
 				</div>
 			{/if}
 		</aside>

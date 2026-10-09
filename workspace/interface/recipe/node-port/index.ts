@@ -5,8 +5,9 @@ import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-
 import type { TokenPropertyType } from '$stylist/workspace/type/alias/property-type';
 import type { TokenSize } from '$stylist/theme/type/alias/size';
 import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
-export interface RecipeNodePort
-	extends ComputeIntersectAll<[SlotWorkspaceNode, SlotTheme, HTMLAttributes<HTMLDivElement>]> {
+export interface RecipeNodePort extends ComputeIntersectAll<
+	[SlotWorkspaceNode, SlotTheme, HTMLAttributes<HTMLDivElement>]
+> {
 	direction?: 'input' | 'output';
 	dataType?: TokenPropertyType | string;
 	size?: TokenSize;

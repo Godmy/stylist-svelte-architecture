@@ -1,7 +1,9 @@
 import type { HTMLAttributes } from 'svelte/elements';
 import type { RecipeIdef0Io } from '$stylist/idef-zero/interface/recipe/idef0-io';
 
-export function createIdef0OutputsState(getProps: () => RecipeIdef0Io & HTMLAttributes<HTMLDivElement>) {
+export function createIdef0OutputsState(
+	getProps: () => RecipeIdef0Io & HTMLAttributes<HTMLDivElement>
+) {
 	const props = $derived(getProps());
 	const boxWidth = $derived(props.boxWidth ?? 0);
 	const startX = $derived(props.boxX + boxWidth);

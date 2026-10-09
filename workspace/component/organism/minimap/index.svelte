@@ -16,7 +16,6 @@
 	{...state.restProps}
 >
 	<!-- MiniMap Canvas -->
-	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions a11y_no_noninteractive_tabindex -->
 	<svg
 		class="minimap__canvas"
 		width={state.width}

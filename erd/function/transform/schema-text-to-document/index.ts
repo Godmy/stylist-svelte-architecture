@@ -206,9 +206,7 @@ export function schemaTextToDocument(source: string): SchemaParseResult {
 		const rest = fieldMatch[2].replace(/\s+/g, ' ').trim();
 		const lowerRest = rest.toLowerCase();
 		const tokens = rest.split(/\s+/);
-		const inlineReferenceMatch = rest.match(
-			/\breferences\s+`?([\w]+)`?\s*\(\s*`?([\w]+)`?\s*\)/i
-		);
+		const inlineReferenceMatch = rest.match(/\breferences\s+`?([\w]+)`?\s*\(\s*`?([\w]+)`?\s*\)/i);
 		const reference = inlineReferenceMatch
 			? `${inlineReferenceMatch[1]}.${inlineReferenceMatch[2]}`
 			: undefined;
@@ -228,12 +226,7 @@ export function schemaTextToDocument(source: string): SchemaParseResult {
 				]
 			},
 			dependency: inlineReferenceMatch
-				? createDependency(
-						tableName,
-						name,
-						inlineReferenceMatch[1],
-						inlineReferenceMatch[2]
-					)
+				? createDependency(tableName, name, inlineReferenceMatch[1], inlineReferenceMatch[2])
 				: undefined
 		};
 	}

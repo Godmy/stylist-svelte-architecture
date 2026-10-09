@@ -4,10 +4,9 @@ import type { LayoutHTMLAttributes } from '$stylist/layout/interface/behavior/la
 import type { SlotClass } from '$stylist/theme/interface/slot/class';
 import type { SlotDimensionable } from '$stylist/layout/interface/slot/dimensionable';
 
-export interface RecipeDrawingSurface
-	extends ComputeIntersectAll<
-		[HTMLCanvasAttributes, LayoutHTMLAttributes<HTMLDivElement>, SlotClass, SlotDimensionable]
-	> {
+export interface RecipeDrawingSurface extends ComputeIntersectAll<
+	[HTMLCanvasAttributes, LayoutHTMLAttributes<HTMLDivElement>, SlotClass, SlotDimensionable]
+> {
 	drawingEnabled?: boolean;
 	tool?: 'pen' | 'eraser' | 'select';
 	strokeColor?: string;

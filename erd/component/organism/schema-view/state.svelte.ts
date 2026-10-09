@@ -594,7 +594,10 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		const fallbackRank = new Map(
 			domains.map((domain, index) => {
 				const narrativeIndex = DOMAIN_ORDER.indexOf(domain);
-				return [domain, narrativeIndex === -1 ? DOMAIN_ORDER.length + index : narrativeIndex] as const;
+				return [
+					domain,
+					narrativeIndex === -1 ? DOMAIN_ORDER.length + index : narrativeIndex
+				] as const;
 			})
 		);
 
@@ -784,7 +787,9 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		const [hub, ...ring] = clusters;
 		const hubCenterX = hub.width / 2;
 		const hubCenterY = hub.height / 2;
-		const finalPositions: SchemaTablePosition[] = hub.positions.map((position) => ({ ...position }));
+		const finalPositions: SchemaTablePosition[] = hub.positions.map((position) => ({
+			...position
+		}));
 
 		if (ring.length === 0) {
 			return finalPositions;
@@ -793,7 +798,9 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		const ringGap = compact ? 90 : 180;
 		const arcGap = compact ? 40 : 90;
 		const hubRadius = Math.max(hub.width, hub.height) / 2;
-		const maxRingClusterSpan = Math.max(...ring.map((cluster) => Math.max(cluster.width, cluster.height)));
+		const maxRingClusterSpan = Math.max(
+			...ring.map((cluster) => Math.max(cluster.width, cluster.height))
+		);
 		// Same two-constraint radius reasoning as createRadialPositions: enough
 		// arc length that ring neighbors don't collide sideways, and enough
 		// clearance from the hub that nothing overlaps it.
