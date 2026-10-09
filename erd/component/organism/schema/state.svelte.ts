@@ -16,7 +16,7 @@ export function createSchemaState(getProps: () => RecipeSchema) {
 	// toolbar/text editor) -- untrack() makes that explicit instead of
 	// tripping the "did you mean a closure?" state_referenced_locally warning.
 	let liveSource = $state<string>(untrack(() => props.value ?? DEFAULT_SCHEMA_TEXT));
-	// Candidate pool for Mode: Edit -- see docs/chat/20260726/001-CLAUDE-ERD-EDIT.md.
+	// Candidate pool for Mode: Edit -- see .docs/_archive/chat/20260726/001-CLAUDE-ERD-EDIT.md.
 	// Purely a format conversion of erd/data/md/schema/schema.md, nothing added
 	// or removed yet.
 	let editSource = $state<string>(EDIT_CANDIDATE_SCHEMA_TEXT);
