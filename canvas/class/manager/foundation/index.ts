@@ -1,8 +1,8 @@
-import { FOUNDATION_DEPTH_THRESHOLDS } from '$stylist/presentation/const/array/foundation-depth-thresholds';
-import { DEFAULT_FOUNDATION_CAMERA } from '$stylist/presentation/const/value/default-foundation-camera';
-import { FOUNDATION_DEPTH_RANGE } from '$stylist/presentation/const/value/foundation-depth-range';
+import { FOUNDATION_DEPTH_THRESHOLDS } from '$stylist/canvas/const/array/foundation-depth-thresholds';
+import { DEFAULT_FOUNDATION_CAMERA } from '$stylist/canvas/const/value/default-foundation-camera';
+import { FOUNDATION_DEPTH_RANGE } from '$stylist/canvas/const/value/foundation-depth-range';
 import type { SceneCamera } from '$stylist/graph/interface/slot/scene-camera';
-import type { FoundationSemanticZoomStage } from '$stylist/presentation/type/alias/foundation-semantic-zoom-stage';
+import type { FoundationSemanticZoomStage } from '$stylist/canvas/type/alias/foundation-semantic-zoom-stage';
 
 export class FoundationManager {
 	static clampDepth(depth: number): number {

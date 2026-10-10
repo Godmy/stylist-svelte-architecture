@@ -1,11 +1,11 @@
 import { Tween } from 'svelte/motion';
 import { cubicOut } from 'svelte/easing';
-import { SemanticZoomManager } from '$stylist/presentation/class/manager/semantic-zoom';
-import { RECORD_FRAME } from '$stylist/presentation/const/record/frame/index';
+import { SemanticZoomManager } from '$stylist/canvas/class/manager/semantic-zoom';
+import { RECORD_FRAME } from '$stylist/canvas/const/record/semantic-zoom-frame/index';
 import { FOCUS_DURATION_MS } from '$stylist/presentation/const/value/prezi-scene/index';
 import { resolvePresenterSceneLinks } from '$stylist/presentation/function/script/scene/presenter';
 import type { RecipePreziScene } from '$stylist/presentation/interface/recipe/prezi-scene';
-import type { SceneNode } from '$stylist/presentation/interface/slot/scene-node';
+import type { SceneNode } from '$stylist/canvas/interface/slot/scene-node';
 import type { PreziCamera } from '$stylist/presentation/interface/slot/prezi-camera/index';
 import type { RecipePreziSceneState } from '$stylist/presentation/interface/recipe/prezi-scene-state/index';
 import type { BehaviorPreziSceneMethods } from '$stylist/presentation/interface/behavior/prezi-scene-methods';

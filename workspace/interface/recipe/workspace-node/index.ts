@@ -1,4 +1,4 @@
-import type { SemanticZoomPresentation } from '$stylist/presentation/interface/slot/semantic-zoom';
+import type { SemanticZoomPresentation } from '$stylist/canvas/interface/slot/semantic-zoom';
 import type { Snippet } from 'svelte';
 import type { SlotTheme } from '$stylist/theme/interface/slot/theme';
 import type { HTMLAttributes } from 'svelte/elements';

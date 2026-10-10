@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Story from '$stylist/theme/component/molecule/story/index.svelte';
 	import { TOKEN_CONTROLLER_TYPE } from '$stylist/domain/const/map/controller-type';
-	import type { SceneNode } from '$stylist/presentation/interface/slot/scene-node';
+	import type { SceneNode } from '$stylist/canvas/interface/slot/scene-node';
 	import SceneInspector from './index.svelte';
 
 	const sampleNode: SceneNode = {

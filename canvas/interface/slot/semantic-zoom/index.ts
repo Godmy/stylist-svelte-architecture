@@ -1,5 +1,5 @@
-import type { FoundationSemanticZoomStage } from '$stylist/presentation/type/alias/foundation-semantic-zoom-stage';
-import type { TierContent } from '$stylist/presentation/type/alias/tier';
+import type { FoundationSemanticZoomStage } from '$stylist/canvas/type/alias/foundation-semantic-zoom-stage';
+import type { TierContent } from '$stylist/layout/type/alias/tier';
 import type { TokenDensity } from '$stylist/layout/type/alias/density';
 import type { TokenShape } from '$stylist/layout/type/alias/shape';
 import type { TokenSize } from '$stylist/theme/type/alias/size';

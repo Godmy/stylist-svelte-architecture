@@ -1,6 +1,6 @@
 import type { PreziCamera } from '$stylist/presentation/interface/slot/prezi-camera/index';
-import type { SceneNode } from '$stylist/presentation/interface/slot/scene-node';
-import type { SemanticZoomPresentation } from '$stylist/presentation/interface/slot/semantic-zoom';
+import type { SceneNode } from '$stylist/canvas/interface/slot/scene-node';
+import type { SemanticZoomPresentation } from '$stylist/canvas/interface/slot/semantic-zoom';
 export interface BehaviorPreziSceneMethods {
 	setCamera: (camera: Partial<PreziCamera>) => void;
 	setViewportSize: (width: number, height: number) => void;

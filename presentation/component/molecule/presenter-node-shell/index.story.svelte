@@ -2,7 +2,7 @@
 	import Story from '$stylist/theme/component/molecule/story/index.svelte';
 	import type { SlotStory } from '$stylist/theme/interface/slot/story';
 	import type { SceneCamera } from '$stylist/graph/interface/slot/scene-camera';
-	import type { SceneNode } from '$stylist/presentation/interface/slot/scene-node';
+	import type { SceneNode } from '$stylist/canvas/interface/slot/scene-node';
 
 	import PresenterNodeShell from './index.svelte';
 

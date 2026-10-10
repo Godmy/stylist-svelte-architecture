@@ -4,8 +4,8 @@ import type { TokenInteration } from '$stylist/workspace/type/alias/interaction'
 import type { TokenSeverity } from '$stylist/workspace/type/alias/sevetity';
 import type { TokenNodeType } from '$stylist/workspace/type/alias/node-type';
 import type { TokenSize } from '$stylist/theme/type/alias/size';
-import type { SemanticZoomPresentation } from '$stylist/presentation/interface/slot/semantic-zoom';
-import { SemanticZoomManager } from '$stylist/presentation/class/manager/semantic-zoom';
+import type { SemanticZoomPresentation } from '$stylist/canvas/interface/slot/semantic-zoom';
+import { SemanticZoomManager } from '$stylist/canvas/class/manager/semantic-zoom';
 
 export function createWorkspaceNodeState(getProps: () => RecipeWorkspaceNode) {
 	const props = $derived(getProps());

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Story from '$stylist/theme/component/molecule/story/index.svelte';
 	import type { SlotStory } from '$stylist/theme/interface/slot/story';
-	import type { SceneNode } from '$stylist/presentation/interface/slot/scene-node';
-	import { SemanticZoomManager } from '$stylist/presentation/class/manager/semantic-zoom';
+	import type { SceneNode } from '$stylist/canvas/interface/slot/scene-node';
+	import { SemanticZoomManager } from '$stylist/canvas/class/manager/semantic-zoom';
 	import PreziScene from './index.svelte';
 
 	const VIEWPORT_WIDTH = 1320;

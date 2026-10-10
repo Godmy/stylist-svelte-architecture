@@ -1,4 +1,4 @@
-import type { SceneNode } from '$stylist/presentation/interface/slot/scene-node';
+import type { SceneNode } from '$stylist/canvas/interface/slot/scene-node';
 import type { LayoutHTMLAttributes } from '$stylist/layout/interface/behavior/layout-html-attributes';
 
 /**

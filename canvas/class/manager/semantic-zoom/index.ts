@@ -1,13 +1,13 @@
-import { RECORD_DENSITY } from '$stylist/presentation/const/record/density/index';
-import { RECORD_FRAME } from '$stylist/presentation/const/record/frame/index';
-import { RECORD_LAYER } from '$stylist/presentation/const/record/layer/index';
-import { RECORD_LEVEL } from '$stylist/presentation/const/record/level/index';
-import { RECORD_SHAPE } from '$stylist/presentation/const/record/shape/index';
-import { RECORD_SIZE } from '$stylist/presentation/const/record/size/index';
-import { FoundationManager } from '$stylist/presentation/class/manager/foundation';
-import type { SceneNode } from '$stylist/presentation/interface/slot/scene-node';
-import type { SemanticZoomPresentation } from '$stylist/presentation/interface/slot/semantic-zoom';
-import type { FoundationSemanticZoomStage } from '$stylist/presentation/type/alias/foundation-semantic-zoom-stage';
+import { RECORD_DENSITY } from '$stylist/canvas/const/record/semantic-zoom-density/index';
+import { RECORD_FRAME } from '$stylist/canvas/const/record/semantic-zoom-frame/index';
+import { RECORD_LAYER } from '$stylist/canvas/const/record/semantic-zoom-layer/index';
+import { RECORD_LEVEL } from '$stylist/canvas/const/record/semantic-zoom-level/index';
+import { RECORD_SHAPE } from '$stylist/canvas/const/record/semantic-zoom-shape/index';
+import { RECORD_SIZE } from '$stylist/canvas/const/record/semantic-zoom-size/index';
+import { FoundationManager } from '$stylist/canvas/class/manager/foundation';
+import type { SceneNode } from '$stylist/canvas/interface/slot/scene-node';
+import type { SemanticZoomPresentation } from '$stylist/canvas/interface/slot/semantic-zoom';
+import type { FoundationSemanticZoomStage } from '$stylist/canvas/type/alias/foundation-semantic-zoom-stage';
 
 export class SemanticZoomManager {
 	static resolvePresentation(worldDepth: number, cameraDepth: number): SemanticZoomPresentation {

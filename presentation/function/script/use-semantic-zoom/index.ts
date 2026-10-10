@@ -1,5 +1,5 @@
-import type { SceneNode } from '$stylist/presentation/interface/slot/scene-node';
-import { SemanticZoomManager } from '$stylist/presentation/class/manager/semantic-zoom';
+import type { SceneNode } from '$stylist/canvas/interface/slot/scene-node';
+import { SemanticZoomManager } from '$stylist/canvas/class/manager/semantic-zoom';
 export function useSemanticZoom(
 	params:
 		| {

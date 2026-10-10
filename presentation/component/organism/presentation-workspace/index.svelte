@@ -2,7 +2,7 @@
 	const browser = typeof window !== 'undefined';
 	import PreziScene from '$stylist/presentation/component/organism/prezi-scene/index.svelte';
 	import SceneInspector from '$stylist/presentation/component/molecule/scene-inspector/index.svelte';
-	import type { SceneNode } from '$stylist/presentation/interface/slot/scene-node';
+	import type { SceneNode } from '$stylist/canvas/interface/slot/scene-node';
 
 	type DemoStep = {
 		id: string;

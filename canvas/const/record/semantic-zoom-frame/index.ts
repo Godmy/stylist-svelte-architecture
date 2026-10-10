@@ -1,4 +1,4 @@
-import type { FoundationSemanticZoomStage } from '$stylist/presentation/type/alias/foundation-semantic-zoom-stage';
+import type { FoundationSemanticZoomStage } from '$stylist/canvas/type/alias/foundation-semantic-zoom-stage';
 
 export const RECORD_FRAME: Record<FoundationSemanticZoomStage, { width: number; height: number }> =
 	{
