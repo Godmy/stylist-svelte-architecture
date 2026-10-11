@@ -1,3 +1,4 @@
+import { untrack } from 'svelte';
 import { CanvasManager } from '$stylist/canvas/class/manager/canvas';
 import { ObjectManagerSharedCanvas } from '$stylist/canvas/class/manager/shared-canvas';
 import type { SlotCanvasObject } from '$stylist/canvas/interface/slot/canvas-object';
@@ -9,8 +10,11 @@ export function createSharedCanvasState(getContract: () => RecipeSharedCanvas) {
 	const contract = $derived(getContract());
 	let selectedTool = $state<SharedCanvasTool>('select');
 	let selectedColor = $state(
-		contract.users?.find((u) => u.id === contract.currentUserId)?.color ??
-			'var(--color-primary-500)'
+		untrack(
+			() =>
+				contract.users?.find((u) => u.id === contract.currentUserId)?.color ??
+				'var(--color-primary-500)'
+		)
 	);
 	let isDrawing = $state(false);
 	let startPoint = $state<Point2D>({ x: 0, y: 0 });
@@ -18,7 +22,7 @@ export function createSharedCanvasState(getContract: () => RecipeSharedCanvas) {
 	let currentObject = $state<SlotCanvasObject | null>(null);
 	let selectedObjectId = $state<string | null>(null);
 	let localObjects = $state<SlotCanvasObject[]>(
-		CanvasManager.cloneCanvasObjects(contract.objects ?? [])
+		untrack(() => CanvasManager.cloneCanvasObjects(contract.objects ?? []))
 	);
 	let undoStack = $state<SlotCanvasObject[][]>([]);
 	let redoStack = $state<SlotCanvasObject[][]>([]);

@@ -46,22 +46,23 @@ const DEFAULT_PALETTE_NODES: SlotWorkspaceNode[] = [
 	}
 ];
 
-export function createWorkspaceState(props: RecipeWorkspace) {
+export function createWorkspaceState(getProps: () => RecipeWorkspace) {
+	const props = $derived(getProps());
 	// --- chrome / editor shell state (was: graph-editor) ---
 	let editorRef = $state<HTMLDivElement | null>(null);
 	let addButtonAnchorRef = $state<HTMLDivElement | null>(null);
-	let anchoredPalettePosition = $state({ ...(props.palettePosition ?? { x: 20, y: 80 }) });
-	let isPaletteOpen = $state(props.showWorkspacePalette ?? true);
-	let isPropertiesPanelOpen = $state(props.showPropertiesPanel ?? true);
+	let anchoredPalettePosition = $derived({ ...(props.palettePosition ?? { x: 20, y: 80 }) });
+	let isPaletteOpen = $derived(props.showWorkspacePalette ?? true);
+	let isPropertiesPanelOpen = $derived(props.showPropertiesPanel ?? true);
 	let paletteSearchQuery = $state('');
 	let paletteSelectedCategory = $state('all');
 
 	// --- canvas state (was: litegraph-canvas) ---
 	let canvasHostRef = $state<HTMLDivElement | null>(null);
 	let canvasSize = $state({ width: 800, height: 600 });
-	let internalZoom = $state(props.zoom ?? 1);
-	let internalOffset = $state({ ...(props.offset ?? { x: 0, y: 0 }) });
-	let isGridVisible = $state(props.showGrid ?? true);
+	let internalZoom = $derived(props.zoom ?? 1);
+	let internalOffset = $derived({ ...(props.offset ?? { x: 0, y: 0 }) });
+	let isGridVisible = $derived(props.showGrid ?? true);
 	let activeTool = $state<'select' | 'pan' | 'add'>('select');
 	let isConnecting = $state(false);
 	let connectionStartPort = $state<SlotWorkspaceNode | null>(null);
@@ -69,34 +70,10 @@ export function createWorkspaceState(props: RecipeWorkspace) {
 	let connectionCurrentPosition = $state<{ x: number; y: number } | null>(null);
 
 	$effect(() => {
-		isPaletteOpen = props.showWorkspacePalette ?? true;
-	});
-
-	$effect(() => {
-		isPropertiesPanelOpen = props.showPropertiesPanel ?? true;
-	});
-
-	$effect(() => {
-		anchoredPalettePosition = { ...(props.palettePosition ?? { x: 20, y: 80 }) };
-	});
-
-	$effect(() => {
 		if (!editorRef || typeof ResizeObserver === 'undefined') return;
 		const observer = new ResizeObserver(recalculatePalettePosition);
 		observer.observe(editorRef);
 		return () => observer.disconnect();
-	});
-
-	$effect(() => {
-		internalZoom = props.zoom ?? 1;
-	});
-
-	$effect(() => {
-		internalOffset = { ...(props.offset ?? { x: 0, y: 0 }) };
-	});
-
-	$effect(() => {
-		isGridVisible = props.showGrid ?? true;
 	});
 
 	$effect(() => {

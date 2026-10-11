@@ -6,4 +6,7 @@ export type { SlotDrawingSurfaceCanvasClearedEvent } from './drawing-surface-can
 export type { SlotDrawingSurfaceExposeMethodsEvent } from './drawing-surface-expose-methods-event';
 export type { Point2D } from './point-2d';
 export type { ObjectPoint2DPath } from './point-2d-path';
+export type { SceneNode } from './scene-node';
+export type { SceneNodePoint } from './scene-node-point';
+export type { SemanticZoomPresentation } from './semantic-zoom';
 export type { SlotSharedCanvasObjectBounds } from './shared-canvas-object-bounds';

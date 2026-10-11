@@ -10,25 +10,13 @@ export function createCanvasToolbarState(
 	) => void
 ) {
 	const props = $derived(getProps());
-	let currentTool = $state<CanvasToolbarDrawingTool>(props.selectedTool ?? 'pen');
-	let currentOptions = $state<SlotCanvasToolbarDrawingOptions>({
+	let currentTool = $derived<CanvasToolbarDrawingTool>(props.selectedTool ?? 'pen');
+	let currentOptions = $derived<SlotCanvasToolbarDrawingOptions>({
 		lineWidth: props.drawingOptions?.lineWidth ?? 2,
 		strokeColor: props.drawingOptions?.strokeColor ?? 'black',
 		tool: props.drawingOptions?.tool ?? props.selectedTool ?? 'pen',
 		mode:
 			props.drawingOptions?.mode ?? ((props.selectedTool ?? 'pen') === 'eraser' ? 'erase' : 'draw')
-	});
-
-	$effect(() => {
-		currentTool = props.selectedTool ?? 'pen';
-		currentOptions = {
-			lineWidth: props.drawingOptions?.lineWidth ?? 2,
-			strokeColor: props.drawingOptions?.strokeColor ?? 'black',
-			tool: props.drawingOptions?.tool ?? props.selectedTool ?? 'pen',
-			mode:
-				props.drawingOptions?.mode ??
-				((props.selectedTool ?? 'pen') === 'eraser' ? 'erase' : 'draw')
-		};
 	});
 
 	function selectTool(tool: CanvasToolbarDrawingTool): void {

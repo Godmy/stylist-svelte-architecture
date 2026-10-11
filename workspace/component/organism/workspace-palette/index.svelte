@@ -28,7 +28,7 @@
 		...restProps
 	}: WorkspacePaletteProps = $props();
 
-	const state = createWorkspacePaletteState({
+	const state = createWorkspacePaletteState(() => ({
 		items,
 		isOpen,
 		x,
@@ -47,7 +47,7 @@
 		onCategorySelect,
 		children,
 		class: className
-	});
+	}));
 </script>
 
 {#if isOpen}

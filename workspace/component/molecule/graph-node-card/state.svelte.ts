@@ -14,11 +14,7 @@ export function createGraphNodeCardState(
 		fieldClick: { field: { name: string; type: string; isRequired?: boolean } };
 	}>();
 
-	let isExpanded = $state(props.expanded ?? false);
-
-	$effect(() => {
-		isExpanded = props.expanded ?? false;
-	});
+	let isExpanded = $derived(props.expanded ?? false);
 
 	const containerClass = $derived(
 		[

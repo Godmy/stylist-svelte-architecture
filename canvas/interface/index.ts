@@ -12,6 +12,9 @@ export type {
 export type {
 	ObjectPoint2DPath,
 	Point2D,
+	SceneNode,
+	SceneNodePoint,
+	SemanticZoomPresentation,
 	SlotCanvasObject,
 	SlotCanvasToolbarDrawingOptions,
 	SlotCollaborativeEditEvent,

@@ -2,7 +2,7 @@ import type { SlotTheme } from '$stylist/theme/interface/slot/theme';
 import type { HTMLAttributes } from 'svelte/elements';
 import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-all';
 import type { TokenPropertyType } from '$stylist/workspace/type/alias/property-type';
-import type { TokenSize } from '$stylist/theme/type/alias/size';
+import type { TokenSize } from '$stylist/design-token/type/alias/size';
 import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
 export interface RecipeNodeProperty extends ComputeIntersectAll<
 	[SlotWorkspaceNode, SlotTheme, Omit<HTMLAttributes<HTMLDivElement>, 'onchange'>]

@@ -21,6 +21,8 @@
 </script>
 
 <div
+	role="application"
+	aria-label="Screenshot selection area"
 	bind:this={state.overlayElement}
 	class="screenshot-overlay {state.drawingMode && state.selectionFixed ? 'drawing-mode' : ''}"
 	onpointerdown={state.handlePointerDown}

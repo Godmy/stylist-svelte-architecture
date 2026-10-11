@@ -1,5 +1,5 @@
 import { ClassNamesManager } from '$stylist/layout/class/manager/class-names';
-import type { TokenSize } from '$stylist/theme/type/alias/size';
+import type { TokenSize } from '$stylist/design-token/type/alias/size';
 import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
 import type { RecipeWorkspaceToolbar } from '$stylist/workspace/interface/recipe/workspace-toolbar';
 

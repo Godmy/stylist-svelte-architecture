@@ -1,5 +1,5 @@
 import type { RecipeNodeProperties as NodePropertiesProps } from '$stylist/workspace/interface/recipe/node-properties';
-import type { TokenSize } from '$stylist/theme/type/alias/size';
+import type { TokenSize } from '$stylist/design-token/type/alias/size';
 import { ObjectManagerNodeProperties } from '$stylist/workspace/class/manager/node-properties';
 
 export function createNodePropertiesState(getProps: () => NodePropertiesProps) {

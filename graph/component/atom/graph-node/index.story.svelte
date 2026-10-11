@@ -2,7 +2,7 @@
 	import Story from '$stylist/theme/component/molecule/story/index.svelte';
 	import SlotGraphNode from './index.svelte';
 	import SlotGraphEdge from '../graph-edge/index.svelte';
-	import type { TokenSize as GraphNodeSize } from '$stylist/theme/type/alias/size';
+	import type { TokenSize as GraphNodeSize } from '$stylist/design-token/type/alias/size';
 	import type { SlotStory } from '$stylist/theme/interface/slot/story';
 
 	type Position = { x: number; y: number };
@@ -226,6 +226,8 @@
 			</div>
 
 			<div
+				role="application"
+				aria-label="Graph node canvas"
 				data-graph-canvas="node-story"
 				class="_c4 [background-size:20px_20px]"
 				style={`--gradient-inner: var(--color-border-primary); --gradient-outer: transparent; background-image: var(--gradient-radial-center); width:${CANVAS_WIDTH}px;height:${CANVAS_HEIGHT}px;`}

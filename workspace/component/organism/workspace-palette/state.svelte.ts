@@ -2,7 +2,8 @@ import { ObjectManagerWorkspacePalette } from '$stylist/workspace/class/manager/
 import type { SlotWorkspaceNode as WorkspacePaletteItem } from '$stylist/workspace/interface/slot/workspace-node';
 import type { RecipeWorkspacePalette as WorkspacePaletteProps } from '$stylist/workspace/interface/recipe/workspace-palette';
 
-export function createWorkspacePaletteState(props: WorkspacePaletteProps) {
+export function createWorkspacePaletteState(getProps: () => WorkspacePaletteProps) {
+	const props = $derived(getProps());
 	const filteredItems = $derived(
 		ObjectManagerWorkspacePalette.filterItems(
 			props.items ?? [],

@@ -1,5 +1,5 @@
 import type { RecipeNodePort as NodePortProps } from '$stylist/workspace/interface/recipe/node-port';
-import type { TokenSize } from '$stylist/theme/type/alias/size';
+import type { TokenSize } from '$stylist/design-token/type/alias/size';
 
 const PORT_SIZE_MAP: Record<string, string> = {
 	xs: 'node-port--xs',

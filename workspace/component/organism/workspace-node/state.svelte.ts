@@ -3,7 +3,7 @@ import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/worksp
 import type { TokenInteration } from '$stylist/workspace/type/alias/interaction';
 import type { TokenSeverity } from '$stylist/workspace/type/alias/sevetity';
 import type { TokenNodeType } from '$stylist/workspace/type/alias/node-type';
-import type { TokenSize } from '$stylist/theme/type/alias/size';
+import type { TokenSize } from '$stylist/design-token/type/alias/size';
 import type { SemanticZoomPresentation } from '$stylist/canvas/interface/slot/semantic-zoom';
 import { SemanticZoomManager } from '$stylist/canvas/class/manager/semantic-zoom';
 

@@ -2,7 +2,7 @@ import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-
 import type { LayoutHTMLAttributes } from '$stylist/layout/interface/behavior/layout-html-attributes';
 import type { AnyProperty } from '$stylist/layout/type/record/any-property';
 import type { SlotCanvasObject } from '$stylist/canvas/interface/slot/canvas-object';
-import type { TokenSize } from '$stylist/theme/type/alias/size';
+import type { TokenSize } from '$stylist/design-token/type/alias/size';
 import type { SlotDimensionable } from '$stylist/layout/interface/slot/dimensionable';
 
 export interface RecipeSharedCanvas extends ComputeIntersectAll<

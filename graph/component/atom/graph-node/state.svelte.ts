@@ -1,5 +1,5 @@
 import type { RecipeGraphNode } from '$stylist/graph/interface/recipe/graph-node';
-import type { TokenSize } from '$stylist/theme/type/alias/size';
+import type { TokenSize } from '$stylist/design-token/type/alias/size';
 
 const GRAPH_NODE_SIZE_MAP: Partial<Record<TokenSize, string>> = {
 	xs: 'graph-node graph-node--xs',

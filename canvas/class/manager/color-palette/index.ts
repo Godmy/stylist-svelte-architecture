@@ -1,8 +1,8 @@
-import { COLORS_SCALES_AMBER } from '$stylist/theme/const/record/colors-scales/amber';
-import { COLORS_SCALES_BLUE } from '$stylist/theme/const/record/colors-scales/blue';
-import { COLORS_SCALES_GREEN } from '$stylist/theme/const/record/colors-scales/green';
-import { COLORS_SCALES_NEUTRAL } from '$stylist/theme/const/record/colors-scales/neutral';
-import { COLORS_SCALES_RED } from '$stylist/theme/const/record/colors-scales/red';
+import { COLORS_SCALES_AMBER } from '$stylist/design-token/const/record/colors-scales/amber';
+import { COLORS_SCALES_BLUE } from '$stylist/design-token/const/record/colors-scales/blue';
+import { COLORS_SCALES_GREEN } from '$stylist/design-token/const/record/colors-scales/green';
+import { COLORS_SCALES_NEUTRAL } from '$stylist/design-token/const/record/colors-scales/neutral';
+import { COLORS_SCALES_RED } from '$stylist/design-token/const/record/colors-scales/red';
 
 export class ObjectManagerColorPalette {
 	static readonly defaultValue = COLORS_SCALES_NEUTRAL[900];

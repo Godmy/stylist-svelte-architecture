@@ -2,7 +2,7 @@
 	import Story from '$stylist/theme/component/molecule/story/index.svelte';
 	import SlotGraphEdge from './index.svelte';
 	import SlotGraphNode from '../graph-node/index.svelte';
-	import type { TokenSize as GraphNodeSize } from '$stylist/theme/type/alias/size';
+	import type { TokenSize as GraphNodeSize } from '$stylist/design-token/type/alias/size';
 	import type { SlotStory } from '$stylist/theme/interface/slot/story';
 
 	type Position = { x: number; y: number };
@@ -183,6 +183,8 @@
 			</div>
 
 			<div
+				role="application"
+				aria-label="Graph edge canvas"
 				data-graph-canvas="edge-story"
 				class="edge-stage"
 				onpointermove={(event) =>

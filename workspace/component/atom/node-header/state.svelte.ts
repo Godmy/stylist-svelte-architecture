@@ -1,5 +1,5 @@
 import type { RecipeNodeHeader } from '$stylist/workspace/interface/recipe/node-header';
-import type { TokenSize } from '$stylist/theme/type/alias/size';
+import type { TokenSize } from '$stylist/design-token/type/alias/size';
 
 export function createNodeHeaderState(getProps: () => RecipeNodeHeader) {
 	const props = $derived(getProps());
@@ -13,7 +13,7 @@ export function createNodeHeaderState(getProps: () => RecipeNodeHeader) {
 	const showDelete = $derived(props.showDelete ?? false);
 	const color = $derived(props.color ?? '#2563eb');
 	const title = $derived(props.title ?? '');
-	let editValue = $state(props.title ?? '');
+	let editValue = $derived(props.title ?? '');
 	const restProps = $derived.by(() => {
 		const {
 			class: _class,

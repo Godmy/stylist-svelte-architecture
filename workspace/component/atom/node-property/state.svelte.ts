@@ -8,7 +8,7 @@ export function createNodePropertyState(getProps: () => NodePropertyProps) {
 	const error = $derived(Boolean(props.error));
 	const hasLabel = $derived(Boolean(props.label));
 	const hasDescription = $derived(Boolean(props.description));
-	let currentValue = $state(props.value);
+	let currentValue = $derived(props.value);
 	const label = $derived(props.label ?? props.name);
 	const description = $derived(props.description ?? '');
 	const isBoolean = $derived(type === 'boolean');
@@ -19,10 +19,6 @@ export function createNodePropertyState(getProps: () => NodePropertyProps) {
 	const isString = $derived(type === 'string');
 	const vectorDimensions = $derived(type === 'vector3' ? 3 : 2);
 	const className = $derived(props.class ?? '');
-
-	$effect(() => {
-		currentValue = props.value;
-	});
 
 	function handleFocus(event: FocusEvent) {
 		props.onfocus?.(event as never);

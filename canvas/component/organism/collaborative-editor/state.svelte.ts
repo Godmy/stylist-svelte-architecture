@@ -16,7 +16,7 @@ const Users = 'users';
 
 export const createCollaborativeEditorState = (getProps: () => RecipeCollaborativeEditor) => {
 	const props = $derived(getProps());
-	let editorContent = $state(props.content ?? '');
+	let editorContent = $derived(props.content ?? '');
 	let editorRef: HTMLDivElement | undefined;
 
 	const showToolbar = $derived(props.showToolbar ?? true);

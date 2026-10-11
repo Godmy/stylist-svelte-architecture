@@ -1,6 +1,6 @@
 import type { HTMLAttributes } from 'svelte/elements';
 import type { SlotThemeBorder } from '$stylist/theme/interface/slot/theme-border';
-import type { SlotTypography } from '$stylist/theme/interface/slot/typography';
+import type { SlotTypography } from '$stylist/typography/interface/slot/typography';
 import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
 import type { RecipeNodeProperties as NodePropertiesProps } from '$stylist/workspace/interface/recipe/node-properties';
 

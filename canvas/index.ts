@@ -1,8 +1,10 @@
 /** AREA: STYLIST CODER MODEL -> AUTO-GENERATED */
 export {
 	CanvasManager,
+	FoundationManager,
 	ObjectManagerColorPalette,
-	ObjectManagerSharedCanvas
+	ObjectManagerSharedCanvas,
+	SemanticZoomManager
 } from './class';
 export {
 	CanvasToolbar,
@@ -15,11 +17,26 @@ export {
 } from './component';
 export {
 	CANVAS_TOOLBAR_DRAWING_TOOL,
+	DEFAULT_FOUNDATION_CAMERA,
+	FOUNDATION_DEPTH_RANGE,
+	FOUNDATION_DEPTH_THRESHOLDS,
+	FOUNDATION_SEMANTIC_ZOOM_STAGES,
+	RECORD_DENSITY,
+	RECORD_FRAME,
+	RECORD_LAYER,
+	RECORD_LEVEL,
+	RECORD_SHAPE,
+	RECORD_SIZE,
 	SHARED_CANVAS_ACTION_ICONS,
-	SHARED_CANVAS_TOOL_DEFINITIONS
+	SHARED_CANVAS_TOOL_DEFINITIONS,
+	TOKEN_FOUNDATION_AXES,
+	TOKEN_FOUNDATION_AXIS_DIRECTIONS
 } from './const';
 export type {
 	CanvasToolbarDrawingTool,
+	FoundationAxis,
+	FoundationDepthThreshold,
+	FoundationSemanticZoomStage,
 	SharedCanvasTool,
 	SharedCanvasToolDefinition
 } from './type';
@@ -34,6 +51,9 @@ export type {
 	RecipeDrawingSurface,
 	RecipeScreenshotSelector,
 	RecipeSharedCanvas,
+	SceneNode,
+	SceneNodePoint,
+	SemanticZoomPresentation,
 	SlotCanvasObject,
 	SlotCanvasToolbarDrawingOptions,
 	SlotCollaborativeEditEvent,

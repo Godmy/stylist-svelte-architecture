@@ -4,11 +4,7 @@ import type { RecipeColorPalette } from '$stylist/canvas/interface/recipe/color-
 export function createColorPaletteState(getProps: () => RecipeColorPalette) {
 	const props = $derived(getProps());
 	let isOpen = $state(false);
-	let internalValue = $state(ObjectManagerColorPalette.resolveValue(props.value));
-
-	$effect(() => {
-		internalValue = ObjectManagerColorPalette.resolveValue(props.value);
-	});
+	let internalValue = $derived(ObjectManagerColorPalette.resolveValue(props.value));
 
 	const palette = $derived(ObjectManagerColorPalette.resolvePalette());
 	const rootClass = $derived(['c-color-picker', props.class].filter(Boolean).join(' '));

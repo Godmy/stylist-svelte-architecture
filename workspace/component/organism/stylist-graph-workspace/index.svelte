@@ -1,6 +1,6 @@
 <script lang="ts">
 	const browser = typeof window !== 'undefined';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 	import type { SceneCamera } from '$stylist/graph/interface/slot/scene-camera';
 	import NodeConnection from '$stylist/workspace/component/atom/node-connection/index.svelte';
 	import NodeIcon from '$stylist/graph/component/atom/node-icon/index.svelte';
@@ -76,12 +76,16 @@
 	let selectedTheme = $state<(typeof TOKEN_THEME_MODE)[number]>('default');
 	let activeTool = $state<GraphToolMode>('select');
 	let showDebug = $state(false);
-	let selectedNodeId = $state<string>(initialNodes[0]?.id ?? '');
+	let selectedNodeId = $state<string>(untrack(() => initialNodes[0]?.id ?? ''));
 	let pendingConnectionTargetId = $state<string>('');
 	let nodeDraft = $state<GraphNodeDraft>({ ...DEFAULT_NODE_DRAFT });
-	let nodeLayouts = $state<GraphWorkspaceNode[]>(initialNodes.map((node) => ({ ...node })));
+	let nodeLayouts = $state<GraphWorkspaceNode[]>(
+		untrack(() => initialNodes.map((node) => ({ ...node })))
+	);
 	let connections = $state<GraphWorkspaceConnection[]>(
-		initialConnections.map((connection, index) => normalizeConnection(connection, index))
+		untrack(() =>
+			initialConnections.map((connection, index) => normalizeConnection(connection, index))
+		)
 	);
 	let camera = $state<SceneCamera>(createOverviewCamera());
 	let animationFrame = 0;
@@ -738,6 +742,8 @@
 		</aside>
 
 		<div
+			role="application"
+			aria-label="Graph viewport"
 			class={`graph-editor-page__viewport-shell ${activeTool === 'pan' ? 'graph-editor-page__viewport-shell--pan' : ''} ${isViewportDragging ? 'graph-editor-page__viewport-shell--dragging' : ''}`}
 			bind:clientWidth={viewportWidth}
 			bind:clientHeight={viewportHeight}

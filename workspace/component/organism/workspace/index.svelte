@@ -13,7 +13,7 @@
 	import createWorkspaceState from './state.svelte';
 
 	let props: RecipeWorkspace = $props();
-	const state = createWorkspaceState(props);
+	const state = createWorkspaceState(() => props);
 </script>
 
 <svelte:window
