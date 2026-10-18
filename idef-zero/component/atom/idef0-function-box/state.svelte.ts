@@ -1,8 +1,8 @@
 import type { SVGAttributes } from 'svelte/elements';
-import type { RecipeIdef0FunctionBox as Idef0FunctionBoxProps } from '$stylist/idef-zero/interface/recipe/idef0-function-box';
+import type { RecipeIdef0FunctionBox } from '$stylist/idef-zero/interface/recipe/idef0-function-box';
 
 export function createIdef0FunctionBoxState(
-	getProps: () => Idef0FunctionBoxProps & SVGAttributes<SVGGElement>
+	getProps: () => RecipeIdef0FunctionBox & SVGAttributes<SVGGElement>
 ) {
 	const props = $derived(getProps());
 	const groupClasses = $derived(

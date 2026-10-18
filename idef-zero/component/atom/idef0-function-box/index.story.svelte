@@ -1,30 +1,11 @@
 <script lang="ts">
-	import Story from '$stylist/theme/component/molecule/story/index.svelte';
-	import type { SlotStory } from '$stylist/theme/interface/slot/story';
 	import Idef0FunctionBox from './index.svelte';
+	import type { RecipeIdef0FunctionBox } from '$stylist/idef-zero/interface/recipe/idef0-function-box';
 
-	const controls: SlotStory[] = [
-		{ name: 'title', type: 'text', defaultValue: 'A0 Process SlotOrder' },
-		{ name: 'subtitle', type: 'text', defaultValue: 'Black Box Function' }
-	];
+	// Render of index.story.ts: the function box is an SVG fragment that needs an svg parent.
+	let args: RecipeIdef0FunctionBox = $props();
 </script>
 
-<Story
-	{controls}
-	component={Idef0FunctionBox}
-	title="IDEF0FunctionBox"
-	description="IDEF0 function block atom."
->
-	{#snippet children(values: any)}
-		<svg width="420" height="250">
-			<Idef0FunctionBox
-				title={values.title}
-				subtitle={values.subtitle}
-				x={50}
-				y={20}
-				width={320}
-				height={200}
-			/>
-		</svg>
-	{/snippet}
-</Story>
+<svg width="420" height="250">
+	<Idef0FunctionBox {...args} />
+</svg>
