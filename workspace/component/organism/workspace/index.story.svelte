@@ -1,9 +1,11 @@
 <script lang="ts">
-	import Story from '$stylist/theme/component/molecule/story/index.svelte';
-	import type { SlotStory } from '$stylist/theme/interface/slot/story';
-	import Workspace from '$stylist/workspace/component/organism/workspace/index.svelte';
+	import Workspace from './index.svelte';
+	import type { RecipeWorkspace } from '$stylist/workspace/interface/recipe/workspace';
 	import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
 	import type { SlotNodeConnection } from '$stylist/workspace/interface/slot/node-connection';
+
+	// Render of index.story.ts: the workspace is controlled, so the story owns nodes, connections, selection, zoom and offset and wires every callback.
+	let args: RecipeWorkspace = $props();
 
 	const HEADER_HEIGHT = 40;
 	const PORT_ROW_HEIGHT = 32;
@@ -173,46 +175,34 @@
 				: node
 		);
 	}
-
-	const controls: SlotStory[] = [];
 </script>
 
-<Story
-	component={Workspace}
-	title="Workspace"
-	description="Full graph workspace: canvas, toolbar, node palette and properties panel in one organism. Fully wired — drag a node, drag from an output port to an input port, add nodes from the palette."
-	{controls}
->
-	{#snippet children()}
-		<div style="height: 600px; padding: var(--spacing-6);">
-			<div
-				style="height: 100%; border: 1px solid var(--color-border-primary); border-radius: var(--border-radius-xl); overflow: hidden; background: var(--color-background-primary);"
-			>
-				<Workspace
-					{nodes}
-					{connections}
-					{selectedNodeIds}
-					{zoom}
-					{offset}
-					showToolbar={true}
-					showMiniMap={true}
-					showWorkspacePalette={true}
-					showPropertiesPanel={true}
-					showGrid={true}
-					allowAddNodes={true}
-					allowDeleteNodes={true}
-					allowDuplicateNodes={true}
-					onNodeSelect={handleNodeSelect}
-					onNodeDrag={handleNodeDrag}
-					onNodeDelete={handleNodeDelete}
-					onNodeDuplicate={handleNodeDuplicate}
-					onNodeAdd={handleNodeAdd}
-					onConnectionEnd={handleConnectionEnd}
-					onPropertyChange={handlePropertyChange}
-					onZoomChange={(next: number) => (zoom = next)}
-					onOffsetChange={(next: { x: number; y: number }) => (offset = next)}
-				/>
-			</div>
-		</div>
-	{/snippet}
-</Story>
+<div class="workspace-story">
+	<Workspace
+		{...args}
+		{nodes}
+		{connections}
+		{selectedNodeIds}
+		{zoom}
+		{offset}
+		onNodeSelect={handleNodeSelect}
+		onNodeDrag={handleNodeDrag}
+		onNodeDelete={handleNodeDelete}
+		onNodeDuplicate={handleNodeDuplicate}
+		onNodeAdd={handleNodeAdd}
+		onConnectionEnd={handleConnectionEnd}
+		onPropertyChange={handlePropertyChange}
+		onZoomChange={(next: number) => (zoom = next)}
+		onOffsetChange={(next: { x: number; y: number }) => (offset = next)}
+	/>
+</div>
+
+<style>
+	.workspace-story {
+		height: 600px;
+		border: 1px solid var(--color-border-primary);
+		border-radius: var(--border-radius-xl);
+		overflow: hidden;
+		background: var(--color-background-primary);
+	}
+</style>
