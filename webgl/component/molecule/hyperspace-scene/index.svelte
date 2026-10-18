@@ -3,6 +3,10 @@
 	import { createProgram } from '$stylist/webgl/function/script/create-program';
 	import vertexSource from '$stylist/webgl/data/shader/vertex/full-screen.vert?raw';
 	import fragmentSource from '$stylist/webgl/data/shader/fragment/hyperspace.frag?raw';
+	import type { RecipeHyperspaceScene } from '$stylist/webgl/interface/recipe/hyperspace-scene';
+
+	// The scene takes no props; the recipe documents the empty surface.
+	let _props: RecipeHyperspaceScene = $props();
 
 	let program: WebGLProgram;
 	let vao: WebGLVertexArrayObject | null = null;

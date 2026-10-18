@@ -1,30 +1,18 @@
 <script lang="ts">
-	import Story from '$stylist/theme/component/molecule/story/index.svelte';
-	import type { SlotStory } from '$stylist/theme/interface/slot/story';
 	import TurtleDissolveScene from './index.svelte';
+	import type { RecipeTurtleDissolveScene } from '$stylist/webgl/interface/recipe/turtle-dissolve-scene';
 
-	const controls: SlotStory[] = [
-		{ name: 'progress', type: 'range', defaultValue: 0.6, min: 0, max: 1, step: 0.01 }
-	];
+	// Render of index.story.ts: the scene is absolutely positioned over its parent, so it needs a sized, positioned frame.
+	let args: RecipeTurtleDissolveScene = $props();
 </script>
 
-<Story
-	{controls}
-	component={TurtleDissolveScene}
-	title="TurtleDissolveScene"
-	category="Molecules/WebGL"
-	description="Procedural teal/white caustic dissolve field, intensity peaking mid-progress. The turtle-hero-morph organism's WebGL accent during the photo→mark morph window."
-	tags={['webgl', 'shader', 'scene']}
->
-	{#snippet children(values: any)}
-		<div class="preview">
-			<TurtleDissolveScene progress={Number(values.progress) || 0} />
-		</div>
-	{/snippet}
-</Story>
+<div class="preview">
+	<TurtleDissolveScene {...args} />
+</div>
 
 <style>
 	.preview {
+		position: relative;
 		width: min(100%, 42rem);
 		height: 24rem;
 		overflow: hidden;

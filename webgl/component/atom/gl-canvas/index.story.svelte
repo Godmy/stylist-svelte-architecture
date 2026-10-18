@@ -1,9 +1,9 @@
 <script lang="ts">
-	import Story from '$stylist/theme/component/molecule/story/index.svelte';
-	import type { SlotStory } from '$stylist/theme/interface/slot/story';
 	import GlCanvas from './index.svelte';
+	import type { RecipeGlCanvas } from '$stylist/webgl/interface/recipe/gl-canvas';
 
-	const controls: SlotStory[] = [];
+	// Render of index.story.ts: the canvas draws only through the frame callback, and it fills a sized frame.
+	let args: RecipeGlCanvas = $props();
 
 	function frame(gl: WebGL2RenderingContext, timeMs: number) {
 		const pulse = (Math.sin(timeMs * 0.001) + 1) * 0.5;
@@ -12,20 +12,9 @@
 	}
 </script>
 
-<Story
-	{controls}
-	component={GlCanvas}
-	title="GlCanvas"
-	category="Atoms/WebGL"
-	description="Base WebGL2 canvas with init, frame, and resize hooks."
-	tags={['webgl', 'canvas', 'rendering']}
->
-	{#snippet children()}
-		<div class="preview">
-			<GlCanvas {frame} />
-		</div>
-	{/snippet}
-</Story>
+<div class="preview">
+	<GlCanvas {frame} {...args} />
+</div>
 
 <style>
 	.preview {
