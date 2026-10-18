@@ -1,13 +1,9 @@
 <script lang="ts">
 	import { ZWICKY_CLUSTER_ORDER } from '$stylist/graph/const/array/zwicky-cluster-order';
 	import { ZWICKY_CLUSTER_COLOR } from '$stylist/graph/const/record/zwicky-cluster-color';
+	import type { RecipeGraphClusterFilter } from '$stylist/graph/interface/recipe/graph-cluster-filter';
 
-	type Props = {
-		activeClusters?: ReadonlySet<string>;
-		onClusterClick?: (cluster: string) => void;
-	};
-
-	let { activeClusters, onClusterClick }: Props = $props();
+	let { activeClusters, onClusterClick }: RecipeGraphClusterFilter = $props();
 
 	const hex = (v: number) =>
 		Math.round(v * 255)

@@ -1,15 +1,7 @@
 <script lang="ts">
-	import type { ZwickyNode } from '$stylist/graph/interface/slot/zwicky-node';
+	import type { RecipeGraphTooltip } from '$stylist/graph/interface/recipe/graph-tooltip';
 
-	type Props = {
-		node: ZwickyNode | null;
-		x: number;
-		y: number;
-		containerWidth?: number;
-		containerHeight?: number;
-	};
-
-	let { node, x, y, containerWidth = 800, containerHeight = 600 }: Props = $props();
+	let { node, x, y, containerWidth = 800, containerHeight = 600 }: RecipeGraphTooltip = $props();
 
 	const TOOLTIP_W = 280;
 	const TOOLTIP_H = 200;

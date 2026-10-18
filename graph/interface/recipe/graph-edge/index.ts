@@ -5,6 +5,12 @@ import type { TokenTrajectory } from '$stylist/workspace/type/alias/trajectory';
 export interface RecipeGraphEdge extends ComputeIntersectAll<
 	[SlotTheme, Omit<HTMLAttributes<SVGPathElement>, 'style'>]
 > {
+	/** Id of the node the edge starts from. */
+	fromNodeId: string;
+	/** Id of the node the edge ends at. */
+	toNodeId: string;
+	/** Accessible label; defaults to "from -> to". */
+	label?: string;
 	directed?: boolean;
 	type?: TokenTrajectory;
 	active?: boolean;

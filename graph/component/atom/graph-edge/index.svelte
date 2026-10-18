@@ -2,7 +2,7 @@
 	import type { RecipeGraphEdge } from '$stylist/graph/interface/recipe/graph-edge';
 	import createGraphEdgeState from './state.svelte';
 
-	let props: RecipeGraphEdge & { fromNodeId: string; toNodeId: string; label?: string } = $props();
+	let props: RecipeGraphEdge = $props();
 
 	const state = createGraphEdgeState(() => props);
 	const fromNodeId = $derived(props.fromNodeId);

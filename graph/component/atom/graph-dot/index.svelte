@@ -1,11 +1,7 @@
 <script lang="ts">
-	type Props = {
-		color: readonly [number, number, number];
-		label: string;
-		size?: number;
-	};
+	import type { RecipeGraphDot } from '$stylist/graph/interface/recipe/graph-dot';
 
-	let { color, label, size = 8 }: Props = $props();
+	let { color, label, size = 8 }: RecipeGraphDot = $props();
 
 	const hex = (v: number) =>
 		Math.round(v * 255)

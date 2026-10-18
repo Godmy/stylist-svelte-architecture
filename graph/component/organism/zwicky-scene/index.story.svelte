@@ -1,9 +1,12 @@
 <script lang="ts">
+	// Render of index.story.ts: the graph data is fetched from the indexation output at mount.
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
-	import ZwickyScene from '$stylist/graph/component/organism/zwicky-scene/index.svelte';
+	import ZwickyScene from './index.svelte';
+	import type { RecipeZwickyScene } from '$stylist/graph/interface/recipe/zwicky-scene';
 	import type { GraphJsonInput } from '$stylist/graph/interface/slot/graph-json-input';
 
+	let args: RecipeZwickyScene = $props();
 	let fullData = $state<GraphJsonInput | null>(null);
 	let loadError = $state<string | null>(null);
 
@@ -24,7 +27,7 @@
 
 <div style="width:100%;height:100vh;background:#050810">
 	{#if fullData}
-		<ZwickyScene title="Morphological Box - Zwicky" data={fullData} style="height:100%" />
+		<ZwickyScene {...args} data={fullData} style="height:100%" />
 	{:else if loadError}
 		<p style="margin:0;padding:1rem;color:#fecaca">{loadError}</p>
 	{:else}

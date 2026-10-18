@@ -1,9 +1,15 @@
 <script lang="ts">
-	import Story from '$stylist/theme/component/molecule/story/index.svelte';
 	import SlotGraphNode from './index.svelte';
 	import SlotGraphEdge from '../graph-edge/index.svelte';
+	import type { RecipeGraphNode } from '$stylist/graph/interface/recipe/graph-node';
 	import type { TokenSize as GraphNodeSize } from '$stylist/design-token/type/alias/size';
-	import type { SlotStory } from '$stylist/theme/interface/slot/story';
+
+	// Render of index.story.ts: the args style the primary node of a draggable three-node canvas, plus size and type galleries.
+	let args: Partial<RecipeGraphNode> & {
+		snapToGrid?: boolean;
+		showEdges?: boolean;
+		directed?: boolean;
+	} = $props();
 
 	type Position = { x: number; y: number };
 	type NodeKind = 'source' | 'gateway' | 'target';
@@ -28,51 +34,6 @@
 	const GRID_SIZE = 20;
 	const CANVAS_WIDTH = 620;
 	const CANVAS_HEIGHT = 300;
-
-	const controls: SlotStory[] = [
-		{
-			name: 'mainLabel',
-			type: 'text',
-			defaultValue: 'Primary'
-		},
-		{
-			name: 'mainColor',
-			type: 'color',
-			defaultValue: '#3b82f6'
-		},
-		{
-			name: 'mainType',
-			type: 'select',
-			options: ['source', 'gateway', 'target'],
-			defaultValue: 'source'
-		},
-		{
-			name: 'size',
-			type: 'select',
-			options: ['xs', 'sm', 'md', 'lg', 'xl', '2xl'],
-			defaultValue: 'md'
-		},
-		{
-			name: 'snapToGrid',
-			type: 'boolean',
-			defaultValue: true
-		},
-		{
-			name: 'showEdges',
-			type: 'boolean',
-			defaultValue: true
-		},
-		{
-			name: 'directed',
-			type: 'boolean',
-			defaultValue: true
-		},
-		{
-			name: 'selected',
-			type: 'boolean',
-			defaultValue: true
-		}
-	];
 
 	let nodes = $state<DemoNode[]>([
 		{
@@ -207,158 +168,154 @@
 		);
 	}
 
+	const canvasNodeSize = $derived<GraphNodeSize>(args.size ?? 'md');
+
 	function stopDrag(): void {
 		draggingNodeId = null;
 	}
 </script>
 
-<Story
-	{controls}
-	component={SlotGraphNode}
-	title="SlotGraphNode Component"
-	description="Interactive graph nodes with selection, drag-and-drop and live edge feedback."
->
-	{#snippet children(values: any)}
-		{@const nodeSize = (values.size as GraphNodeSize) ?? 'md'}
-		<div class="_c1">
-			<div class="_c2">
-				<span class="_c3"> click to select, drag to move </span>
-			</div>
+<div class="_root">
+	<div class="_c1">
+		<div class="_c2">
+			<span class="_c3"> click to select, drag to move </span>
+		</div>
 
-			<div
-				role="application"
-				aria-label="Graph node canvas"
-				data-graph-canvas="node-story"
-				class="_c4 [background-size:20px_20px]"
-				style={`--gradient-inner: var(--color-border-primary); --gradient-outer: transparent; background-image: var(--gradient-radial-center); width:${CANVAS_WIDTH}px;height:${CANVAS_HEIGHT}px;`}
-				onpointermove={(event) => dragNode(event, Boolean(values.snapToGrid), nodeSize)}
-				onpointerup={stopDrag}
-				onpointerleave={stopDrag}
-			>
-				{#if values.showEdges}
-					{#each links as link (link.id)}
-						{@const from = findNode(link.from)}
-						{@const to = findNode(link.to)}
-						{#if from && to}
-							<SlotGraphEdge
-								fromNodeId={from.id}
-								toNodeId={to.id}
-								type="straight"
-								directed={Boolean(values.directed)}
-								style={edgeStyle(from, to, nodeSize)}
-							/>
-						{/if}
-					{/each}
-				{/if}
-
-				{#each nodes as node (node.id)}
-					<SlotGraphNode
-						id={node.id}
-						x={node.position.x}
-						y={node.position.y}
-						label={node.id === 'node-1' ? String(values.mainLabel ?? node.label) : node.label}
-						type={node.id === 'node-1' ? (values.mainType as NodeKind) : node.type}
-						size={nodeSize}
-						color={node.id === 'node-1' ? String(values.mainColor ?? node.color) : node.color}
-						selected={node.id === 'node-1' ? Boolean(values.selected) : selectedNodeId === node.id}
-						interactive={true}
-						onclick={() => (selectedNodeId = node.id)}
-						onpointerdown={(event) => startDrag(event, node.id)}
-					/>
+		<div
+			role="application"
+			aria-label="Graph node canvas"
+			data-graph-canvas="node-story"
+			class="_c4 [background-size:20px_20px]"
+			style={`--gradient-inner: var(--color-border-primary); --gradient-outer: transparent; background-image: var(--gradient-radial-center); width:${CANVAS_WIDTH}px;height:${CANVAS_HEIGHT}px;`}
+			onpointermove={(event) => dragNode(event, Boolean(args.snapToGrid), canvasNodeSize)}
+			onpointerup={stopDrag}
+			onpointerleave={stopDrag}
+		>
+			{#if args.showEdges}
+				{#each links as link (link.id)}
+					{@const from = findNode(link.from)}
+					{@const to = findNode(link.to)}
+					{#if from && to}
+						<SlotGraphEdge
+							fromNodeId={from.id}
+							toNodeId={to.id}
+							type="straight"
+							directed={Boolean(args.directed)}
+							style={edgeStyle(from, to, canvasNodeSize)}
+						/>
+					{/if}
 				{/each}
-			</div>
+			{/if}
 
-			<div class="_c5">
-				selected: <span class="_c6">{selectedNodeId}</span>
-				{#if values.snapToGrid}
-					<span class="_c7">snap: {GRID_SIZE}px</span>
-				{/if}
-			</div>
+			{#each nodes as node (node.id)}
+				<SlotGraphNode
+					id={node.id}
+					x={node.position.x}
+					y={node.position.y}
+					label={node.id === 'node-1' ? (args.label ?? node.label) : node.label}
+					type={node.id === 'node-1' ? (args.type ?? node.type) : node.type}
+					size={canvasNodeSize}
+					color={node.id === 'node-1' ? (args.color ?? node.color) : node.color}
+					selected={node.id === 'node-1' ? Boolean(args.selected) : selectedNodeId === node.id}
+					interactive={true}
+					onclick={() => (selectedNodeId = node.id)}
+					onpointerdown={(event) => startDrag(event, node.id)}
+				/>
+			{/each}
 		</div>
-	{/snippet}
 
-	{#snippet variants()}
-		<div class="_c8">
-			<div>
-				<h3 class="_c9">Size Ladder</h3>
-				<div class="_c10">
-					<div class="_c11">
-						<SlotGraphNode id="size-xs" x={12} y={18} label="XS" size="xs" color="#0f766e" />
-					</div>
-					<div class="_c11">
-						<SlotGraphNode id="size-sm" x={10} y={16} label="SM" size="sm" color="#0f766e" />
-					</div>
-					<div class="_c11">
-						<SlotGraphNode id="size-md" x={6} y={12} label="MD" size="md" color="#0f766e" />
-					</div>
-					<div class="_c11">
-						<SlotGraphNode id="size-lg" x={2} y={8} label="LG" size="lg" color="#0f766e" />
-					</div>
-					<div class="_c11">
-						<SlotGraphNode id="size-xl" x={0} y={4} label="XL" size="xl" color="#0f766e" />
-					</div>
-					<div class="_c11">
-						<SlotGraphNode id="size-2xl" x={0} y={0} label="2XL" size="2xl" color="#0f766e" />
-					</div>
+		<div class="_c5">
+			selected: <span class="_c6">{selectedNodeId}</span>
+			{#if args.snapToGrid}
+				<span class="_c7">snap: {GRID_SIZE}px</span>
+			{/if}
+		</div>
+	</div>
+
+	<div class="_c8">
+		<div>
+			<h3 class="_c9">Size Ladder</h3>
+			<div class="_c10">
+				<div class="_c11">
+					<SlotGraphNode id="size-xs" x={12} y={18} label="XS" size="xs" color="#0f766e" />
 				</div>
-			</div>
-
-			<div>
-				<h3 class="_c9">Type Gallery</h3>
-				<div class="_c12">
-					<div class="_c13">
-						<div class="_c14">
-							<SlotGraphNode
-								id="type-source"
-								x={0}
-								y={0}
-								label="IN"
-								type="source"
-								size="xl"
-								color="#0f766e"
-							/>
-						</div>
-						<strong class="_c15">Source</strong>
-						<span class="_c16">solid border</span>
-					</div>
-					<div class="_c13">
-						<div class="_c14">
-							<SlotGraphNode
-								id="type-gateway"
-								x={0}
-								y={0}
-								label="GW"
-								type="gateway"
-								size="xl"
-								color="#b45309"
-								selected={true}
-							/>
-						</div>
-						<strong class="_c15">Gateway</strong>
-						<span class="_c16">dashed border</span>
-					</div>
-					<div class="_c13">
-						<div class="_c14">
-							<SlotGraphNode
-								id="type-target"
-								x={0}
-								y={0}
-								label="OUT"
-								type="target"
-								size="xl"
-								color="#1d4ed8"
-							/>
-						</div>
-						<strong class="_c15">Target</strong>
-						<span class="_c16">output marker</span>
-					</div>
+				<div class="_c11">
+					<SlotGraphNode id="size-sm" x={10} y={16} label="SM" size="sm" color="#0f766e" />
+				</div>
+				<div class="_c11">
+					<SlotGraphNode id="size-md" x={6} y={12} label="MD" size="md" color="#0f766e" />
+				</div>
+				<div class="_c11">
+					<SlotGraphNode id="size-lg" x={2} y={8} label="LG" size="lg" color="#0f766e" />
+				</div>
+				<div class="_c11">
+					<SlotGraphNode id="size-xl" x={0} y={4} label="XL" size="xl" color="#0f766e" />
+				</div>
+				<div class="_c11">
+					<SlotGraphNode id="size-2xl" x={0} y={0} label="2XL" size="2xl" color="#0f766e" />
 				</div>
 			</div>
 		</div>
-	{/snippet}
-</Story>
+
+		<div>
+			<h3 class="_c9">Type Gallery</h3>
+			<div class="_c12">
+				<div class="_c13">
+					<div class="_c14">
+						<SlotGraphNode
+							id="type-source"
+							x={0}
+							y={0}
+							label="IN"
+							type="source"
+							size="xl"
+							color="#0f766e"
+						/>
+					</div>
+					<strong class="_c15">Source</strong>
+					<span class="_c16">solid border</span>
+				</div>
+				<div class="_c13">
+					<div class="_c14">
+						<SlotGraphNode
+							id="type-gateway"
+							x={0}
+							y={0}
+							label="GW"
+							type="gateway"
+							size="xl"
+							color="#b45309"
+							selected={true}
+						/>
+					</div>
+					<strong class="_c15">Gateway</strong>
+					<span class="_c16">dashed border</span>
+				</div>
+				<div class="_c13">
+					<div class="_c14">
+						<SlotGraphNode
+							id="type-target"
+							x={0}
+							y={0}
+							label="OUT"
+							type="target"
+							size="xl"
+							color="#1d4ed8"
+						/>
+					</div>
+					<strong class="_c15">Target</strong>
+					<span class="_c16">output marker</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 
 <style>
+	._root {
+		display: grid;
+		gap: 1.5rem;
+	}
 	._c1 {
 		border-radius: 0.5rem;
 		border-width: 1px;
