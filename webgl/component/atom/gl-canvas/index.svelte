@@ -1,11 +1,7 @@
 <script lang="ts">
-	type Props = {
-		init?: (gl: WebGL2RenderingContext) => void;
-		frame?: (gl: WebGL2RenderingContext, timeMs: number) => void;
-		resize?: (gl: WebGL2RenderingContext, width: number, height: number) => void;
-	};
+	import type { RecipeGlCanvas } from '$stylist/webgl/interface/recipe/gl-canvas';
 
-	let { init, frame, resize }: Props = $props();
+	let { init, frame, resize }: RecipeGlCanvas = $props();
 
 	let canvas: HTMLCanvasElement;
 	let gl: WebGL2RenderingContext | null = null;

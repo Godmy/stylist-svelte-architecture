@@ -1,27 +1,14 @@
 <script lang="ts">
-	import Story from '$stylist/theme/component/molecule/story/index.svelte';
-	import type { SlotStory } from '$stylist/theme/interface/slot/story';
 	import ConcentricCirclesScene from './index.svelte';
+	import type { RecipeConcentricCirclesScene } from '$stylist/webgl/interface/recipe/concentric-circles-scene';
 
-	const controls: SlotStory[] = [
-		{ name: 'ringCount', type: 'range', defaultValue: 100, min: 8, max: 180, step: 1 }
-	];
+	// Render of index.story.ts: the WebGL canvas fills its parent, so the scene needs a sized frame.
+	let args: RecipeConcentricCirclesScene = $props();
 </script>
 
-<Story
-	{controls}
-	component={ConcentricCirclesScene}
-	title="ConcentricCirclesScene"
-	category="Molecules/WebGL"
-	description="Animated concentric circle shader scene."
-	tags={['webgl', 'shader', 'scene']}
->
-	{#snippet children(values: any)}
-		<div class="preview">
-			<ConcentricCirclesScene ringCount={Number(values.ringCount) || 100} />
-		</div>
-	{/snippet}
-</Story>
+<div class="preview">
+	<ConcentricCirclesScene {...args} />
+</div>
 
 <style>
 	.preview {

@@ -1,9 +1,17 @@
 <script lang="ts">
-	import Story from '$stylist/theme/component/molecule/story/index.svelte';
 	import SlotGraphEdge from './index.svelte';
 	import SlotGraphNode from '../graph-node/index.svelte';
+	import type { RecipeGraphEdge } from '$stylist/graph/interface/recipe/graph-edge';
 	import type { TokenSize as GraphNodeSize } from '$stylist/design-token/type/alias/size';
-	import type { SlotStory } from '$stylist/theme/interface/slot/story';
+
+	// Render of index.story.ts: three draggable nodes recompute the edge geometry, plus a route gallery.
+	let args: Partial<RecipeGraphEdge> & {
+		nodeSize?: GraphNodeSize;
+		edgeColor?: string;
+		edgeThickness?: number;
+		showLabels?: boolean;
+		snapToGrid?: boolean;
+	} = $props();
 
 	type Position = { x: number; y: number };
 	type CanvasNodeSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -27,27 +35,6 @@
 	const GRID_SIZE = 20;
 	const CANVAS_WIDTH = 640;
 	const CANVAS_HEIGHT = 320;
-
-	const controls: SlotStory[] = [
-		{
-			name: 'edgeType',
-			type: 'select',
-			options: ['straight', 'curve', 'polyline'],
-			defaultValue: 'straight'
-		},
-		{ name: 'directed', type: 'boolean', defaultValue: true },
-		{ name: 'active', type: 'boolean', defaultValue: false },
-		{
-			name: 'nodeSize',
-			type: 'select',
-			options: ['xs', 'sm', 'md', 'lg', 'xl', '2xl'],
-			defaultValue: 'md'
-		},
-		{ name: 'edgeColor', type: 'color', defaultValue: '#2563eb' },
-		{ name: 'edgeThickness', type: 'range', defaultValue: 3, min: 1, max: 8, step: 1 },
-		{ name: 'showLabels', type: 'boolean', defaultValue: true },
-		{ name: 'snapToGrid', type: 'boolean', defaultValue: true }
-	];
 
 	let nodes = $state<DemoNode[]>([
 		{ id: 'node-1', label: 'Source', type: 'source', color: '#14b8a6', position: { x: 80, y: 90 } },
@@ -106,8 +93,8 @@
 		return { x: node.position.x + radius, y: node.position.y + radius };
 	}
 
-	function edgeStyle(from: DemoNode, to: DemoNode, values: any): Record<string, string> {
-		const currentSize = (values.nodeSize as GraphNodeSize) ?? 'md';
+	function edgeStyle(from: DemoNode, to: DemoNode): Record<string, string> {
+		const currentSize = args.nodeSize ?? 'md';
 		const fromCenter = centerOf(from, currentSize);
 		const toCenter = centerOf(to, currentSize);
 		const dx = toCenter.x - fromCenter.x;
@@ -120,9 +107,9 @@
 			'--edge-top': `${fromCenter.y}px`,
 			'--edge-length': `${length}px`,
 			'--edge-angle': `${angle}deg`,
-			'--edge-color': String(values.edgeColor ?? '#2563eb'),
-			'--edge-thickness': `${Number(values.edgeThickness ?? 3)}px`,
-			'--edge-label-display': values.showLabels ? 'inline-flex' : 'none'
+			'--edge-color': String(args.edgeColor ?? '#2563eb'),
+			'--edge-thickness': `${Number(args.edgeThickness ?? 3)}px`,
+			'--edge-label-display': args.showLabels ? 'inline-flex' : 'none'
 		};
 	}
 
@@ -168,115 +155,110 @@
 	}
 </script>
 
-<Story
-	{controls}
-	component={SlotGraphEdge}
-	title="SlotGraphEdge Component"
-	description="Interactive graph edges between draggable nodes. Use the controls to compare straight, curved and polyline routing."
->
-	{#snippet children(values: any)}
-		<div class="edge-story-shell">
-			<div class="edge-story-chips">
-				<span>type: {values.edgeType}</span>
-				<span>directed: {values.directed ? 'yes' : 'no'}</span>
-				<span>drag nodes to recalc geometry</span>
-			</div>
+<div class="edge-story-root">
+	<div class="edge-story-shell">
+		<div class="edge-story-chips">
+			<span>type: {args.type ?? 'straight'}</span>
+			<span>directed: {args.directed ? 'yes' : 'no'}</span>
+			<span>drag nodes to recalc geometry</span>
+		</div>
 
-			<div
-				role="application"
-				aria-label="Graph edge canvas"
-				data-graph-canvas="edge-story"
-				class="edge-stage"
-				onpointermove={(event) =>
-					dragNode(event, Boolean(values.snapToGrid), (values.nodeSize as GraphNodeSize) ?? 'md')}
-				onpointerup={stopDrag}
-				onpointerleave={stopDrag}
-			>
-				{#each edges as edge (edge.id)}
-					{@const from = findNode(edge.from)}
-					{@const to = findNode(edge.to)}
-					{#if from && to}
-						<SlotGraphEdge
-							fromNodeId={edge.from}
-							toNodeId={edge.to}
-							directed={Boolean(values.directed)}
-							active={Boolean(values.active)}
-							type={(values.edgeType as 'straight' | 'curve' | 'polyline') ?? 'straight'}
-							label={values.showLabels ? `${from.label} -> ${to.label}` : ''}
-							style={edgeStyle(from, to, values)}
-						/>
-					{/if}
-				{/each}
-
-				{#each nodes as node (node.id)}
-					<SlotGraphNode
-						id={node.id}
-						label={node.label}
-						x={node.position.x}
-						y={node.position.y}
-						type={node.type}
-						color={node.color}
-						size={(values.nodeSize as GraphNodeSize) ?? 'md'}
-						selected={selectedNodeId === node.id}
-						interactive={true}
-						onpointerdown={(event) => startDrag(event, node.id)}
-						onclick={() => (selectedNodeId = node.id)}
+		<div
+			role="application"
+			aria-label="Graph edge canvas"
+			data-graph-canvas="edge-story"
+			class="edge-stage"
+			onpointermove={(event) => dragNode(event, Boolean(args.snapToGrid), args.nodeSize ?? 'md')}
+			onpointerup={stopDrag}
+			onpointerleave={stopDrag}
+		>
+			{#each edges as edge (edge.id)}
+				{@const from = findNode(edge.from)}
+				{@const to = findNode(edge.to)}
+				{#if from && to}
+					<SlotGraphEdge
+						fromNodeId={edge.from}
+						toNodeId={edge.to}
+						directed={Boolean(args.directed)}
+						active={Boolean(args.active)}
+						type={args.type ?? 'straight'}
+						label={args.showLabels ? `${from.label} -> ${to.label}` : ''}
+						style={edgeStyle(from, to)}
 					/>
-				{/each}
-			</div>
-
-			<div class="edge-story-footer">
-				selected: <strong>{selectedNodeId}</strong>
-				{#if values.snapToGrid}
-					<span class="snap-chip">snap: {GRID_SIZE}px</span>
 				{/if}
-			</div>
+			{/each}
+
+			{#each nodes as node (node.id)}
+				<SlotGraphNode
+					id={node.id}
+					label={node.label}
+					x={node.position.x}
+					y={node.position.y}
+					type={node.type}
+					color={node.color}
+					size={args.nodeSize ?? 'md'}
+					selected={selectedNodeId === node.id}
+					interactive={true}
+					onpointerdown={(event) => startDrag(event, node.id)}
+					onclick={() => (selectedNodeId = node.id)}
+				/>
+			{/each}
 		</div>
-	{/snippet}
 
-	{#snippet variants()}
-		<div class="edge-story-shell">
-			<div class="edge-story-chips">
-				<span>variant gallery</span>
-				<span>same anchors, different route geometry</span>
-			</div>
+		<div class="edge-story-footer">
+			selected: <strong>{selectedNodeId}</strong>
+			{#if args.snapToGrid}
+				<span class="snap-chip">snap: {GRID_SIZE}px</span>
+			{/if}
+		</div>
+	</div>
 
-			<div class="_c1">
-				{#each [{ id: 'straight', label: 'Straight', type: 'straight', color: '#334155' }, { id: 'curve', label: 'Curve', type: 'curve', color: '#2563eb' }, { id: 'polyline', label: 'Polyline', type: 'polyline', color: '#0f766e' }] as item}
-					<div class="variant-track">
-						<div class="variant-copy">
-							<strong>{item.label}</strong>
-							<span>{item.type}</span>
-						</div>
-						<div class="variant-stage">
-							<div class="variant-anchor variant-anchor-start">A</div>
-							<div class="variant-anchor variant-anchor-end">B</div>
-							<SlotGraphEdge
-								fromNodeId={`${item.id}-a`}
-								toNodeId={`${item.id}-b`}
-								type={item.type as 'straight' | 'curve' | 'polyline'}
-								directed={item.type !== 'polyline'}
-								active={true}
-								label={item.label}
-								style={{
-									'--edge-left': '32px',
-									'--edge-top': '40px',
-									'--edge-length': '260px',
-									'--edge-angle': '0deg',
-									'--edge-color': item.color,
-									'--edge-thickness': '3px',
-									'--edge-label-display': 'inline-flex'
-								}}
-							/>
-						</div>
+	<div class="edge-story-shell">
+		<div class="edge-story-chips">
+			<span>variant gallery</span>
+			<span>same anchors, different route geometry</span>
+		</div>
+
+		<div class="_c1">
+			{#each [{ id: 'straight', label: 'Straight', type: 'straight', color: '#334155' }, { id: 'curve', label: 'Curve', type: 'curve', color: '#2563eb' }, { id: 'polyline', label: 'Polyline', type: 'polyline', color: '#0f766e' }] as item (item.id)}
+				<div class="variant-track">
+					<div class="variant-copy">
+						<strong>{item.label}</strong>
+						<span>{item.type}</span>
 					</div>
-				{/each}
-			</div>
+					<div class="variant-stage">
+						<div class="variant-anchor variant-anchor-start">A</div>
+						<div class="variant-anchor variant-anchor-end">B</div>
+						<SlotGraphEdge
+							fromNodeId={`${item.id}-a`}
+							toNodeId={`${item.id}-b`}
+							type={item.type as 'straight' | 'curve' | 'polyline'}
+							directed={item.type !== 'polyline'}
+							active={true}
+							label={item.label}
+							style={{
+								'--edge-left': '32px',
+								'--edge-top': '40px',
+								'--edge-length': '260px',
+								'--edge-angle': '0deg',
+								'--edge-color': item.color,
+								'--edge-thickness': '3px',
+								'--edge-label-display': 'inline-flex'
+							}}
+						/>
+					</div>
+				</div>
+			{/each}
 		</div>
-	{/snippet}
-</Story>
+	</div>
+</div>
 
 <style>
+	.edge-story-root {
+		display: grid;
+		gap: 1.5rem;
+	}
+
 	.edge-story-shell {
 		display: grid;
 		gap: 0.75rem;

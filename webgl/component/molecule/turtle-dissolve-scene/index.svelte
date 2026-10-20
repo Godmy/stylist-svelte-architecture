@@ -3,12 +3,9 @@
 	import { createProgram } from '$stylist/webgl/function/script/create-program';
 	import vertexSource from '$stylist/webgl/data/shader/vertex/full-screen.vert?raw';
 	import fragmentSource from '$stylist/webgl/data/shader/fragment/turtle-dissolve.frag?raw';
+	import type { RecipeTurtleDissolveScene } from '$stylist/webgl/interface/recipe/turtle-dissolve-scene';
 
-	type Props = {
-		progress?: number;
-	};
-
-	let { progress = 0 }: Props = $props();
+	let { progress = 0 }: RecipeTurtleDissolveScene = $props();
 
 	let program: WebGLProgram;
 	let vao: WebGLVertexArrayObject | null = null;

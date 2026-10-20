@@ -1,25 +1,14 @@
 <script lang="ts">
-	import Story from '$stylist/theme/component/molecule/story/index.svelte';
-	import type { SlotStory } from '$stylist/theme/interface/slot/story';
 	import HyperspaceScene from './index.svelte';
+	import type { RecipeHyperspaceScene } from '$stylist/webgl/interface/recipe/hyperspace-scene';
 
-	const controls: SlotStory[] = [];
+	// Render of index.story.ts: the WebGL canvas fills its parent, so the scene needs a sized frame.
+	let args: RecipeHyperspaceScene = $props();
 </script>
 
-<Story
-	{controls}
-	component={HyperspaceScene}
-	title="HyperspaceScene"
-	category="Molecules/WebGL"
-	description="Animated hyperspace shader scene."
-	tags={['webgl', 'shader', 'scene']}
->
-	{#snippet children()}
-		<div class="preview">
-			<HyperspaceScene />
-		</div>
-	{/snippet}
-</Story>
+<div class="preview">
+	<HyperspaceScene {...args} />
+</div>
 
 <style>
 	.preview {

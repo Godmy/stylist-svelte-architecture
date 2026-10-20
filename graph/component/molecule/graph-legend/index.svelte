@@ -1,13 +1,9 @@
 <script lang="ts">
 	import { ZWICKY_DOMAIN_COLOR } from '$stylist/graph/const/record/zwicky-domain-color';
 	import GraphDot from '$stylist/graph/component/atom/graph-dot/index.svelte';
+	import type { RecipeGraphLegend } from '$stylist/graph/interface/recipe/graph-legend';
 
-	type Props = {
-		activeDomains?: Set<string>;
-		onDomainClick?: (domain: string) => void;
-	};
-
-	let { activeDomains, onDomainClick }: Props = $props();
+	let { activeDomains, onDomainClick }: RecipeGraphLegend = $props();
 
 	const entries = Object.entries(ZWICKY_DOMAIN_COLOR);
 </script>

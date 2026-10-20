@@ -3,12 +3,9 @@
 	import { createProgram } from '$stylist/webgl/function/script/create-program';
 	import vertexSource from '$stylist/webgl/data/shader/vertex/full-screen.vert?raw';
 	import fragmentSource from '$stylist/webgl/data/shader/fragment/concentric-circles.frag?raw';
+	import type { RecipeConcentricCirclesScene } from '$stylist/webgl/interface/recipe/concentric-circles-scene';
 
-	type Props = {
-		ringCount?: number;
-	};
-
-	let { ringCount = 100 }: Props = $props();
+	let { ringCount = 100 }: RecipeConcentricCirclesScene = $props();
 
 	let program: WebGLProgram;
 	let vao: WebGLVertexArrayObject | null = null;

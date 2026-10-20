@@ -1,9 +1,9 @@
-import type { SlotFieldHighlighter as IFieldHighlighterProps } from '$stylist/graph/interface/slot/field-highlighter';
+import type { RecipeFieldHighlighter } from '$stylist/graph/interface/recipe/field-highlighter';
 import type { SlotFieldHighlighterSelectedField as IFieldHighlighterSelectedField } from '$stylist/graph/interface/slot/field-highlighter-selected-field';
 import type { SlotGraphEdge as IGraphEdge } from '$stylist/graph/interface/slot/graph-edge';
 import type { SlotGraphNode as IGraphNode } from '$stylist/graph/interface/slot/graph-node';
 
-export const createFieldHighlighterState = (getProps: () => IFieldHighlighterProps) => {
+export const createFieldHighlighterState = (getProps: () => RecipeFieldHighlighter) => {
 	const props = $derived(getProps());
 	function handleNodeClick(node: IGraphNode) {
 		props.onNodeClick?.(node);

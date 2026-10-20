@@ -1,38 +1,30 @@
 <script lang="ts">
-	import Story from '$stylist/theme/component/molecule/story/index.svelte';
 	import SceneCameraControl from './index.svelte';
+	import type { RecipeSceneCameraControl } from '$stylist/graph/interface/recipe/scene-camera-control';
 
-	let radius = $state(8.4);
-	let targetX = $state(1.5);
-	let targetY = $state(-2.2);
+	// Render of index.story.ts: radius and target are local state updated by the control's callbacks.
+	let args: RecipeSceneCameraControl = $props();
+	let radius = $derived(args.radius);
+	let targetX = $derived(args.targetX);
+	let targetY = $derived(args.targetY);
 </script>
 
-<Story
-	component={SceneCameraControl}
-	title="SceneCameraControl"
-	description="Camera plane and zoom control for interactive scene navigation."
->
-	{#snippet children()}
-		<div class="_c1">
-			<div class="_c2 border-white/10 bg-white/5"></div>
-			<SceneCameraControl
-				{radius}
-				minRadius={4}
-				maxRadius={16}
-				sceneFitRadius={10.5}
-				{targetX}
-				{targetY}
-				onradiuschange={(next) => {
-					radius = next;
-				}}
-				ontargetchange={(x, y) => {
-					targetX = x;
-					targetY = y;
-				}}
-			/>
-		</div>
-	{/snippet}
-</Story>
+<div class="_c1">
+	<div class="_c2 border-white/10 bg-white/5"></div>
+	<SceneCameraControl
+		{...args}
+		{radius}
+		{targetX}
+		{targetY}
+		onradiuschange={(next) => {
+			radius = next;
+		}}
+		ontargetchange={(x, y) => {
+			targetX = x;
+			targetY = y;
+		}}
+	/>
+</div>
 
 <style>
 	._c1 {

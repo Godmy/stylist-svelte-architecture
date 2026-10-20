@@ -1,53 +1,23 @@
 <script lang="ts">
-	import Story from '$stylist/theme/component/molecule/story/index.svelte';
-	import type { SlotStory } from '$stylist/theme/interface/slot/story';
 	import SchemaDependency from './index.svelte';
+	import type { RecipeErdDependency } from '$stylist/erd/interface/recipe/erd-dependency';
 
-	const controls: SlotStory[] = [
-		{ name: 'active', type: 'boolean', defaultValue: true },
-		{ name: 'targetOffset', type: 'number', defaultValue: 40, min: -80, max: 120, step: 10 }
-	];
+	// Render of index.story.ts: the marker is an SVG fragment drawn between two table boxes that follow y2.
+	let args: RecipeErdDependency = $props();
 </script>
 
-<Story
-	component={SchemaDependency}
-	title="Schema Dependency"
-	description="SVG relation marker between two schema fields."
-	{controls}
->
-	{#snippet children(values: any)}
-		<svg
-			class="schema-dependency-story"
-			viewBox="0 0 520 180"
-			aria-label="Schema dependency preview"
-		>
-			<rect x="28" y="44" width="160" height="88" rx="8" />
-			<rect x="332" y={44 + Number(values.targetOffset ?? 40)} width="160" height="88" rx="8" />
-			<SchemaDependency
-				dependency={{
-					id: 'user.organization--organization.id',
-					sourceTable: 'user',
-					sourceField: 'organization_id',
-					targetTable: 'organization',
-					targetField: 'id',
-					label: 'User.organization_id -> Organization.id'
-				}}
-				x1={188}
-				y1={88}
-				x2={332}
-				y2={88 + Number(values.targetOffset ?? 40)}
-				active={Boolean(values.active)}
-			/>
-			<text x="44" y="94">User</text>
-			<text x="348" y={94 + Number(values.targetOffset ?? 40)}>Organization</text>
-		</svg>
-	{/snippet}
-</Story>
+<svg class="schema-dependency-story" viewBox="0 0 520 260" aria-label="Schema dependency preview">
+	<rect x="28" y={args.y1 - 44} width="160" height="88" rx="8" />
+	<rect x="332" y={args.y2 - 44} width="160" height="88" rx="8" />
+	<SchemaDependency {...args} />
+	<text x="44" y={args.y1 + 6}>User</text>
+	<text x="348" y={args.y2 + 6}>Organization</text>
+</svg>
 
 <style>
 	.schema-dependency-story {
 		width: min(100%, 620px);
-		height: 220px;
+		height: 260px;
 		border: 1px solid rgba(22, 31, 44, 0.12);
 		border-radius: 0.5rem;
 		background: #eef3f8;

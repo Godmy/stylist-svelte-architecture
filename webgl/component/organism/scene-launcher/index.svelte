@@ -2,14 +2,11 @@
 	import Button from '$stylist/button/component/atom/button/index.svelte';
 	import ConcentricCirclesScene from '$stylist/webgl/component/molecule/concentric-circles-scene/index.svelte';
 	import HyperspaceScene from '$stylist/webgl/component/molecule/hyperspace-scene/index.svelte';
+	import type { RecipeSceneLauncher } from '$stylist/webgl/interface/recipe/scene-launcher';
 
 	type ActiveScene = 'circle' | 'hyperspace' | null;
 
-	type Props = {
-		ringCount?: number;
-	};
-
-	let { ringCount = 100 }: Props = $props();
+	let { ringCount = 100 }: RecipeSceneLauncher = $props();
 
 	let container: HTMLDivElement;
 	let activeScene = $state<ActiveScene>(null);
