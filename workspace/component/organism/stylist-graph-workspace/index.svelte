@@ -1115,14 +1115,12 @@
 </section>
 
 <style>
-	:global(body) {
-		margin: 0;
+	/* Its own backdrop, not body: SvelteKit links every lazily importable component's CSS, so a
+	   global body rule here would repaint every page, including the story preview. */
+	.graph-editor-page {
 		background:
 			radial-gradient(circle at top left, rgba(255, 255, 255, 0.72), transparent 28%),
 			linear-gradient(180deg, #eef3f9 0%, #dde7f4 100%);
-	}
-
-	.graph-editor-page {
 		--workspace-canvas: #edf3fa;
 		--workspace-chrome: #fbfdff;
 		--workspace-panel: rgba(255, 255, 255, 0.88);
