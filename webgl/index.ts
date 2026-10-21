@@ -14,3 +14,10 @@ export {
 	compileShader,
 	createProgram
 } from './function';
+export type {
+	RecipeConcentricCirclesScene,
+	RecipeGlCanvas,
+	RecipeHyperspaceScene,
+	RecipeSceneLauncher,
+	RecipeTurtleDissolveScene
+} from './interface';

@@ -2,8 +2,12 @@
 export type {
 	RecipeFieldHighlighter,
 	RecipeGraph,
+	RecipeGraphClusterFilter,
+	RecipeGraphDot,
 	RecipeGraphEdge,
+	RecipeGraphLegend,
 	RecipeGraphNode,
+	RecipeGraphTooltip,
 	RecipeGraphvizDirectedEdge,
 	RecipeNodeIcon,
 	RecipeOntologyEdgeComponent,

@@ -1,8 +1,12 @@
 /** AREA: STYLIST CODER MODEL -> AUTO-GENERATED */
 export type { RecipeFieldHighlighter } from './field-highlighter';
 export type { RecipeGraph } from './graph';
+export type { RecipeGraphClusterFilter } from './graph-cluster-filter';
+export type { RecipeGraphDot } from './graph-dot';
 export type { RecipeGraphEdge } from './graph-edge';
+export type { RecipeGraphLegend } from './graph-legend';
 export type { RecipeGraphNode } from './graph-node';
+export type { RecipeGraphTooltip } from './graph-tooltip';
 export type { RecipeGraphvizDirectedEdge } from './graphviz-directed-edge';
 export type { RecipeNodeIcon } from './node-icon';
 export type { RecipeOntologyEdgeComponent } from './ontology-edge-component';
