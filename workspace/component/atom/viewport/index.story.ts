@@ -1,4 +1,4 @@
-import Viewport from './index.svelte';
+import Viewport from '$stylist/workspace/component/atom/viewport/index.svelte';
 import type { RecipeViewport } from '$stylist/workspace/interface/recipe/viewport';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

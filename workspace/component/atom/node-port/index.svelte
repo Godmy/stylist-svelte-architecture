@@ -2,7 +2,7 @@
 	import BaseIcon from '$stylist/svg/component/atom/icon/index.svelte';
 	import type { RecipeNodePort } from '$stylist/workspace/interface/recipe/node-port';
 	import type { TokenPropertyType } from '$stylist/workspace/type/alias/property-type';
-	import createNodePortState from './state.svelte';
+	import createNodePortState from '$stylist/workspace/component/atom/node-port/state.svelte';
 
 	let props: RecipeNodePort = $props();
 

@@ -1,4 +1,4 @@
-import SchemaTableField from './index.svelte';
+import SchemaTableField from '$stylist/erd/component/atom/schema-table-field/index.svelte';
 import type { RecipeErdTableField } from '$stylist/erd/interface/recipe/erd-table-field';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

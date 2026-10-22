@@ -1,6 +1,6 @@
 <script lang="ts">
 	import BaseIcon from '$stylist/svg/component/atom/icon/index.svelte';
-	import createCollaborativeEditorState from './state.svelte';
+	import createCollaborativeEditorState from '$stylist/canvas/component/organism/collaborative-editor/state.svelte';
 	import type { RecipeCollaborativeEditor } from '$stylist/canvas/interface/recipe/collaborative-editor';
 
 	let props: RecipeCollaborativeEditor = $props();

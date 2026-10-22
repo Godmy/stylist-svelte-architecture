@@ -1,5 +1,5 @@
 <script lang="ts">
-	import SceneCameraControl from './index.svelte';
+	import SceneCameraControl from '$stylist/graph/component/molecule/scene-camera-control/index.svelte';
 	import type { RecipeSceneCameraControl } from '$stylist/graph/interface/recipe/scene-camera-control';
 
 	// Render of index.story.ts: radius and target are local state updated by the control's callbacks.

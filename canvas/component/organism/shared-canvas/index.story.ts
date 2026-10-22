@@ -1,4 +1,4 @@
-import SharedCanvas from './index.svelte';
+import SharedCanvas from '$stylist/canvas/component/organism/shared-canvas/index.svelte';
 import type { RecipeSharedCanvas } from '$stylist/canvas/interface/recipe/shared-canvas';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

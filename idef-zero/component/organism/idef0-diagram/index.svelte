@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import type { RecipeIdef0Diagram } from '$stylist/idef-zero/interface/recipe/idef0-diagram';
-	import createIdef0DiagramState from './state.svelte';
+	import createIdef0DiagramState from '$stylist/idef-zero/component/organism/idef0-diagram/state.svelte';
 	import Idef0BlackBox from '$stylist/idef-zero/component/molecule/idef0-black-box/index.svelte';
 
 	let props: RecipeIdef0Diagram & HTMLAttributes<HTMLDivElement> = $props();

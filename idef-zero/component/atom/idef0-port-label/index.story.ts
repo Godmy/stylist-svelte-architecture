@@ -1,4 +1,4 @@
-import Idef0PortLabel from './index.svelte';
+import Idef0PortLabel from '$stylist/idef-zero/component/atom/idef0-port-label/index.svelte';
 import type { RecipeIdef0PortLabel } from '$stylist/idef-zero/interface/recipe/idef0-port-label';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

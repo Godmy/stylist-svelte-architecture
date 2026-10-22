@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
-	import GraphLegend from './index.svelte';
+	import GraphLegend from '$stylist/graph/component/molecule/graph-legend/index.svelte';
 	import type { RecipeGraphLegend } from '$stylist/graph/interface/recipe/graph-legend';
 
 	// Render of index.story.ts: the active domains are local state toggled by onDomainClick.

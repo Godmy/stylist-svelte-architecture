@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Idef0PortLabel from './index.svelte';
+	import Idef0PortLabel from '$stylist/idef-zero/component/atom/idef0-port-label/index.svelte';
 	import type { RecipeIdef0PortLabel } from '$stylist/idef-zero/interface/recipe/idef0-port-label';
 
 	// Render of index.story.ts: the label is an SVG text element that needs an svg parent.

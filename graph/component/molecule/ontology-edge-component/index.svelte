@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { RecipeOntologyEdgeComponent } from '$stylist/graph/interface/recipe/ontology-edge-component';
-	import createOntologyEdgeComponentState from './state.svelte';
+	import createOntologyEdgeComponentState from '$stylist/graph/component/molecule/ontology-edge-component/state.svelte';
 
 	let props: RecipeOntologyEdgeComponent = $props();
 	const state = createOntologyEdgeComponentState(() => props);

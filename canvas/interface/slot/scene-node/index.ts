@@ -6,7 +6,7 @@ export interface SceneNode {
 	label?: string;
 	description?: string;
 	iconText?: string;
-	position: import('../scene-node-point').SceneNodePoint;
+	position: import('$stylist/canvas/interface/slot/scene-node-point').SceneNodePoint;
 	depth: number;
 	accent: string;
 	layer?: TokenZIndex;

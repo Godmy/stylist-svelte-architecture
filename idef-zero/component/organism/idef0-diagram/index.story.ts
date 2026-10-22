@@ -1,4 +1,4 @@
-import Idef0Diagram from './index.svelte';
+import Idef0Diagram from '$stylist/idef-zero/component/organism/idef0-diagram/index.svelte';
 import type { RecipeIdef0Diagram } from '$stylist/idef-zero/interface/recipe/idef0-diagram';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

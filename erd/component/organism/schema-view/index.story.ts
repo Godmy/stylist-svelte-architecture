@@ -1,4 +1,4 @@
-import SchemaView from './index.svelte';
+import SchemaView from '$stylist/erd/component/organism/schema-view/index.svelte';
 import type { RecipeErdSchemaView } from '$stylist/erd/interface/recipe/erd-schema-view';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { DEFAULT_SCHEMA_TEXT } from '$stylist/erd/const/value/schema-text';

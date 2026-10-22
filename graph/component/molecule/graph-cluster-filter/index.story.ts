@@ -1,4 +1,4 @@
-import GraphClusterFilter from './index.svelte';
+import GraphClusterFilter from '$stylist/graph/component/molecule/graph-cluster-filter/index.svelte';
 import type { RecipeGraphClusterFilter } from '$stylist/graph/interface/recipe/graph-cluster-filter';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

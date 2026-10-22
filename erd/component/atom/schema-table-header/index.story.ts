@@ -1,4 +1,4 @@
-import SchemaTableHeader from './index.svelte';
+import SchemaTableHeader from '$stylist/erd/component/atom/schema-table-header/index.svelte';
 import type { RecipeErdTableHeader } from '$stylist/erd/interface/recipe/erd-table-header';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

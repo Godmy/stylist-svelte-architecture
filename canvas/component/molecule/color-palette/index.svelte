@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { RecipeColorPalette } from '$stylist/canvas/interface/recipe/color-palette';
-	import createColorPaletteState from './state.svelte';
+	import createColorPaletteState from '$stylist/canvas/component/molecule/color-palette/state.svelte';
 
 	let props: RecipeColorPalette = $props();
 	const state = createColorPaletteState(() => props);

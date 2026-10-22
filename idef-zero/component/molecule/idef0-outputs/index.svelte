@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import type { RecipeIdef0Io } from '$stylist/idef-zero/interface/recipe/idef0-io';
-	import createIdef0OutputsState from './state.svelte';
+	import createIdef0OutputsState from '$stylist/idef-zero/component/molecule/idef0-outputs/state.svelte';
 	import Idef0Connector from '$stylist/idef-zero/component/atom/idef0-connector/index.svelte';
 
 	let props: RecipeIdef0Io & HTMLAttributes<HTMLDivElement> = $props();

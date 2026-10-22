@@ -10,7 +10,7 @@
 	import WorkspacePalette from '$stylist/workspace/component/organism/workspace-palette/index.svelte';
 	import Minimap from '$stylist/workspace/component/organism/minimap/index.svelte';
 	import type { RecipeWorkspace } from '$stylist/workspace/interface/recipe/workspace';
-	import createWorkspaceState from './state.svelte';
+	import createWorkspaceState from '$stylist/workspace/component/organism/workspace/state.svelte';
 
 	let props: RecipeWorkspace = $props();
 	const state = createWorkspaceState(() => props);

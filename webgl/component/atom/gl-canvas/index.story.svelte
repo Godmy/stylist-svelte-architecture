@@ -1,5 +1,5 @@
 <script lang="ts">
-	import GlCanvas from './index.svelte';
+	import GlCanvas from '$stylist/webgl/component/atom/gl-canvas/index.svelte';
 	import type { RecipeGlCanvas } from '$stylist/webgl/interface/recipe/gl-canvas';
 
 	// Render of index.story.ts: the canvas draws only through the frame callback, and it fills a sized frame.

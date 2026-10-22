@@ -3,7 +3,7 @@
 	import type { RecipeGraphNodeCard } from '$stylist/workspace/interface/recipe/graph-node-card';
 	import Button from '$stylist/button/component/atom/button/index.svelte';
 	import Icon from '$stylist/svg/component/atom/icon/index.svelte';
-	import { createGraphNodeCardState } from './state.svelte';
+	import { createGraphNodeCardState } from '$stylist/workspace/component/molecule/graph-node-card/state.svelte';
 
 	let props: RecipeGraphNodeCard & HTMLAttributes<HTMLDivElement> = $props();
 	const state = createGraphNodeCardState(() => props);

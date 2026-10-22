@@ -1,4 +1,4 @@
-import GraphEdge from './index.svelte';
+import GraphEdge from '$stylist/graph/component/atom/graph-edge/index.svelte';
 import type { RecipeGraphEdge } from '$stylist/graph/interface/recipe/graph-edge';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import type { TokenSize } from '$stylist/design-token/type/alias/size';

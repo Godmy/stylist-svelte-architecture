@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Viewport from './index.svelte';
+	import Viewport from '$stylist/workspace/component/atom/viewport/index.svelte';
 	import type { RecipeViewport } from '$stylist/workspace/interface/recipe/viewport';
 
 	// Render of index.story.ts: the viewport moves the camera it receives, so the story owns it as local state, with world content.

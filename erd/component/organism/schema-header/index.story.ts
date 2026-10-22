@@ -1,4 +1,4 @@
-import SchemaHeader from './index.svelte';
+import SchemaHeader from '$stylist/erd/component/organism/schema-header/index.svelte';
 import type { RecipeSchemaHeader } from '$stylist/erd/interface/recipe/schema-header';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

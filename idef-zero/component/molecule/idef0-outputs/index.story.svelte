@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Idef0Outputs from './index.svelte';
+	import Idef0Outputs from '$stylist/idef-zero/component/molecule/idef0-outputs/index.svelte';
 	import type { RecipeIdef0Io } from '$stylist/idef-zero/interface/recipe/idef0-io';
 
 	// Render of index.story.ts: the connectors are an SVG group drawn against a box outline.

@@ -1,4 +1,4 @@
-import Idef0Inputs from './index.svelte';
+import Idef0Inputs from '$stylist/idef-zero/component/molecule/idef0-inputs/index.svelte';
 import type { RecipeIdef0Io } from '$stylist/idef-zero/interface/recipe/idef0-io';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

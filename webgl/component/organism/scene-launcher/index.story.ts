@@ -1,4 +1,4 @@
-import SceneLauncher from './index.svelte';
+import SceneLauncher from '$stylist/webgl/component/organism/scene-launcher/index.svelte';
 import type { RecipeSceneLauncher } from '$stylist/webgl/interface/recipe/scene-launcher';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

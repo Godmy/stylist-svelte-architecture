@@ -1,4 +1,4 @@
-import OntologyEdgeComponent from './index.svelte';
+import OntologyEdgeComponent from '$stylist/graph/component/molecule/ontology-edge-component/index.svelte';
 import type { RecipeOntologyEdgeComponent } from '$stylist/graph/interface/recipe/ontology-edge-component';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import type { RecipeIdef0BlackBox } from '$stylist/idef-zero/interface/recipe/idef0-black-box';
-	import createIdef0BlackBoxState from './state.svelte';
+	import createIdef0BlackBoxState from '$stylist/idef-zero/component/molecule/idef0-black-box/state.svelte';
 	import Idef0FunctionBox from '$stylist/idef-zero/component/atom/idef0-function-box/index.svelte';
 	import Idef0Inputs from '$stylist/idef-zero/component/molecule/idef0-inputs/index.svelte';
 	import Idef0Outputs from '$stylist/idef-zero/component/molecule/idef0-outputs/index.svelte';

@@ -1,4 +1,4 @@
-import SceneCameraControl from './index.svelte';
+import SceneCameraControl from '$stylist/graph/component/molecule/scene-camera-control/index.svelte';
 import type { RecipeSceneCameraControl } from '$stylist/graph/interface/recipe/scene-camera-control';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

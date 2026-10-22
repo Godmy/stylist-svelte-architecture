@@ -1,4 +1,4 @@
-import ScreenshotSelector from './index.svelte';
+import ScreenshotSelector from '$stylist/canvas/component/molecule/screenshot-selector/index.svelte';
 import type { RecipeScreenshotSelector } from '$stylist/canvas/interface/recipe/screenshot-selector';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

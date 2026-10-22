@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import createDrawingSurfaceState from './state.svelte';
+	import createDrawingSurfaceState from '$stylist/canvas/component/molecule/drawing-surface/state.svelte';
 	import type { RecipeDrawingSurface } from '$stylist/canvas/interface/recipe/drawing-surface';
 	import type { SlotDrawingSurfaceCanvasClearedEvent } from '$stylist/canvas/interface/slot/drawing-surface-canvas-cleared-event';
 	import type { SlotDrawingSurfaceExposeMethodsEvent } from '$stylist/canvas/interface/slot/drawing-surface-expose-methods-event';

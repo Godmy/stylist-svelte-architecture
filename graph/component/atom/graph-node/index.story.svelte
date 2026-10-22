@@ -1,6 +1,6 @@
 <script lang="ts">
-	import SlotGraphNode from './index.svelte';
-	import SlotGraphEdge from '../graph-edge/index.svelte';
+	import SlotGraphNode from '$stylist/graph/component/atom/graph-node/index.svelte';
+	import SlotGraphEdge from '$stylist/graph/component/atom/graph-edge/index.svelte';
 	import type { RecipeGraphNode } from '$stylist/graph/interface/recipe/graph-node';
 	import type { TokenSize as GraphNodeSize } from '$stylist/design-token/type/alias/size';
 

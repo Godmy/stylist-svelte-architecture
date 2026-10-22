@@ -2,7 +2,7 @@
 	// Render of index.story.ts: the graph data is fetched from the indexation output at mount.
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
-	import ZwickyScene from './index.svelte';
+	import ZwickyScene from '$stylist/graph/component/organism/zwicky-scene/index.svelte';
 	import type { RecipeZwickyScene } from '$stylist/graph/interface/recipe/zwicky-scene';
 	import type { GraphJsonInput } from '$stylist/graph/interface/slot/graph-json-input';
 

@@ -1,4 +1,4 @@
-import GraphTooltip from './index.svelte';
+import GraphTooltip from '$stylist/graph/component/atom/graph-tooltip/index.svelte';
 import type { RecipeGraphTooltip } from '$stylist/graph/interface/recipe/graph-tooltip';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

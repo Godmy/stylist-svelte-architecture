@@ -1,4 +1,4 @@
-import TurtleDissolveScene from './index.svelte';
+import TurtleDissolveScene from '$stylist/webgl/component/molecule/turtle-dissolve-scene/index.svelte';
 import type { RecipeTurtleDissolveScene } from '$stylist/webgl/interface/recipe/turtle-dissolve-scene';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

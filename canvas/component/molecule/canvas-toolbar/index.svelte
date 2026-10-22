@@ -3,7 +3,7 @@
 	import type { SlotCanvasToolbarDrawingOptions } from '$stylist/canvas/interface/slot/canvas-toolbar-drawing-options';
 	import type { CanvasToolbarDrawingTool } from '$stylist/canvas/type/alias/canvas-toolbar-drawing-tool';
 	import type { RecipeCanvasToolbar } from '$stylist/canvas/interface/recipe/canvas-toolbar';
-	import createCanvasToolbarState from './state.svelte';
+	import createCanvasToolbarState from '$stylist/canvas/component/molecule/canvas-toolbar/state.svelte';
 
 	let dispatch = createEventDispatcher<{
 		'tool-change': { tool: CanvasToolbarDrawingTool; options: SlotCanvasToolbarDrawingOptions };

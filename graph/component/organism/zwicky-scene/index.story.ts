@@ -1,4 +1,4 @@
-import ZwickyScene from './index.svelte';
+import ZwickyScene from '$stylist/graph/component/organism/zwicky-scene/index.svelte';
 import type { RecipeZwickyScene } from '$stylist/graph/interface/recipe/zwicky-scene';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

@@ -1,4 +1,4 @@
-import FieldHighlighter from './index.svelte';
+import FieldHighlighter from '$stylist/graph/component/molecule/field-highlighter/index.svelte';
 import type { RecipeFieldHighlighter } from '$stylist/graph/interface/recipe/field-highlighter';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

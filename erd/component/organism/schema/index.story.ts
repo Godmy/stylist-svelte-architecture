@@ -1,4 +1,4 @@
-import Schema from './index.svelte';
+import Schema from '$stylist/erd/component/organism/schema/index.svelte';
 import type { RecipeSchema } from '$stylist/erd/interface/recipe/schema';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import schemaSource from '$stylist/erd/data/md/schema/schema.md?raw';

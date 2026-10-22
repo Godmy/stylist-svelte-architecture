@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import type { RecipeNodeIcon } from '$stylist/graph/interface/recipe/node-icon';
-	import { createNodeIconState } from './state.svelte';
+	import { createNodeIconState } from '$stylist/graph/component/atom/node-icon/state.svelte';
 
 	let props: RecipeNodeIcon & HTMLAttributes<HTMLDivElement> = $props();
 	const state = createNodeIconState(() => props);

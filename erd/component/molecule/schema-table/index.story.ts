@@ -1,4 +1,4 @@
-import SchemaTable from './index.svelte';
+import SchemaTable from '$stylist/erd/component/molecule/schema-table/index.svelte';
 import type { RecipeErdTable } from '$stylist/erd/interface/recipe/erd-table';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

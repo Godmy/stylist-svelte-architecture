@@ -1,4 +1,4 @@
-import Scene from './index.svelte';
+import Scene from '$stylist/graph/component/organism/scene/index.svelte';
 import type { RecipeScene } from '$stylist/graph/interface/recipe/scene';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

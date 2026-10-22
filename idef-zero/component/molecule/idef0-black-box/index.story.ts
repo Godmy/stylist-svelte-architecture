@@ -1,4 +1,4 @@
-import Idef0BlackBox from './index.svelte';
+import Idef0BlackBox from '$stylist/idef-zero/component/molecule/idef0-black-box/index.svelte';
 import type { RecipeIdef0BlackBox } from '$stylist/idef-zero/interface/recipe/idef0-black-box';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

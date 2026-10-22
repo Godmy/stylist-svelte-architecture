@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { RecipeNodeProperties as NodePropertiesProps } from '$stylist/workspace/interface/recipe/node-properties';
-	import createNodePropertiesState from './state.svelte';
+	import createNodePropertiesState from '$stylist/workspace/component/molecule/node-properties/state.svelte';
 	import IconButton from '$stylist/button/component/atom/icon-button/index.svelte';
 	import NodeProperty from '$stylist/workspace/component/atom/node-property/index.svelte';
 	import type { TokenPropertyType } from '$stylist/workspace/type/alias/property-type';

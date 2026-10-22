@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ConcentricCirclesScene from './index.svelte';
+	import ConcentricCirclesScene from '$stylist/webgl/component/molecule/concentric-circles-scene/index.svelte';
 	import type { RecipeConcentricCirclesScene } from '$stylist/webgl/interface/recipe/concentric-circles-scene';
 
 	// Render of index.story.ts: the WebGL canvas fills its parent, so the scene needs a sized frame.

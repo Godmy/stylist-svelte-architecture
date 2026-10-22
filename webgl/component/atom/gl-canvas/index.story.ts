@@ -1,4 +1,4 @@
-import GlCanvas from './index.svelte';
+import GlCanvas from '$stylist/webgl/component/atom/gl-canvas/index.svelte';
 import type { RecipeGlCanvas } from '$stylist/webgl/interface/recipe/gl-canvas';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

@@ -1,4 +1,4 @@
-import ConcentricCirclesScene from './index.svelte';
+import ConcentricCirclesScene from '$stylist/webgl/component/molecule/concentric-circles-scene/index.svelte';
 import type { RecipeConcentricCirclesScene } from '$stylist/webgl/interface/recipe/concentric-circles-scene';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

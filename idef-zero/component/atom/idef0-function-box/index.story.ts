@@ -1,4 +1,4 @@
-import Idef0FunctionBox from './index.svelte';
+import Idef0FunctionBox from '$stylist/idef-zero/component/atom/idef0-function-box/index.svelte';
 import type { RecipeIdef0FunctionBox } from '$stylist/idef-zero/interface/recipe/idef0-function-box';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

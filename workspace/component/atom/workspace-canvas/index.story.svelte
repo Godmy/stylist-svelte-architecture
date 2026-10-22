@@ -1,6 +1,6 @@
 <script lang="ts">
 	import WorkspaceNode from '$stylist/workspace/component/organism/workspace-node/index.svelte';
-	import WorkspaceCanvas from './index.svelte';
+	import WorkspaceCanvas from '$stylist/workspace/component/atom/workspace-canvas/index.svelte';
 	import type { RecipeWorkspaceCanvas } from '$stylist/workspace/interface/recipe/workspace-canvas';
 
 	// Render of index.story.ts: the canvas is shown with workspace nodes as its children.

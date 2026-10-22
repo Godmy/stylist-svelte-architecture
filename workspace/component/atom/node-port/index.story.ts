@@ -1,4 +1,4 @@
-import NodePort from './index.svelte';
+import NodePort from '$stylist/workspace/component/atom/node-port/index.svelte';
 import type { RecipeNodePort } from '$stylist/workspace/interface/recipe/node-port';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { TOKEN_SIZE } from '$stylist/design-token/const/array/size';

@@ -1,4 +1,4 @@
-import GraphvizDirectedEdge from './index.svelte';
+import GraphvizDirectedEdge from '$stylist/graph/component/molecule/graphviz-directed-edge/index.svelte';
 import type { RecipeGraphvizDirectedEdge } from '$stylist/graph/interface/recipe/graphviz-directed-edge';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

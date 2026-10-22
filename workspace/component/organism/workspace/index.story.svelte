@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Workspace from './index.svelte';
+	import Workspace from '$stylist/workspace/component/organism/workspace/index.svelte';
 	import type { RecipeWorkspace } from '$stylist/workspace/interface/recipe/workspace';
 	import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
 	import type { SlotNodeConnection } from '$stylist/workspace/interface/slot/node-connection';

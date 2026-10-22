@@ -1,4 +1,4 @@
-import WorkspaceCanvas from './index.svelte';
+import WorkspaceCanvas from '$stylist/workspace/component/atom/workspace-canvas/index.svelte';
 import type { RecipeWorkspaceCanvas } from '$stylist/workspace/interface/recipe/workspace-canvas';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { TOKEN_PAN_MODES } from '$stylist/workspace/const/array/pan-mode';

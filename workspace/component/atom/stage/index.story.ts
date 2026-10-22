@@ -1,4 +1,4 @@
-import Stage from './index.svelte';
+import Stage from '$stylist/workspace/component/atom/stage/index.svelte';
 import type { RecipeStage } from '$stylist/workspace/interface/recipe/stage';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import type { HtmlElementNode } from '$stylist/html/type/struct/html-element-node';

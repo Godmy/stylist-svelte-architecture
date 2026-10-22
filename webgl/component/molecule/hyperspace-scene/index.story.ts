@@ -1,4 +1,4 @@
-import HyperspaceScene from './index.svelte';
+import HyperspaceScene from '$stylist/webgl/component/molecule/hyperspace-scene/index.svelte';
 import type { RecipeHyperspaceScene } from '$stylist/webgl/interface/recipe/hyperspace-scene';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

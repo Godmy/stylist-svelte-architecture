@@ -1,4 +1,4 @@
-import ColorPalette from './index.svelte';
+import ColorPalette from '$stylist/canvas/component/molecule/color-palette/index.svelte';
 import type { RecipeColorPalette } from '$stylist/canvas/interface/recipe/color-palette';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

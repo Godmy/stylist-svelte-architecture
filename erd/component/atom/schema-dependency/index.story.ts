@@ -1,4 +1,4 @@
-import SchemaDependency from './index.svelte';
+import SchemaDependency from '$stylist/erd/component/atom/schema-dependency/index.svelte';
 import type { RecipeErdDependency } from '$stylist/erd/interface/recipe/erd-dependency';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

@@ -3,7 +3,7 @@
 	import InputText from '$stylist/input/component/molecule/input-text/index.svelte';
 	import Icon from '$stylist/svg/component/atom/icon/index.svelte';
 	import Separator from '$stylist/layout/component/atom/separator/index.svelte';
-	import createWorkspacePaletteState from './state.svelte';
+	import createWorkspacePaletteState from '$stylist/workspace/component/organism/workspace-palette/state.svelte';
 	import type { RecipeWorkspacePalette as WorkspacePaletteProps } from '$stylist/workspace/interface/recipe/workspace-palette';
 
 	let {

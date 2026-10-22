@@ -1,4 +1,4 @@
-import NodeConnection from './index.svelte';
+import NodeConnection from '$stylist/workspace/component/atom/node-connection/index.svelte';
 import type { RecipeNodeConnection } from '$stylist/workspace/interface/recipe/node-connection';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { TOKEN_TRAJECTORY } from '$stylist/workspace/const/array/trajectory';

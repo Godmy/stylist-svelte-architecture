@@ -1,4 +1,4 @@
-import GraphNode from './index.svelte';
+import GraphNode from '$stylist/graph/component/atom/graph-node/index.svelte';
 import type { RecipeGraphNode } from '$stylist/graph/interface/recipe/graph-node';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { TOKEN_SIZE } from '$stylist/design-token/const/array/size';

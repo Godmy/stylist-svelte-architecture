@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { RecipeStage } from '$stylist/workspace/interface/recipe/stage';
-	import createStageState from './state.svelte';
+	import createStageState from '$stylist/workspace/component/atom/stage/state.svelte';
 
 	let props: RecipeStage = $props();
 	const state = createStageState(() => props);

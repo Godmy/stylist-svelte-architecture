@@ -1,4 +1,4 @@
-import WorkspacePalette from './index.svelte';
+import WorkspacePalette from '$stylist/workspace/component/organism/workspace-palette/index.svelte';
 import type { RecipeWorkspacePalette } from '$stylist/workspace/interface/recipe/workspace-palette';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { TOKEN_NODE_TYPE } from '$stylist/workspace/const/array/node-type';

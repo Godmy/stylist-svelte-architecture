@@ -1,4 +1,4 @@
-import Minimap from './index.svelte';
+import Minimap from '$stylist/workspace/component/organism/minimap/index.svelte';
 import type { RecipeMinimap } from '$stylist/workspace/interface/recipe/minimap';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

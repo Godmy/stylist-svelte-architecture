@@ -1,4 +1,4 @@
-import Workspace from './index.svelte';
+import Workspace from '$stylist/workspace/component/organism/workspace/index.svelte';
 import type { RecipeWorkspace } from '$stylist/workspace/interface/recipe/workspace';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { TOKEN_PAN_MODES } from '$stylist/workspace/const/array/pan-mode';

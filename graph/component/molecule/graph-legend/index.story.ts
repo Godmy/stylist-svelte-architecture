@@ -1,4 +1,4 @@
-import GraphLegend from './index.svelte';
+import GraphLegend from '$stylist/graph/component/molecule/graph-legend/index.svelte';
 import type { RecipeGraphLegend } from '$stylist/graph/interface/recipe/graph-legend';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

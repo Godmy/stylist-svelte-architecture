@@ -1,4 +1,4 @@
-import CollaborativeEditor from './index.svelte';
+import CollaborativeEditor from '$stylist/canvas/component/organism/collaborative-editor/index.svelte';
 import type { RecipeCollaborativeEditor } from '$stylist/canvas/interface/recipe/collaborative-editor';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

@@ -3,7 +3,7 @@
 	import SchemaHeader from '$stylist/erd/component/organism/schema-header/index.svelte';
 	import SchemaView from '$stylist/erd/component/organism/schema-view/index.svelte';
 	import type { RecipeSchema } from '$stylist/erd/interface/recipe/schema';
-	import createSchemaState from './state.svelte';
+	import createSchemaState from '$stylist/erd/component/organism/schema/state.svelte';
 
 	let props: RecipeSchema = $props();
 

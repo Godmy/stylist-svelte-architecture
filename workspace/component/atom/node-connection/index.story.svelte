@@ -1,5 +1,5 @@
 <script lang="ts">
-	import NodeConnection from './index.svelte';
+	import NodeConnection from '$stylist/workspace/component/atom/node-connection/index.svelte';
 	import type { RecipeNodeConnection } from '$stylist/workspace/interface/recipe/node-connection';
 
 	// Render of index.story.ts: the connection draws an SVG group and needs an <svg> parent.

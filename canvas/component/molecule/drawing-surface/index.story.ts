@@ -1,4 +1,4 @@
-import DrawingSurface from './index.svelte';
+import DrawingSurface from '$stylist/canvas/component/molecule/drawing-surface/index.svelte';
 import type { RecipeDrawingSurface } from '$stylist/canvas/interface/recipe/drawing-surface';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

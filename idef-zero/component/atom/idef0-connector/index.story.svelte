@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Idef0Connector from './index.svelte';
+	import Idef0Connector from '$stylist/idef-zero/component/atom/idef0-connector/index.svelte';
 	import type { RecipeIdef0Connector } from '$stylist/idef-zero/interface/recipe/idef0-connector';
 
 	// Render of index.story.ts: the connector is an SVG fragment that needs an svg parent.

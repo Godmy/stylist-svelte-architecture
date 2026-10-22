@@ -1,4 +1,4 @@
-import CanvasToolbar from './index.svelte';
+import CanvasToolbar from '$stylist/canvas/component/molecule/canvas-toolbar/index.svelte';
 import type { RecipeCanvasToolbar } from '$stylist/canvas/interface/recipe/canvas-toolbar';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { CANVAS_TOOLBAR_DRAWING_TOOL } from '$stylist/canvas/const/array/canvas-toolbar-drawing-tool';

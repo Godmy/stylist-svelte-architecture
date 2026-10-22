@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import createSceneState from './state.svelte';
+	import createSceneState from '$stylist/graph/component/organism/scene/state.svelte';
 	import type { RecipeScene } from '$stylist/graph/interface/recipe/scene';
 	import SceneCameraControl from '$stylist/graph/component/molecule/scene-camera-control/index.svelte';
 

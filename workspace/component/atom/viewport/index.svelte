@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { RecipeViewport } from '$stylist/workspace/interface/recipe/viewport';
-	import createViewportState from './state.svelte';
+	import createViewportState from '$stylist/workspace/component/atom/viewport/state.svelte';
 	import Stage from '$stylist/workspace/component/atom/stage/index.svelte';
 	import Grid from '$stylist/layout/component/atom/grid/index.svelte';
 

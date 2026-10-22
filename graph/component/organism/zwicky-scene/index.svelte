@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import createZwickySceneState from './state.svelte';
+	import createZwickySceneState from '$stylist/graph/component/organism/zwicky-scene/state.svelte';
 	import GraphClusterFilter from '$stylist/graph/component/molecule/graph-cluster-filter/index.svelte';
 	import GraphLegend from '$stylist/graph/component/molecule/graph-legend/index.svelte';
 	import GraphTooltip from '$stylist/graph/component/atom/graph-tooltip/index.svelte';

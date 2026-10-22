@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
-	import GraphClusterFilter from './index.svelte';
+	import GraphClusterFilter from '$stylist/graph/component/molecule/graph-cluster-filter/index.svelte';
 	import type { RecipeGraphClusterFilter } from '$stylist/graph/interface/recipe/graph-cluster-filter';
 
 	// Render of index.story.ts: the active layers are local state toggled by onClusterClick.

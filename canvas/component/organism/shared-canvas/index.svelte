@@ -3,7 +3,7 @@
 	import type { RecipeSharedCanvas } from '$stylist/canvas/interface/recipe/shared-canvas';
 	import BaseIcon from '$stylist/svg/component/atom/icon/index.svelte';
 	import { ObjectManagerSharedCanvas } from '$stylist/canvas/class/manager/shared-canvas/index';
-	import createSharedCanvasState from './state.svelte';
+	import createSharedCanvasState from '$stylist/canvas/component/organism/shared-canvas/state.svelte';
 
 	const contract: RecipeSharedCanvas = $props();
 	const state = createSharedCanvasState(() => contract);

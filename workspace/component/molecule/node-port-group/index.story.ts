@@ -1,4 +1,4 @@
-import NodePortGroup from './index.svelte';
+import NodePortGroup from '$stylist/workspace/component/molecule/node-port-group/index.svelte';
 import type { RecipeNodePortGroup } from '$stylist/workspace/interface/recipe/node-port-group';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { TOKEN_SIZE } from '$stylist/design-token/const/array/size';

@@ -1,4 +1,4 @@
-import GraphDot from './index.svelte';
+import GraphDot from '$stylist/graph/component/atom/graph-dot/index.svelte';
 import type { RecipeGraphDot } from '$stylist/graph/interface/recipe/graph-dot';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

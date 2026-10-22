@@ -1,4 +1,4 @@
-import GraphNodeCard from './index.svelte';
+import GraphNodeCard from '$stylist/workspace/component/molecule/graph-node-card/index.svelte';
 import type { RecipeGraphNodeCard } from '$stylist/workspace/interface/recipe/graph-node-card';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { RecipeNodePortGroup } from '$stylist/workspace/interface/recipe/node-port-group';
-	import createNodePortGroupState from './state.svelte';
+	import createNodePortGroupState from '$stylist/workspace/component/molecule/node-port-group/state.svelte';
 	import NodePort from '$stylist/workspace/component/atom/node-port/index.svelte';
 	import Divider from '$stylist/layout/component/atom/divider/index.svelte';
 

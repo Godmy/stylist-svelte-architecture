@@ -1,4 +1,4 @@
-import NodeProperties from './index.svelte';
+import NodeProperties from '$stylist/workspace/component/molecule/node-properties/index.svelte';
 import type { RecipeNodeProperties } from '$stylist/workspace/interface/recipe/node-properties';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { TOKEN_SIZE } from '$stylist/design-token/const/array/size';

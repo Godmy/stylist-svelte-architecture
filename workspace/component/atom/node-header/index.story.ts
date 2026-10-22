@@ -1,4 +1,4 @@
-import NodeHeader from './index.svelte';
+import NodeHeader from '$stylist/workspace/component/atom/node-header/index.svelte';
 import type { RecipeNodeHeader } from '$stylist/workspace/interface/recipe/node-header';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { TOKEN_SIZE } from '$stylist/design-token/const/array/size';

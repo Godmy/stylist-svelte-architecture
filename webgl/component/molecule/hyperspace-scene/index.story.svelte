@@ -1,5 +1,5 @@
 <script lang="ts">
-	import HyperspaceScene from './index.svelte';
+	import HyperspaceScene from '$stylist/webgl/component/molecule/hyperspace-scene/index.svelte';
 	import type { RecipeHyperspaceScene } from '$stylist/webgl/interface/recipe/hyperspace-scene';
 
 	// Render of index.story.ts: the WebGL canvas fills its parent, so the scene needs a sized frame.

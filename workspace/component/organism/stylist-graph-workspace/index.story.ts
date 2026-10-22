@@ -1,4 +1,4 @@
-import StylistGraphWorkspace from './index.svelte';
+import StylistGraphWorkspace from '$stylist/workspace/component/organism/stylist-graph-workspace/index.svelte';
 import type { RecipeStylistGraphWorkspace } from '$stylist/workspace/interface/recipe/stylist-graph-workspace';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import SchemaDependency from './index.svelte';
+	import SchemaDependency from '$stylist/erd/component/atom/schema-dependency/index.svelte';
 	import type { RecipeErdDependency } from '$stylist/erd/interface/recipe/erd-dependency';
 
 	// Render of index.story.ts: the marker is an SVG fragment drawn between two table boxes that follow y2.

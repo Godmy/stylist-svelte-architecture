@@ -1,4 +1,4 @@
-import NodeIcon from './index.svelte';
+import NodeIcon from '$stylist/graph/component/atom/node-icon/index.svelte';
 import type { RecipeNodeIcon } from '$stylist/graph/interface/recipe/node-icon';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 

@@ -1,4 +1,4 @@
-import WorkspaceToolbar from './index.svelte';
+import WorkspaceToolbar from '$stylist/workspace/component/molecule/workspace-toolbar/index.svelte';
 import type { RecipeWorkspaceToolbar } from '$stylist/workspace/interface/recipe/workspace-toolbar';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { TOKEN_SIZE } from '$stylist/design-token/const/array/size';
