@@ -2,6 +2,7 @@ import { GraphScriptManager } from '$stylist/graph/class/manager/graph-script';
 import { Camera } from '$stylist/graph/class/manager/camera';
 import { ZWICKY_LAYOUT_SCALE } from '$stylist/graph/const/value/zwicky-layout-scale';
 import type { ZwickyNode } from '$stylist/graph/interface/slot/zwicky-node';
+import type { GraphTheme } from '$stylist/graph/type/alias/graph-theme';
 import instancedVert from '$stylist/graph/data/shader/vertex/instanced.vert?raw';
 import instancedFrag from '$stylist/graph/data/shader/fragment/instanced.frag?raw';
 import edgeVert from '$stylist/graph/data/shader/vertex/edge.vert?raw';
@@ -15,6 +16,10 @@ const QUAD_VERTICES = new Float32Array([
 export class InstancedGraphManager {
 	private canvas: HTMLCanvasElement | null = null;
 	private gl: WebGL2RenderingContext | null = null;
+	private background: readonly [number, number, number] = [0.02, 0.025, 0.04];
+	private theme: GraphTheme = 'dark';
+	private edgeTint: readonly [number, number, number] = [1, 1, 1];
+	private edgeFilter: 'both' | 'any' = 'both';
 	private animFrameId: number | null = null;
 	private time = 0;
 
@@ -75,6 +80,26 @@ export class InstancedGraphManager {
 
 	onSelect: ((node: ZwickyNode) => void) | null = null;
 
+	/** Canvas clear colour (RGB 0..1); applies at once when the scene is running. */
+	setBackground(color: readonly [number, number, number]): void {
+		this.background = color;
+		this.gl?.clearColor(...color, 1);
+	}
+
+	/** Light: a paper canvas and source-to-target gradient edges mixed with `edgeTint`. */
+	setTheme(theme: GraphTheme, edgeTint?: readonly [number, number, number]): void {
+		this.theme = theme;
+		if (edgeTint) this.edgeTint = edgeTint;
+		this.setBackground(theme === 'light' ? [0.965, 0.957, 0.94] : [0.02, 0.025, 0.04]);
+		this.needsEdgeRebuild = true;
+	}
+
+	/** 'any' keeps an edge under a filter when one of its ends passes (default 'both'). */
+	setEdgeFilter(mode: 'both' | 'any'): void {
+		this.edgeFilter = mode;
+		this.needsEdgeRebuild = true;
+	}
+
 	start(canvas: HTMLCanvasElement): void {
 		this.stop();
 		this.canvas = canvas;
@@ -102,7 +127,7 @@ export class InstancedGraphManager {
 		gl.enable(gl.DEPTH_TEST);
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-		gl.clearColor(0.02, 0.025, 0.04, 1);
+		gl.clearColor(...this.background, 1);
 
 		this.setupNodeVAO();
 		this.setupEdgeVAO();
@@ -344,7 +369,10 @@ export class InstancedGraphManager {
 			this.edges,
 			this.selectedId,
 			this.domainFilter,
-			this.clusterFilter
+			this.clusterFilter,
+			this.theme,
+			this.edgeTint,
+			this.edgeFilter
 		);
 		this.edgeVertexCount = data.length / 6;
 
@@ -380,7 +408,11 @@ export class InstancedGraphManager {
 			gl.useProgram(this.edgeProgram);
 			gl.uniformMatrix4fv(this.uViewEdge, false, view);
 			gl.uniformMatrix4fv(this.uProjEdge, false, proj);
-			gl.uniform1f(this.uAlphaEdge, this.selectedId ? 0.65 : 0.15);
+			// Pastel lines on a light canvas need more opacity than dimmed ones on the dark.
+			gl.uniform1f(
+				this.uAlphaEdge,
+				this.theme === 'light' ? (this.selectedId ? 0.95 : 0.85) : this.selectedId ? 0.65 : 0.15
+			);
 			gl.bindVertexArray(this.edgeVAO);
 			gl.drawArrays(gl.LINES, 0, this.edgeVertexCount);
 			gl.bindVertexArray(null);

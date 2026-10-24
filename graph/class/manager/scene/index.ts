@@ -21,6 +21,7 @@ export class SceneObjectManager {
 
 	private canvas: HTMLCanvasElement | null = null;
 	private gl: WebGL2RenderingContext | null = null;
+	private background: readonly [number, number, number] = [0.025, 0.032, 0.052];
 	private animationFrameId: number | null = null;
 	private program: WebGLProgram | null = null;
 	private sceneGraph: SceneGraph | null = null;
@@ -50,7 +51,14 @@ export class SceneObjectManager {
 	private hoveredAtomId: string | null = null;
 	private selectedAtomId: string | null = 'node-graph-core';
 
-	start(canvas: HTMLCanvasElement): void {
+	/** Canvas clear colour (RGB 0..1); applies at once when the scene is running. */
+	setBackground(color: readonly [number, number, number]): void {
+		this.background = color;
+		this.gl?.clearColor(...color, 1);
+	}
+
+	/** Draws `graph`, or the built-in demonstration graph when none is given. */
+	start(canvas: HTMLCanvasElement, graph?: SceneGraph): void {
 		if (this.canvas === canvas && this.gl) {
 			return;
 		}
@@ -74,7 +82,7 @@ export class SceneObjectManager {
 		this.tintColorLocation = this.gl.getUniformLocation(this.program, 'uTintColor');
 		this.tintStrengthLocation = this.gl.getUniformLocation(this.program, 'uTintStrength');
 
-		this.sceneGraph = GraphScriptManager.createDemoSceneGraph();
+		this.sceneGraph = graph ?? GraphScriptManager.createDemoSceneGraph();
 		this.sceneAtoms = this.sceneGraph.atoms;
 		this.atomBuffers = new Map(
 			this.sceneAtoms.map((atom) => [
@@ -97,7 +105,7 @@ export class SceneObjectManager {
 		this.applyCameraPreset(this.cameraPreset, this.focusTarget, this.radius);
 
 		this.gl.enable(this.gl.DEPTH_TEST);
-		this.gl.clearColor(0.025, 0.032, 0.052, 1);
+		this.gl.clearColor(...this.background, 1);
 
 		this.canvas.addEventListener('mousedown', this.handleMouseDown);
 		this.canvas.addEventListener('mousemove', this.handleMouseMove);

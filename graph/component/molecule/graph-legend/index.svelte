@@ -3,22 +3,25 @@
 	import GraphDot from '$stylist/graph/component/atom/graph-dot/index.svelte';
 	import type { RecipeGraphLegend } from '$stylist/graph/interface/recipe/graph-legend';
 
-	let { activeDomains, onDomainClick }: RecipeGraphLegend = $props();
+	let { activeDomains, onDomainClick, domains, title }: RecipeGraphLegend = $props();
 
-	const entries = Object.entries(ZWICKY_DOMAIN_COLOR);
+	// Own domains, or every library domain with its colour.
+	const entries = $derived(
+		domains ?? Object.entries(ZWICKY_DOMAIN_COLOR).map(([id, color]) => ({ id, label: id, color }))
+	);
 </script>
 
 <aside class="graph-legend">
-	<p class="graph-legend__title">Domains</p>
+	<p class="graph-legend__title">{title ?? 'Domains'}</p>
 	<ul class="graph-legend__list">
-		{#each entries as [domain, color] (domain)}
+		{#each entries as { id: domain, label, color } (domain)}
 			<li>
 				<button
 					class="graph-legend__item"
 					class:graph-legend__item--active={activeDomains?.has(domain)}
 					onclick={() => onDomainClick?.(domain)}
 				>
-					<GraphDot {color} label={domain} />
+					<GraphDot {color} {label} />
 				</button>
 			</li>
 		{/each}

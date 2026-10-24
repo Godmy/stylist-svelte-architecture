@@ -7,6 +7,8 @@ export interface ZwickyNode {
 	cluster: string;
 	joint: string;
 	family: string;
+	/** Display name from GraphJsonInput.labels. */
+	label?: string;
 	level: ZwickyLevel;
 	x: number;
 	y: number;

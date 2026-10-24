@@ -29,7 +29,9 @@
 		<div class="graph-tooltip__header">
 			<span class="graph-tooltip__dot" style="background:{dotColor};box-shadow:0 0 8px {dotColor}88"
 			></span>
-			<span class="graph-tooltip__family">{node.family || node.joint || node.domain}</span>
+			<span class="graph-tooltip__family"
+				>{node.label || node.family || node.joint || node.domain}</span
+			>
 		</div>
 
 		<!-- Path -->

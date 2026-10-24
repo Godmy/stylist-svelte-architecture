@@ -29,6 +29,18 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 		ClassNamesManager.merge('zwicky-scene__overlay', props.overlayClass?.toString() ?? '')
 	);
 	const title = $derived(props.title ?? 'Zwicky Graph');
+	const text = $derived({
+		badge: props.text?.badge ?? 'WebGL2 · Instanced',
+		nodes: props.text?.nodes ?? 'nodes',
+		edges: props.text?.edges ?? 'edges',
+		render: props.text?.render ?? 'render',
+		selected: props.text?.selected ?? 'selected',
+		dependencies: props.text?.dependencies ?? 'deps',
+		clear: props.text?.clear ?? '✕ clear all filters',
+		hint: props.text?.hint ?? 'Drag · Wheel · F fit · Click select · Pills filter',
+		clusters: props.text?.clusters,
+		domains: props.text?.domains
+	});
 
 	const restProps = $derived.by(() => {
 		const {
@@ -38,6 +50,9 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 			overlayClass: _oc,
 			class: _c,
 			onNodeSelect: _ns,
+			scheme: _s,
+			text: _tx,
+			theme: _th,
 			...rest
 		} = props;
 		return rest;
@@ -54,8 +69,11 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 		const input = props.data;
 		if (!input) return;
 
-		const { nodes, edges } = GraphScriptManager.parseZwickyGraph(input);
-		GraphScriptManager.layoutZwickyNodes(nodes);
+		const { nodes, edges } = GraphScriptManager.parseZwickyGraph(input, props.scheme);
+		GraphScriptManager.layoutZwickyNodes(
+			nodes,
+			props.scheme?.clusters.map((group) => group.id)
+		);
 		manager.setGraph(nodes, edges);
 		nodeCount = nodes.length;
 		edgeCount = edges.length;
@@ -64,6 +82,9 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 
 	function mount(canvas: HTMLCanvasElement | null): void {
 		if (!canvas) return;
+		// A light page gets a warm off-white canvas and pastel edges instead of the night sky.
+		if (props.theme === 'light') manager.setTheme('light', props.scheme?.edgeTint);
+		if (props.scheme?.edgeFilter) manager.setEdgeFilter(props.scheme.edgeFilter);
 		manager.start(canvas);
 		loadData();
 
@@ -124,6 +145,15 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 		},
 		get title() {
 			return title;
+		},
+		get text() {
+			return text;
+		},
+		get scheme() {
+			return props.scheme;
+		},
+		get theme() {
+			return props.theme ?? 'dark';
 		},
 		get restProps() {
 			return restProps;

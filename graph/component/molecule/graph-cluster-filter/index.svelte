@@ -3,7 +3,17 @@
 	import { ZWICKY_CLUSTER_COLOR } from '$stylist/graph/const/record/zwicky-cluster-color';
 	import type { RecipeGraphClusterFilter } from '$stylist/graph/interface/recipe/graph-cluster-filter';
 
-	let { activeClusters, onClusterClick }: RecipeGraphClusterFilter = $props();
+	let { activeClusters, onClusterClick, clusters, title }: RecipeGraphClusterFilter = $props();
+
+	// Own clusters, or the library's assembly layers in their fixed order.
+	const entries = $derived(
+		clusters ??
+			ZWICKY_CLUSTER_ORDER.map((cluster) => ({
+				id: cluster,
+				label: cluster,
+				color: ZWICKY_CLUSTER_COLOR[cluster] ?? ([0.5, 0.5, 0.5] as const)
+			}))
+	);
 
 	const hex = (v: number) =>
 		Math.round(v * 255)
@@ -15,10 +25,9 @@
 </script>
 
 <nav class="graph-cluster-filter" aria-label="Cluster filter">
-	<p class="graph-cluster-filter__label">Assembly layer</p>
+	<p class="graph-cluster-filter__label">{title ?? 'Assembly layer'}</p>
 	<ul class="graph-cluster-filter__list">
-		{#each ZWICKY_CLUSTER_ORDER as cluster (cluster)}
-			{@const color = ZWICKY_CLUSTER_COLOR[cluster] ?? [0.5, 0.5, 0.5]}
+		{#each entries as { id: cluster, label, color } (cluster)}
 			{@const cssColor = toHex(color)}
 			{@const active = activeClusters?.has(cluster) ?? false}
 			<li>
@@ -27,10 +36,10 @@
 					class:graph-cluster-filter__pill--active={active}
 					style="--c:{cssColor}"
 					onclick={() => onClusterClick?.(cluster)}
-					title="Toggle {cluster} layer"
+					title={clusters ? label : `Toggle ${cluster} layer`}
 				>
 					<span class="graph-cluster-filter__dot"></span>
-					{cluster}
+					{label}
 				</button>
 			</li>
 		{/each}

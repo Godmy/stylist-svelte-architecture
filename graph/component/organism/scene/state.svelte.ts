@@ -1,5 +1,6 @@
 import { ClassNamesManager } from '$stylist/layout/class/manager/class-names';
 import { SceneObjectManager } from '$stylist/graph/class/manager/scene/index';
+import { GraphScriptManager } from '$stylist/graph/class/manager/graph-script';
 import type { RecipeScene } from '$stylist/graph/interface/recipe/scene';
 import type { SceneDebugInfo } from '$stylist/graph/interface/slot/scene-debug-info';
 
@@ -64,6 +65,12 @@ export function createSceneState(getProps: () => RecipeScene) {
 	const overlayClass = $derived(
 		ClassNamesManager.merge('scene__overlay', props.overlayClass?.toString() ?? '')
 	);
+	const text = $derived({
+		nodes: props.text?.nodes ?? 'nodes',
+		links: props.text?.links ?? 'links',
+		frames: props.text?.frames ?? 'frames',
+		selected: props.text?.selected ?? 'selected'
+	});
 	const restProps = $derived.by(() => {
 		const {
 			title: _title,
@@ -72,6 +79,10 @@ export function createSceneState(getProps: () => RecipeScene) {
 			canvasClass: _canvasClass,
 			overlayClass: _overlayClass,
 			class: _class,
+			nodes: _nodes,
+			connections: _connections,
+			text: _text,
+			theme: _theme,
 			...rest
 		} = props;
 
@@ -90,7 +101,17 @@ export function createSceneState(getProps: () => RecipeScene) {
 		};
 
 		try {
-			sceneManager.start(canvas);
+			const light = props.theme === 'light';
+			if (light) sceneManager.setBackground([0.965, 0.957, 0.94]);
+			sceneManager.start(
+				canvas,
+				props.nodes
+					? GraphScriptManager.createSceneGraph(props.nodes, props.connections ?? [], {
+							label: title,
+							...(light && { floorColor: [0.9, 0.88, 0.84], nodeColor: [0.36, 0.4, 0.48] })
+						})
+					: undefined
+			);
 			debugInfo = sceneManager.getDebugInfo();
 			cameraControl = sceneManager.getCameraControlInfo();
 		} catch (error) {
@@ -153,6 +174,12 @@ export function createSceneState(getProps: () => RecipeScene) {
 		},
 		get restProps() {
 			return restProps;
+		},
+		get text() {
+			return text;
+		},
+		get theme() {
+			return props.theme ?? 'dark';
 		},
 		get debugInfo() {
 			return debugInfo;

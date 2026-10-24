@@ -18,7 +18,7 @@
 	const hasFilter = $derived(state.domainFilter.size > 0 || state.clusterFilter.size > 0);
 </script>
 
-<div class={state.containerClass} {...state.restProps}>
+<div class={state.containerClass} data-theme={state.theme} {...state.restProps}>
 	<canvas bind:this={canvasRef} class={state.canvasClass}></canvas>
 
 	<!-- Hover tooltip -->
@@ -32,34 +32,39 @@
 
 	<!-- Main info overlay -->
 	<div class={state.overlayClass}>
-		<span class="zwicky-scene__badge">WebGL2 · Instanced</span>
+		<span class="zwicky-scene__badge">{state.text.badge}</span>
 		<h2 class="zwicky-scene__title">{state.title}</h2>
 
 		<div class="zwicky-scene__metrics">
 			<div class="zwicky-scene__metric">
 				<span>{state.nodeCount.toLocaleString()}</span>
-				<small>nodes</small>
+				<small>{state.text.nodes}</small>
 			</div>
 			<div class="zwicky-scene__metric">
 				<span>{state.edgeCount.toLocaleString()}</span>
-				<small>edges</small>
+				<small>{state.text.edges}</small>
 			</div>
 			<div class="zwicky-scene__metric">
 				<span>{state.isLoaded ? 'GPU' : '—'}</span>
-				<small>render</small>
+				<small>{state.text.render}</small>
 			</div>
 		</div>
 
 		{#if state.selectedNode}
 			<div class="zwicky-scene__selection">
-				<small>selected</small>
+				<small>{state.text.selected}</small>
+				{#if state.selectedNode.label}<strong class="zwicky-scene__label"
+						>{state.selectedNode.label}</strong
+					>{/if}
 				<code class="zwicky-scene__path">{state.selectedNode.path}</code>
 				<div class="zwicky-scene__tags">
 					<span class="zwicky-scene__tag--domain">{state.selectedNode.domain}</span>
 					<span>{state.selectedNode.cluster}</span>
 					{#if state.selectedNode.joint}<span>{state.selectedNode.joint}</span>{/if}
 				</div>
-				<span class="zwicky-scene__deps-count">{state.selectedNode.dependencyIds.length} deps</span>
+				<span class="zwicky-scene__deps-count"
+					>{state.selectedNode.dependencyIds.length} {state.text.dependencies}</span
+				>
 			</div>
 		{/if}
 
@@ -68,21 +73,28 @@
 			<GraphClusterFilter
 				activeClusters={state.clusterFilter}
 				onClusterClick={state.toggleCluster}
+				clusters={state.scheme?.clusters}
+				title={state.text.clusters}
 			/>
 		</div>
 
 		<!-- Domain legend (secondary) -->
 		<div class="zwicky-scene__panel">
-			<GraphLegend activeDomains={state.domainFilter} onDomainClick={state.toggleDomain} />
+			<GraphLegend
+				activeDomains={state.domainFilter}
+				onDomainClick={state.toggleDomain}
+				domains={state.scheme?.domains}
+				title={state.text.domains}
+			/>
 		</div>
 
 		{#if hasFilter}
 			<button class="zwicky-scene__clear-btn" onclick={state.clearFilter}>
-				✕ clear all filters
+				{state.text.clear}
 			</button>
 		{/if}
 
-		<p class="zwicky-scene__hint">Drag · Wheel · F fit · Click select · Pills filter</p>
+		<p class="zwicky-scene__hint">{state.text.hint}</p>
 	</div>
 </div>
 
@@ -202,6 +214,12 @@
 		color: rgb(155 175 200);
 	}
 
+	.zwicky-scene__label {
+		display: block;
+		font-weight: 600;
+		line-height: 1.3;
+	}
+
 	.zwicky-scene__path {
 		font-family: 'Fira Code', ui-monospace, monospace;
 		font-size: 0.64rem;
@@ -266,6 +284,105 @@
 		line-height: 1.5;
 		border-top: 1px solid rgb(255 255 255 / 5%);
 		padding-top: 0.45rem;
+	}
+
+	/* Light theme: warm paper canvas, white panels, dark ink; nested panels follow. */
+	.zwicky-scene[data-theme='light'] {
+		background:
+			radial-gradient(ellipse at 20% 15%, rgb(120 170 210 / 16%), transparent 40%),
+			radial-gradient(ellipse at 80% 85%, rgb(200 160 110 / 14%), transparent 38%),
+			linear-gradient(145deg, #f8f6f1, #f3f0ea 55%, #efeae2);
+	}
+	[data-theme='light'] .zwicky-scene__overlay {
+		background: rgb(255 255 255 / 90%);
+		border-color: rgb(23 32 51 / 10%);
+		color: #1d2633;
+		box-shadow: 0 1rem 2.5rem rgb(23 32 51 / 12%);
+		scrollbar-color: rgb(23 32 51 / 18%) transparent;
+	}
+	[data-theme='light'] .zwicky-scene__badge {
+		border-color: rgb(20 130 100 / 30%);
+		color: #157a5f;
+	}
+	[data-theme='light'] .zwicky-scene__title,
+	[data-theme='light'] .zwicky-scene__metric span {
+		color: #172033;
+	}
+	[data-theme='light'] .zwicky-scene__metric,
+	[data-theme='light'] .zwicky-scene__selection {
+		border-color: rgb(23 32 51 / 8%);
+		background: rgb(23 32 51 / 3%);
+	}
+	[data-theme='light'] .zwicky-scene__metric small,
+	[data-theme='light'] .zwicky-scene__selection > small,
+	[data-theme='light'] .zwicky-scene__deps-count,
+	[data-theme='light'] .zwicky-scene__hint {
+		color: #5f6b7a;
+	}
+	[data-theme='light'] .zwicky-scene__path {
+		color: #157a5f;
+	}
+	[data-theme='light'] .zwicky-scene__tags span {
+		background: rgb(23 32 51 / 6%);
+		color: #3a4656;
+	}
+	[data-theme='light'] .zwicky-scene__tag--domain {
+		border-color: rgb(40 110 200 / 25%);
+		color: #2563a8 !important;
+	}
+	[data-theme='light'] .zwicky-scene__clear-btn {
+		color: #b42323;
+	}
+	[data-theme='light'] :global(.graph-legend__title),
+	[data-theme='light'] :global(.graph-cluster-filter__label) {
+		color: #5f6b7a;
+	}
+	[data-theme='light'] :global(.graph-legend) {
+		scrollbar-color: rgb(23 32 51 / 18%) transparent;
+	}
+	[data-theme='light'] :global(.graph-legend__item:hover) {
+		background: rgb(23 32 51 / 5%);
+	}
+	[data-theme='light'] :global(.graph-legend__item--active) {
+		background: rgb(23 32 51 / 9%);
+	}
+	[data-theme='light'] :global(.graph-dot__label) {
+		color: #2b3644;
+	}
+	[data-theme='light'] :global(.graph-cluster-filter__pill) {
+		border-color: rgb(23 32 51 / 12%);
+		background: rgb(255 255 255 / 70%);
+		color: #2b3644;
+	}
+	[data-theme='light'] :global(.graph-cluster-filter__pill:hover),
+	[data-theme='light'] :global(.graph-cluster-filter__pill--active) {
+		color: #172033;
+	}
+	[data-theme='light'] :global(.graph-tooltip) {
+		background: rgb(255 255 255 / 96%);
+		border-color: rgb(23 32 51 / 12%);
+		color: #2b3644;
+		box-shadow: 0 0.75rem 2rem rgb(23 32 51 / 16%);
+	}
+	[data-theme='light'] :global(.graph-tooltip__family) {
+		color: #172033;
+	}
+	[data-theme='light'] :global(.graph-tooltip__path) {
+		color: #157a5f;
+	}
+	[data-theme='light'] :global(.graph-tooltip__chip) {
+		background: rgb(23 32 51 / 5%);
+		border-color: rgb(23 32 51 / 8%);
+		color: #3a4656;
+	}
+	[data-theme='light'] :global(.graph-tooltip__chip--domain) {
+		color: #2563a8;
+	}
+	[data-theme='light'] :global(.graph-tooltip__deps-label),
+	[data-theme='light'] :global(.graph-tooltip__dep-item),
+	[data-theme='light'] :global(.graph-tooltip__dep-more),
+	[data-theme='light'] :global(.graph-tooltip__no-deps) {
+		color: #5f6b7a;
 	}
 
 	@media (max-width: 640px) {

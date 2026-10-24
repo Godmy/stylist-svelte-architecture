@@ -19,7 +19,7 @@
 	});
 </script>
 
-<div class={state.containerClass} {...state.restProps}>
+<div class={state.containerClass} data-theme={state.theme} {...state.restProps}>
 	<canvas bind:this={canvasRef} class={state.canvasClass}></canvas>
 	<SceneCameraControl
 		radius={state.cameraControl.radius}
@@ -37,19 +37,19 @@
 		<div class="scene__metric-grid">
 			<div>
 				<span>{state.debugInfo.graphNodes}</span>
-				<small>nodes</small>
+				<small>{state.text.nodes}</small>
 			</div>
 			<div>
 				<span>{state.debugInfo.graphConnections}</span>
-				<small>links</small>
+				<small>{state.text.links}</small>
 			</div>
 			<div>
 				<span>{state.debugInfo.drawCount}</span>
-				<small>frames</small>
+				<small>{state.text.frames}</small>
 			</div>
 		</div>
 		<div class="scene__selection">
-			<small>selected</small>
+			<small>{state.text.selected}</small>
 			<span>{state.debugInfo.selectedAtom}</span>
 		</div>
 		{#if state.debugInfo.lastError}
@@ -177,6 +177,56 @@
 	.scene__error {
 		margin: 0.75rem 0 0;
 		color: rgb(255 160 150);
+	}
+
+	/* Light theme: warm paper canvas, white panels, dark ink; the camera control follows. */
+	.scene[data-theme='light'] {
+		background:
+			radial-gradient(circle at 22% 18%, rgb(120 170 210 / 16%), transparent 34%),
+			radial-gradient(circle at 78% 12%, rgb(200 160 110 / 14%), transparent 30%),
+			linear-gradient(145deg, #f8f6f1, #f3f0ea 55%, #efeae2);
+	}
+	[data-theme='light'] .scene__overlay {
+		background: rgb(255 255 255 / 90%);
+		border-color: rgb(23 32 51 / 10%);
+		color: #1d2633;
+		box-shadow: 0 1rem 2.5rem rgb(23 32 51 / 12%);
+	}
+	[data-theme='light'] .scene__eyebrow {
+		border-color: rgb(20 130 150 / 30%);
+		color: #137085;
+	}
+	[data-theme='light'] .scene__metric-grid div,
+	[data-theme='light'] .scene__selection {
+		border-color: rgb(23 32 51 / 8%);
+		background: rgb(23 32 51 / 3%);
+	}
+	[data-theme='light'] .scene__metric-grid span,
+	[data-theme='light'] .scene__selection span {
+		color: #172033;
+	}
+	[data-theme='light'] .scene__metric-grid small,
+	[data-theme='light'] .scene__selection small {
+		color: #5f6b7a;
+	}
+	[data-theme='light'] .scene__error {
+		color: #b42323;
+	}
+	[data-theme='light'] :global(.scene-camera-control) {
+		border-color: rgb(23 32 51 / 12%);
+		background: rgb(255 255 255 / 88%);
+		color: #172033;
+	}
+	[data-theme='light'] :global(.scene-camera-control__label-row),
+	[data-theme='light'] :global(.scene-camera-control__fit),
+	[data-theme='light'] :global(.scene-camera-control__depth-readout) {
+		color: #3a4656;
+	}
+	[data-theme='light'] :global(.scene-camera-control__depth-readout strong) {
+		color: #172033;
+	}
+	[data-theme='light'] :global(.scene-camera-control__pad) {
+		border-color: rgb(23 32 51 / 15%);
 	}
 
 	@media (max-width: 640px) {

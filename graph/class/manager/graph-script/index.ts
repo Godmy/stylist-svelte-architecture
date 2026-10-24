@@ -13,6 +13,8 @@ import type { ZwickyNode } from '$stylist/graph/interface/slot/zwicky-node';
 import { ZWICKY_CLUSTER_ORDER } from '$stylist/graph/const/array/zwicky-cluster-order';
 import { ZWICKY_CLUSTER_COLOR } from '$stylist/graph/const/record/zwicky-cluster-color';
 import type { GraphJsonInput } from '$stylist/graph/interface/slot/graph-json-input';
+import type { ZwickyScheme } from '$stylist/graph/interface/slot/zwicky-scheme';
+import type { GraphTheme } from '$stylist/graph/type/alias/graph-theme';
 
 export class GraphScriptManager {
 	static bindSceneAttributeBuffer(
@@ -588,6 +590,44 @@ export class GraphScriptManager {
 				accent: [0.34, 0.79, 0.92]
 			}
 		] as const;
+		return GraphScriptManager.createSceneGraph(nodes, connections, {
+			id: 'standalone-graph',
+			label: 'Standalone WebGL graph',
+			floor: { x: 0, z: 1.65, width: 13.8, depth: 10.8 },
+			boundsRadius: 8.4,
+			focusTarget: { x: 0, y: 0.05, z: 1.35 }
+		});
+	}
+
+	/**
+	 * A scene of spatial nodes and their connections. Without explicit floor, bounds and
+	 * focus they are derived from the node positions, so any graph is framed by the camera.
+	 */
+	static createSceneGraph(
+		nodes: readonly GraphNode[],
+		connections: readonly GraphConnection[],
+		options: {
+			id?: string;
+			label?: string;
+			floor?: { x: number; z: number; width: number; depth: number };
+			boundsRadius?: number;
+			focusTarget?: { x: number; y: number; z: number };
+			floorColor?: readonly [number, number, number];
+			nodeColor?: readonly [number, number, number];
+		} = {}
+	): SceneGraph {
+		const xs = nodes.map((node) => node.position.x);
+		const zs = nodes.map((node) => node.position.z);
+		const minX = Math.min(0, ...xs);
+		const maxX = Math.max(0, ...xs);
+		const minZ = Math.min(0, ...zs);
+		const maxZ = Math.max(0, ...zs);
+		const floor = options.floor ?? {
+			x: (minX + maxX) / 2,
+			z: (minZ + maxZ) / 2,
+			width: maxX - minX + 4,
+			depth: maxZ - minZ + 4
+		};
 		const nodeMap = new Map(nodes.map((node) => [node.id, node]));
 		const atoms: SceneAtom[] = [];
 
@@ -597,15 +637,15 @@ export class GraphScriptManager {
 				kind: 'surface',
 				geometry: {
 					type: 'box',
-					width: 13.8,
+					width: floor.width,
 					height: 0.08,
-					depth: 10.8,
-					color: [0.055, 0.07, 0.105]
+					depth: floor.depth,
+					color: options.floorColor ?? [0.055, 0.07, 0.105]
 				},
 				material: { kind: 'surface' },
-				transform: { position: { x: 0, y: -0.72, z: 1.65 } },
+				transform: { position: { x: floor.x, y: -0.72, z: floor.z } },
 				selectable: false,
-				boundsRadius: 6.8,
+				boundsRadius: Math.max(floor.width, floor.depth) / 2,
 				metadata: { label: 'Graph surface' }
 			})
 		);
@@ -686,7 +726,7 @@ export class GraphScriptManager {
 						width: size * 1.05,
 						height: size * 0.72,
 						depth: size * 1.05,
-						color: [0.84, 0.88, 0.94]
+						color: options.nodeColor ?? [0.84, 0.88, 0.94]
 					},
 					material: { kind: 'node-core' },
 					transform: {
@@ -709,20 +749,20 @@ export class GraphScriptManager {
 		const molecules: readonly SceneMolecule[] = [
 			{
 				id: 'graph-runtime',
-				label: 'Standalone WebGL Graph',
+				label: options.label ?? 'Standalone WebGL Graph',
 				atoms
 			}
 		];
 
 		return {
-			id: 'standalone-graph',
-			label: 'Standalone WebGL graph',
+			id: options.id ?? 'scene-graph',
+			label: options.label ?? 'Scene graph',
 			nodes,
 			connections,
 			molecules,
 			atoms,
-			boundsRadius: 8.4,
-			focusTarget: { x: 0, y: 0.05, z: 1.35 },
+			boundsRadius: options.boundsRadius ?? Math.hypot(floor.width, floor.depth) / 2,
+			focusTarget: options.focusTarget ?? { x: floor.x, y: 0.05, z: floor.z },
 			defaultPreset: 'iso'
 		};
 	}
@@ -859,7 +899,10 @@ export class GraphScriptManager {
 		edges: readonly [string, string][],
 		selectedId: string | null,
 		domainFilter: ReadonlySet<string>,
-		clusterFilter: ReadonlySet<string>
+		clusterFilter: ReadonlySet<string>,
+		theme: GraphTheme = 'dark',
+		tint: readonly [number, number, number] = [1, 1, 1],
+		edgeFilter: 'both' | 'any' = 'both'
 	): Float32Array {
 		const nodeIndex = new Map<string, ZwickyNode>();
 		for (const node of nodes) nodeIndex.set(node.id, node);
@@ -880,13 +923,29 @@ export class GraphScriptManager {
 			const fromClusterOk = !hasClusterFilter || clusterFilter.has(from.cluster);
 			const toClusterOk = !hasClusterFilter || clusterFilter.has(to.cluster);
 
-			if (!fromDomainOk || !toDomainOk || !fromClusterOk || !toClusterOk) continue;
+			// 'both': an edge stays only inside the filtered groups; 'any': it stays when one
+			// end is in them, so links from a group to other groups remain visible.
+			const fromOk = fromDomainOk && fromClusterOk;
+			const toOk = toDomainOk && toClusterOk;
+			if (edgeFilter === 'any' ? !fromOk && !toOk : !fromOk || !toOk) continue;
 
 			const isActive = selectedId !== null && (fromId === selectedId || toId === selectedId);
+			// Dark: the source colour, dimmed unless the edge touches the selection.
+			// Light: a gradient from the source's colour to the target's, both mixed with
+			// `tint` (white by default), more so for edges away from the selection, so links
+			// between kinds read apart.
 			const brightness = isActive ? 1.0 : 0.2;
-			const r = from.color[0] * brightness;
-			const g = from.color[1] * brightness;
-			const b = from.color[2] * brightness;
+			const mix = isActive ? 0 : selectedId !== null ? 0.6 : 0.15;
+			const tone = (color: readonly [number, number, number], index: number) =>
+				theme === 'light'
+					? color[index] + (tint[index] - color[index]) * mix
+					: color[index] * brightness;
+			const r = tone(from.color, 0);
+			const g = tone(from.color, 1);
+			const b = tone(from.color, 2);
+			const r2 = theme === 'light' ? tone(to.color, 0) : r;
+			const g2 = theme === 'light' ? tone(to.color, 1) : g;
+			const b2 = theme === 'light' ? tone(to.color, 2) : b;
 
 			const base = written * 12;
 			data[base] = from.x;
@@ -898,9 +957,9 @@ export class GraphScriptManager {
 			data[base + 6] = to.x;
 			data[base + 7] = to.y;
 			data[base + 8] = to.z;
-			data[base + 9] = r;
-			data[base + 10] = g;
-			data[base + 11] = b;
+			data[base + 9] = r2;
+			data[base + 10] = g2;
+			data[base + 11] = b2;
 			written++;
 		}
 
@@ -915,7 +974,8 @@ export class GraphScriptManager {
 		])
 	);
 
-	static layoutZwickyNodes(nodes: ZwickyNode[]): void {
+	/** `clusterOrder` places own clusters as evenly spaced lanes centred on X = 0. */
+	static layoutZwickyNodes(nodes: ZwickyNode[], clusterOrder?: readonly string[]): void {
 		const { domainZStep, laneScatterX, laneScatterY, laneScatterZ, goldenAngle } =
 			ZWICKY_LAYOUT_SCALE;
 
@@ -937,7 +997,10 @@ export class GraphScriptManager {
 		const domainZ = new Map(domains.map((d, i) => [d, (i - (nDomains - 1) / 2) * domainZStep]));
 
 		for (const [cluster, domMap] of clusterMap) {
-			const baseX = GraphScriptManager.CLUSTER_X[cluster] ?? 0;
+			const lane = clusterOrder?.indexOf(cluster) ?? -1;
+			const baseX = clusterOrder
+				? (Math.max(lane, 0) - (clusterOrder.length - 1) / 2) * ZWICKY_LAYOUT_SCALE.clusterXSpacing
+				: (GraphScriptManager.CLUSTER_X[cluster] ?? 0);
 
 			for (const [domain, families] of domMap) {
 				const baseZ = domainZ.get(domain) ?? 0;
@@ -961,7 +1024,10 @@ export class GraphScriptManager {
 		}
 	}
 
-	static parseZwickyGraph(input: GraphJsonInput): {
+	static parseZwickyGraph(
+		input: GraphJsonInput,
+		scheme?: ZwickyScheme
+	): {
 		nodes: ZwickyNode[];
 		edges: readonly [string, string][];
 	} {
@@ -980,8 +1046,11 @@ export class GraphScriptManager {
 			const cluster = parts[1] ?? '';
 			const joint = parts[2] ?? '';
 			const family = parts[3] ?? '';
-			// Color encodes cluster (assembly layer), not domain
-			const color = ZWICKY_CLUSTER_COLOR[cluster] ?? [0.5, 0.5, 0.5];
+			// Color encodes cluster (assembly layer, or the scheme's own cluster), not domain
+			const color =
+				(scheme
+					? scheme.clusters.find((group) => group.id === cluster)?.color
+					: ZWICKY_CLUSTER_COLOR[cluster]) ?? ([0.5, 0.5, 0.5] as const);
 
 			return {
 				id: path,
@@ -990,6 +1059,7 @@ export class GraphScriptManager {
 				cluster,
 				joint,
 				family,
+				label: input.labels?.[path],
 				level: 'family',
 				x: 0,
 				y: 0,
