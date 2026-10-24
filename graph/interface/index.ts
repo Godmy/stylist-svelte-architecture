@@ -35,10 +35,14 @@ export type {
 	SceneGraph,
 	SceneMaterial,
 	SceneMolecule,
+	SceneText,
 	SlotFieldHighlighter,
 	SlotFieldHighlighterSelectedField,
 	SlotGraphEdge,
 	SlotGraphNode,
 	ZwickyFilterState,
-	ZwickyNode
+	ZwickyGroup,
+	ZwickyNode,
+	ZwickyScheme,
+	ZwickyText
 } from './slot';

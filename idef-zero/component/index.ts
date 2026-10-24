@@ -9,4 +9,7 @@ export {
 	Idef0Inputs,
 	Idef0Outputs
 } from './molecule';
-export { Idef0Diagram } from './organism';
+export {
+	Idef0Decomposition,
+	Idef0Diagram
+} from './organism';

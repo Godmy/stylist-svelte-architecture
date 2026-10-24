@@ -19,7 +19,7 @@
 
 <header class="schema-header">
 	<div class="schema-header__titles">
-		<h1 class="schema-header__title">{title}</h1>
+		{#if title}<h1 class="schema-header__title">{title}</h1>{/if}
 		{#if stats}
 			<div class="schema-header__stats">
 				<span>{stats.tables} tables</span>

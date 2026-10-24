@@ -2,6 +2,7 @@
 export {
 	Idef0BlackBox,
 	Idef0Connector,
+	Idef0Decomposition,
 	Idef0Diagram,
 	Idef0FunctionBox,
 	Idef0Inputs,
@@ -9,8 +10,11 @@ export {
 	Idef0PortLabel
 } from './component';
 export type {
+	Idef0Activity,
+	Idef0Arrow,
 	RecipeIdef0BlackBox,
 	RecipeIdef0Connector,
+	RecipeIdef0Decomposition,
 	RecipeIdef0Diagram,
 	RecipeIdef0FunctionBox,
 	RecipeIdef0Io,

@@ -2,6 +2,7 @@
 export type {
 	GraphGridMode,
 	GraphNodeCategory,
+	GraphTheme,
 	GraphToolMode,
 	SceneAtomKind,
 	SceneCameraPreset,

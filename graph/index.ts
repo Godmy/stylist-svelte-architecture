@@ -37,6 +37,7 @@ export {
 export type {
 	GraphGridMode,
 	GraphNodeCategory,
+	GraphTheme,
 	GraphToolMode,
 	SceneAtomKind,
 	SceneCameraPreset,
@@ -76,10 +77,14 @@ export type {
 	SceneGraph,
 	SceneMaterial,
 	SceneMolecule,
+	SceneText,
 	SlotFieldHighlighter,
 	SlotFieldHighlighterSelectedField,
 	SlotGraphEdge,
 	SlotGraphNode,
 	ZwickyFilterState,
-	ZwickyNode
+	ZwickyGroup,
+	ZwickyNode,
+	ZwickyScheme,
+	ZwickyText
 } from './interface';

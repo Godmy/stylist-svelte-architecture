@@ -3,7 +3,9 @@ export {
 	ConcentricCirclesScene,
 	GlCanvas,
 	HyperspaceScene,
+	InterferenceFieldScene,
 	SceneLauncher,
+	ShaderField,
 	TurtleDissolveScene
 } from './component';
 export {
@@ -12,12 +14,16 @@ export {
 } from './const';
 export {
 	compileShader,
-	createProgram
+	createProgram,
+	shaderTint
 } from './function';
 export type {
 	RecipeConcentricCirclesScene,
 	RecipeGlCanvas,
 	RecipeHyperspaceScene,
+	RecipeInterferenceFieldScene,
 	RecipeSceneLauncher,
-	RecipeTurtleDissolveScene
+	RecipeShaderField,
+	RecipeTurtleDissolveScene,
+	SlotShaderField
 } from './interface';
