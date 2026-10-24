@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { RecipeGlCanvas } from '$stylist/webgl/interface/recipe/gl-canvas';
 
-	let { init, frame, resize }: RecipeGlCanvas = $props();
+	let { init, frame, resize, unsupported }: RecipeGlCanvas = $props();
 
 	let canvas: HTMLCanvasElement;
 	let gl: WebGL2RenderingContext | null = null;
@@ -32,7 +32,8 @@
 		canvas = node;
 		gl = canvas.getContext('webgl2');
 		if (!gl) {
-			console.error('WebGL2 is not supported in this browser.');
+			if (unsupported) unsupported();
+			else console.error('WebGL2 is not supported in this browser.');
 			return;
 		}
 		resizeToDisplaySize();
