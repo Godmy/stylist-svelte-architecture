@@ -60,6 +60,7 @@
 				showRelations={state.relationsVisible}
 				highlightRelations={state.relationHighlight}
 				layout={state.currentLayout}
+				clusterAspectRatio={props.clusterAspectRatio}
 				draggable={props.draggable ?? true}
 				persistLayout={props.persistLayout ?? false}
 			/>

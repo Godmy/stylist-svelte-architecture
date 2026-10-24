@@ -27,6 +27,11 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	const showRelations = $derived(props.showRelations ?? true);
 	const highlightRelations = $derived(props.highlightRelations ?? true);
 	const layout = $derived(props.layout ?? 'grid');
+	const clusterAspectRatio = $derived(
+		Number.isFinite(props.clusterAspectRatio) && (props.clusterAspectRatio ?? 0) > 0
+			? props.clusterAspectRatio
+			: undefined
+	);
 	const activeTableId = $derived(props.activeTableId ?? '');
 	const draggable = $derived(props.draggable ?? true);
 	const persistLayout = $derived(props.persistLayout ?? false);
@@ -227,7 +232,7 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		const nextLayoutKey = document.tables
 			.map((table) => `${table.id}:${table.fields.length}`)
 			.join('|')
-			.concat(`:${layout}`);
+			.concat(`:${layout}:${clusterAspectRatio ?? ''}`);
 
 		if (nextLayoutKey === documentLayoutKey) {
 			return;
@@ -242,7 +247,9 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 
 		positions =
 			persisted ??
-			(layout === activeLayout ? mergePositions() : createPositions(document.tables.length));
+			(layout === activeLayout && !clusterAspectRatio
+				? mergePositions()
+				: createPositions(document.tables.length));
 		documentLayoutKey = nextLayoutKey;
 		activeLayout = layout;
 		draggedTableId = null;
@@ -264,7 +271,8 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	}
 
 	function currentStorageKey(): string {
-		return `erd-layout:${layout}:${hashTableIds()}`;
+		const grouping = clusterAspectRatio ? `:aspect-${clusterAspectRatio}` : '';
+		return `erd-layout:${layout}:${hashTableIds()}${grouping}`;
 	}
 
 	function loadPersistedPositions(): SchemaTablePosition[] | null {
@@ -727,12 +735,37 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		const heights = document.tables.map((table) => createTableHeight(table.fields.length));
 		const clusterGapX = compact ? 90 : 220;
 		const clusterGapY = compact ? 110 : 220;
-		const clustersPerRow = compact ? 4 : 3;
+		let clustersPerRow = compact ? 4 : 3;
 
 		const clusters = orderedDomainGroups.map(({ domain, indices }) => ({
 			domain,
 			...buildDomainGrid(indices, heights)
 		}));
+
+		// Compare actual domain sizes: table counts alone miss tall field lists.
+		// Keep the connection order while choosing the closest canvas proportions.
+		if (clusterAspectRatio && clusters.length > 0) {
+			let bestScore = Infinity;
+			for (let columns = 1; columns <= clusters.length; columns += 1) {
+				let width = 0;
+				let height = 0;
+				for (let start = 0; start < clusters.length; start += columns) {
+					const row = clusters.slice(start, start + columns);
+					width = Math.max(
+						width,
+						row.reduce((sum, cluster) => sum + cluster.width, 0) +
+							(row.length - 1) * clusterGapX
+					);
+					height += Math.max(...row.map((cluster) => cluster.height));
+					if (start > 0) height += clusterGapY;
+				}
+				const score = Math.abs(Math.log(width / height / clusterAspectRatio));
+				if (score < bestScore) {
+					bestScore = score;
+					clustersPerRow = columns;
+				}
+			}
+		}
 
 		const finalPositions: SchemaTablePosition[] = [];
 		let cursorY = 60;
