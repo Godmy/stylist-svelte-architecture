@@ -66,14 +66,14 @@
 			display: grid;
 			grid-template-columns: minmax(0, 1.6fr) minmax(15.625rem, 1fr);
 			align-items: start;
-			gap: calc(var(--layout-spacing-1rem, 1rem) * 1.5);
+			gap: calc(var(--space-4, 1rem) * 1.5);
 			color: var(--color-text-primary);
 		}
 		.c-shader-field__stage {
 			position: relative;
 			height: 26.875rem;
 			overflow: hidden;
-			border-radius: var(--layout-border-radius-xxl, 1rem);
+			border-radius: var(--radius-4, 1rem);
 			background: radial-gradient(
 				ellipse,
 				var(--color-primary-800, #1e40af),
@@ -82,34 +82,34 @@
 		}
 		.c-shader-field__status {
 			position: absolute;
-			bottom: var(--layout-spacing-1rem, 1rem);
-			left: var(--layout-spacing-1rem, 1rem);
-			font-size: var(--typography-font-size-3, 0.75rem);
+			bottom: var(--space-4, 1rem);
+			left: var(--space-4, 1rem);
+			font-size: var(--font-size-3, 0.75rem);
 			color: var(--color-text-inverse, #fff);
 		}
 		.c-shader-field__panel {
 			display: flex;
 			flex-direction: column;
-			gap: calc(var(--layout-spacing-1rem, 1rem) * 0.75);
-			padding: calc(var(--layout-spacing-1rem, 1rem) * 1.5);
+			gap: calc(var(--space-4, 1rem) * 0.75);
+			padding: calc(var(--space-4, 1rem) * 1.5);
 			border: var(--border-width-thin, 1px) solid var(--color-border-primary);
-			border-radius: var(--layout-border-radius-xl, 0.75rem);
+			border-radius: var(--radius-3, 0.75rem);
 			background: var(--color-background-primary);
 		}
 		.c-shader-field__title {
 			margin: 0;
-			font-size: var(--typography-font-size-5, 1.25rem);
+			font-size: var(--font-size-5, 1.25rem);
 		}
 		.c-shader-field__field {
 			display: flex;
 			flex-direction: column;
-			gap: calc(var(--layout-spacing-1rem, 1rem) / 4);
-			font-weight: var(--typography-font-weight-medium, 500);
+			gap: calc(var(--space-4, 1rem) / 4);
+			font-weight: var(--font-weight-medium, 500);
 		}
 		.c-shader-field__button {
 			padding: var(--density-block, 0.5rem) var(--density-inline, 0.75rem);
 			border: var(--border-width-thin, 1px) solid var(--color-primary-600);
-			border-radius: var(--layout-border-radius-md, 0.375rem);
+			border-radius: var(--radius-1-5, 0.375rem);
 			background: var(--color-primary-600);
 			color: var(--color-on-primary, #fff);
 			font: inherit;

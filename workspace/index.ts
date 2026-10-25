@@ -6,6 +6,7 @@ export {
 } from './class';
 export {
 	GraphNodeCard,
+	GridPattern,
 	Minimap,
 	NodeConnection,
 	NodeHeader,
@@ -54,6 +55,7 @@ export type {
 	MinimapBounds,
 	MinimapViewport,
 	RecipeGraphNodeCard,
+	RecipeGridPattern,
 	RecipeMinimap,
 	RecipeNodeConnection,
 	RecipeNodeHeader,

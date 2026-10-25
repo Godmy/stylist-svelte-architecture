@@ -1,9 +1,10 @@
 import type { RecipeOntologyNodeComponent } from '$stylist/graph/interface/recipe/ontology-node-component';
+import type { TokenIconName } from '$stylist/svg/type/alias/icon-name';
 
-const NODE_ICON_MAP: Record<string, string> = {
+const NODE_ICON_MAP: Record<string, TokenIconName> = {
 	class: 'square',
 	'object-property': 'arrow-right',
-	'datatype-property': 'database',
+	'datatype-property': 'cabinet-database',
 	datatype: 'type',
 	deprecated: 'x',
 	'equivalent-class': 'zap'

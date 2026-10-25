@@ -2,7 +2,7 @@
 	import type { RecipeViewport } from '$stylist/workspace/interface/recipe/viewport';
 	import createViewportState from '$stylist/workspace/component/atom/viewport/state.svelte';
 	import Stage from '$stylist/workspace/component/atom/stage/index.svelte';
-	import Grid from '$stylist/layout/component/atom/grid/index.svelte';
+	import GridPattern from '$stylist/workspace/component/atom/grid-pattern/index.svelte';
 
 	let props: RecipeViewport = $props();
 	const state = createViewportState(() => props);
@@ -23,7 +23,7 @@
 	onkeydown={state.handleKeyDown}
 	{...state.restProps}
 >
-	<Grid zoom={state.camera.zoom} visible={state.showGrid} />
+	<GridPattern zoom={state.camera.zoom} visible={state.showGrid} />
 	<Stage camera={state.camera} worldWidth={state.worldWidth} worldHeight={state.worldHeight}>
 		{#if props.children}{#if props.children}{@render props.children()}{/if}{/if}
 	</Stage>

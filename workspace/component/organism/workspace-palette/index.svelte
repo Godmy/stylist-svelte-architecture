@@ -2,7 +2,7 @@
 	import IconButton from '$stylist/button/component/atom/icon-button/index.svelte';
 	import InputText from '$stylist/input/component/molecule/input-text/index.svelte';
 	import Icon from '$stylist/svg/component/atom/icon/index.svelte';
-	import Separator from '$stylist/layout/component/atom/separator/index.svelte';
+	import Divider from '$stylist/layout/component/atom/divider/index.svelte';
 	import createWorkspacePaletteState from '$stylist/workspace/component/organism/workspace-palette/state.svelte';
 	import type { RecipeWorkspacePalette as WorkspacePaletteProps } from '$stylist/workspace/interface/recipe/workspace-palette';
 
@@ -114,7 +114,7 @@
 			{/each}
 		</div>
 
-		<Separator orientation="horizontal" />
+		<Divider orientation="horizontal" />
 
 		<div class="workspace-palette__content">
 			{#if state.filteredItems.length === 0}

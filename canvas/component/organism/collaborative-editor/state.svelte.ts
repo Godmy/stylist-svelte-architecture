@@ -1,18 +1,19 @@
 import { ClassNamesManager } from '$stylist/layout/class/manager/class-names';
 
 import type { RecipeCollaborativeEditor } from '$stylist/canvas/interface/recipe/collaborative-editor';
+import type { TokenIconName } from '$stylist/svg/type/alias/icon-name';
 
-const Bold = 'bold';
-const Italic = 'italic';
-const Underline = 'underline';
-const AlignLeft = 'align-left';
-const AlignCenter = 'align-center';
-const AlignRight = 'align-right';
-const List = 'list';
-const ListOrdered = 'list-ordered';
-const MessageCircle = 'message-circle';
-const UserIcon = 'user';
-const Users = 'users';
+const Bold: TokenIconName = 'bold';
+const Italic: TokenIconName = 'italic';
+const Underline: TokenIconName = 'underline';
+const AlignLeft: TokenIconName = 'align-left';
+const AlignCenter: TokenIconName = 'align-center';
+const AlignRight: TokenIconName = 'align-right';
+const List: TokenIconName = 'list';
+const ListOrdered: TokenIconName = 'list-ordered';
+const MessageCircle: TokenIconName = 'message-circle';
+const UserIcon: TokenIconName = 'user';
+const Users: TokenIconName = 'cabinet-users';
 
 export const createCollaborativeEditorState = (getProps: () => RecipeCollaborativeEditor) => {
 	const props = $derived(getProps());

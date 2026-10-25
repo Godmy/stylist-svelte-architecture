@@ -16,9 +16,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: var(--radius-icon, 8px);
+		border-radius: var(--radius-2, 0.5rem);
 		box-shadow: var(--elevation-icon, 0 2px 4px rgba(0, 0, 0, 0.1));
-		transition: all 200ms var(--easing-standard, ease);
+		transition: all 200ms var(--easing-ease, ease);
 	}
 
 	.icon-text {

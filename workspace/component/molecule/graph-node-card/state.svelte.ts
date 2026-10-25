@@ -2,6 +2,7 @@ import type { HTMLAttributes } from 'svelte/elements';
 import { createEventDispatcher } from 'svelte';
 import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
 import type { RecipeGraphNodeCard } from '$stylist/workspace/interface/recipe/graph-node-card';
+import type { TokenIconName } from '$stylist/svg/type/alias/icon-name';
 
 export function createGraphNodeCardState(
 	getProps: () => RecipeGraphNodeCard & HTMLAttributes<HTMLDivElement>
@@ -48,22 +49,22 @@ export function createGraphNodeCardState(
 		return rest;
 	});
 
-	function getIconName(type: string) {
+	function getIconName(type: string): TokenIconName {
 		switch (type) {
 			case 'object':
 				return 'object';
 			case 'interface':
 				return 'interface';
 			case 'union':
-				return 'union';
+				return 'merge';
 			case 'enum':
 				return 'enum';
 			case 'scalar':
-				return 'scalar';
+				return 'type';
 			case 'input':
 				return 'input';
 			default:
-				return 'default';
+				return 'box';
 		}
 	}
 

@@ -5,6 +5,7 @@ import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-
 import type { TokenPropertyType } from '$stylist/workspace/type/alias/property-type';
 import type { TokenSize } from '$stylist/design-token/type/alias/size';
 import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
+import type { TokenIconName } from '$stylist/svg/type/alias/icon-name';
 export interface RecipeNodePort extends ComputeIntersectAll<
 	[SlotWorkspaceNode, SlotTheme, HTMLAttributes<HTMLDivElement>]
 > {
@@ -14,7 +15,7 @@ export interface RecipeNodePort extends ComputeIntersectAll<
 	index?: number;
 	connected?: boolean;
 	active?: boolean;
-	icon?: string | Snippet;
+	icon?: TokenIconName | Snippet;
 	onConnectionStart?: (event: MouseEvent) => void;
 	onConnectionEnd?: (event: MouseEvent) => void;
 }

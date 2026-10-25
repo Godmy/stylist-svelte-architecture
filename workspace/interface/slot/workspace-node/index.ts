@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { TokenIconName } from '$stylist/svg/type/alias/icon-name';
 export interface SlotWorkspaceNode {
 	id?: string;
 	name?: string;
@@ -6,7 +7,7 @@ export interface SlotWorkspaceNode {
 	type?: string;
 	label?: string;
 	description?: string;
-	icon?: string | Snippet;
+	icon?: TokenIconName | Snippet;
 	color?: string;
 	category?: string;
 	value?: unknown;

@@ -1,5 +1,6 @@
 /** AREA: STYLIST CODER MODEL -> AUTO-GENERATED */
 export {
+	GridPattern,
 	NodeConnection,
 	NodeHeader,
 	NodePort,

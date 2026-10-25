@@ -126,8 +126,8 @@
 		top: calc(-0.4rem - var(--edge-label-offset, 0px));
 		transform: translateX(-50%) rotate(calc(-1 * var(--edge-angle, 0deg)));
 		transform-origin: center;
-		padding: var(--spacing-1) var(--spacing-1);
-		border-radius: var(--border-radius-full);
+		padding: var(--space-1) var(--space-1);
+		border-radius: var(--radius-full);
 		background: color-mix(in srgb, var(--color-background-secondary) 95%, transparent);
 		border: 1px solid color-mix(in srgb, var(--color-border-secondary) 80%, transparent);
 		color: var(--color-text-primary);

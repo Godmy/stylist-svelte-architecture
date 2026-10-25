@@ -48,7 +48,7 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: var(--border-radius-full);
+		border-radius: var(--radius-full);
 		border: 2px solid var(--color-border-secondary);
 		background: var(--graph-node-color, var(--color-primary-500));
 		color: var(--color-text-inverse);
@@ -59,9 +59,9 @@
 		user-select: none;
 		cursor: pointer;
 		transition:
-			transform var(--duration-120) var(--animation-ease),
-			box-shadow var(--duration-120) var(--animation-ease),
-			border-color var(--duration-120) var(--animation-ease);
+			transform var(--duration-120) var(--easing-ease),
+			box-shadow var(--duration-120) var(--easing-ease),
+			border-color var(--duration-120) var(--easing-ease);
 	}
 
 	:global(.graph-node:hover) {

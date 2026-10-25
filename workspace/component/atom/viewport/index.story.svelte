@@ -42,7 +42,7 @@
 	.viewport-story {
 		height: 320px;
 		border: 1px solid var(--color-border-primary);
-		border-radius: var(--border-radius-md);
+		border-radius: var(--radius-1-5);
 		overflow: hidden;
 		background: var(--color-background-secondary);
 	}
@@ -54,13 +54,13 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: var(--border-radius-lg);
+		border-radius: var(--radius-2);
 		color: #ffffff;
 		font-weight: 600;
 	}
 
 	.viewport-story__camera {
-		margin: var(--spacing-2) 0 0;
+		margin: var(--space-2) 0 0;
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
 	}

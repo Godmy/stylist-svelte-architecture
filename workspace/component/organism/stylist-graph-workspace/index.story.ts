@@ -64,7 +64,7 @@ export default {
 		tag: 'div',
 		attrs: {
 			style:
-				'height: 500px; border: 1px solid var(--color-border-primary); border-radius: var(--border-radius-xl); overflow: hidden; background: var(--color-background-primary);'
+				'height: 500px; border: 1px solid var(--color-border-primary); border-radius: var(--radius-4); overflow: hidden; background: var(--color-background-primary);'
 		},
 		children: [{ kind: 'outlet' }]
 	}

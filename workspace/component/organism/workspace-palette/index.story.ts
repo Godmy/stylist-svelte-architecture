@@ -15,7 +15,7 @@ export default {
 				type: 'source',
 				title: 'Data Source',
 				description: 'Input data source node',
-				icon: 'database',
+				icon: 'cabinet-database',
 				color: 'var(--color-primary-500)',
 				category: 'source'
 			},
@@ -24,7 +24,7 @@ export default {
 				type: 'processor',
 				title: 'Data Processor',
 				description: 'Process and transform data',
-				icon: 'cpu',
+				icon: 'chip',
 				color: 'var(--color-warning-500)',
 				category: 'processor'
 			},
@@ -67,7 +67,7 @@ export default {
 		tag: 'div',
 		attrs: {
 			style:
-				'position: relative; min-height: 560px; padding: var(--spacing-6); background: var(--color-background-secondary);'
+				'position: relative; min-height: 560px; padding: var(--space-6); background: var(--color-background-secondary);'
 		},
 		children: [{ kind: 'outlet' }]
 	}

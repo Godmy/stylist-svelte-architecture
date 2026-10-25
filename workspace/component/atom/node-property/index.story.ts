@@ -44,7 +44,7 @@ export default {
 		tag: 'div',
 		attrs: {
 			style:
-				'background: #1e1e1e; padding: var(--spacing-5); border-radius: var(--border-radius-lg); max-width: 520px;'
+				'background: #1e1e1e; padding: var(--space-5); border-radius: var(--radius-2); max-width: 520px;'
 		},
 		children: [{ kind: 'outlet' }]
 	}

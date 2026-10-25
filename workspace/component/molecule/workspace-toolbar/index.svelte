@@ -2,7 +2,7 @@
 	import type { RecipeWorkspaceToolbar } from '$stylist/workspace/interface/recipe/workspace-toolbar';
 	import { createWorkspaceToolbarState } from '$stylist/workspace/component/molecule/workspace-toolbar/state.svelte';
 	import IconButton from '$stylist/button/component/atom/icon-button/index.svelte';
-	import Separator from '$stylist/layout/component/atom/separator/index.svelte';
+	import Divider from '$stylist/layout/component/atom/divider/index.svelte';
 
 	let props: RecipeWorkspaceToolbar = $props();
 	const state = createWorkspaceToolbarState(() => props);
@@ -49,7 +49,7 @@
 					state.handleValueChange(item, (event.target as HTMLInputElement).value)}
 			/>
 		{:else if item.type === 'separator'}
-			<Separator
+			<Divider
 				orientation={state.orientation === 'vertical' ? 'horizontal' : 'vertical'}
 				class="workspace-toolbar__separator"
 			/>

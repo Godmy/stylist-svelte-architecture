@@ -1,7 +1,7 @@
 export const SHARED_CANVAS_TOOL_DEFINITIONS = [
 	{
 		id: 'select',
-		icon: 'mouse-pointer-2',
+		icon: 'mouse-pointer',
 		title: 'Select Tool'
 	},
 	{

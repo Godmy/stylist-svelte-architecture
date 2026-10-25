@@ -61,7 +61,7 @@ export default {
 		tag: 'div',
 		attrs: {
 			style:
-				'position: relative; width: 100%; height: 400px; padding: 0 2rem; box-sizing: border-box; background: var(--color-background-secondary); border-radius: var(--border-radius-md);'
+				'position: relative; width: 100%; height: 400px; padding: 0 2rem; box-sizing: border-box; background: var(--color-background-secondary); border-radius: var(--radius-1-5);'
 		},
 		children: [{ kind: 'outlet' }]
 	}

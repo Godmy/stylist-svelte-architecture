@@ -1,7 +1,7 @@
 <script lang="ts">
 	import IconButton from '$stylist/button/component/atom/icon-button/index.svelte';
 	import Icon from '$stylist/svg/component/atom/icon/index.svelte';
-	import Separator from '$stylist/layout/component/atom/separator/index.svelte';
+	import Divider from '$stylist/layout/component/atom/divider/index.svelte';
 	import WorkspaceCanvas from '$stylist/workspace/component/atom/workspace-canvas/index.svelte';
 	import NodeConnection from '$stylist/workspace/component/atom/node-connection/index.svelte';
 	import WorkspaceToolbar from '$stylist/workspace/component/molecule/workspace-toolbar/index.svelte';
@@ -176,7 +176,7 @@
 			</IconButton>
 		</div>
 
-		<Separator orientation="vertical" />
+		<Divider orientation="vertical" />
 
 		<IconButton
 			variant="ghost"

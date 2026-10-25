@@ -8,7 +8,7 @@ function tile(label: string, left: number, top: number, color: string): HtmlElem
 		kind: 'element',
 		tag: 'div',
 		attrs: {
-			style: `position: absolute; left: ${left}px; top: ${top}px; width: 160px; height: 88px; display: flex; align-items: center; justify-content: center; border-radius: var(--border-radius-lg); background: ${color}; color: #ffffff; font-weight: 600;`
+			style: `position: absolute; left: ${left}px; top: ${top}px; width: 160px; height: 88px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-2); background: ${color}; color: #ffffff; font-weight: 600;`
 		},
 		children: [{ kind: 'text', value: label }]
 	};
@@ -44,7 +44,7 @@ export default {
 		tag: 'div',
 		attrs: {
 			style:
-				'display: inline-block; border: 1px solid var(--color-border-primary); border-radius: var(--border-radius-md); background: var(--color-background-secondary);'
+				'display: inline-block; border: 1px solid var(--color-border-primary); border-radius: var(--radius-1-5); background: var(--color-background-secondary);'
 		},
 		children: [{ kind: 'outlet' }]
 	}

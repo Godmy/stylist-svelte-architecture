@@ -48,7 +48,7 @@ export default {
 		tag: 'div',
 		attrs: {
 			style:
-				'position: relative; width: 220px; margin: 0 2rem; padding: var(--spacing-4) 1.5rem; background: var(--color-background-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--border-radius-md);'
+				'position: relative; width: 220px; margin: 0 2rem; padding: var(--space-4) 1.5rem; background: var(--color-background-secondary); border: 1px solid var(--color-border-primary); border-radius: var(--radius-1-5);'
 		},
 		children: [{ kind: 'outlet' }]
 	}

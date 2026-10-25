@@ -113,10 +113,10 @@
 
 	:global(.minimap__canvas) {
 		border: 1px solid var(--color-border-primary);
-		border-radius: var(--border-radius-lg);
+		border-radius: var(--radius-2);
 		box-shadow: var(--shadow-custom39);
 		cursor: pointer;
-		transition: border-color var(--duration-120) var(--animation-ease);
+		transition: border-color var(--duration-120) var(--easing-ease);
 	}
 
 	:global(.minimap__canvas:hover) {
@@ -124,7 +124,7 @@
 	}
 
 	:global(.minimap__node) {
-		transition: fill var(--duration-120) var(--animation-ease);
+		transition: fill var(--duration-120) var(--easing-ease);
 		cursor: pointer;
 	}
 
@@ -135,8 +135,8 @@
 
 	:global(.minimap__viewport) {
 		cursor: move;
-		transition: all var(--duration-120) var(--animation-ease);
-		animation: minimap-viewport-pulse var(--duration-2000) var(--animation-ease-in-out) infinite;
+		transition: all var(--duration-120) var(--easing-ease);
+		animation: minimap-viewport-pulse var(--duration-2000) var(--easing-ease-in-out) infinite;
 	}
 
 	@keyframes minimap-viewport-pulse {
@@ -151,14 +151,14 @@
 
 	:global(.minimap__controls) {
 		position: absolute;
-		top: var(--spacing-2);
-		right: var(--spacing-2);
+		top: var(--space-2);
+		right: var(--space-2);
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-1);
+		gap: var(--space-1);
 		background: color-mix(in srgb, var(--color-background-primary) 90%, transparent);
-		border-radius: var(--border-radius-base);
-		padding: var(--spacing-1);
+		border-radius: var(--radius-1-5);
+		padding: var(--space-1);
 		backdrop-filter: blur(4px);
 	}
 </style>

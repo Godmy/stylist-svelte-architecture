@@ -201,7 +201,7 @@
 	.workspace-story {
 		height: 600px;
 		border: 1px solid var(--color-border-primary);
-		border-radius: var(--border-radius-xl);
+		border-radius: var(--radius-4);
 		overflow: hidden;
 		background: var(--color-background-primary);
 	}

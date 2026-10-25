@@ -1,6 +1,7 @@
 /** AREA: STYLIST CODER MODEL -> AUTO-GENERATED */
 export type {
 	RecipeGraphNodeCard,
+	RecipeGridPattern,
 	RecipeMinimap,
 	RecipeNodeConnection,
 	RecipeNodeHeader,

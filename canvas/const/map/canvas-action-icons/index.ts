@@ -1,5 +1,5 @@
 export const SHARED_CANVAS_ACTION_ICONS = {
-	color: 'palette',
+	color: 'color',
 	undo: 'undo',
 	redo: 'redo',
 	delete: 'trash-2',

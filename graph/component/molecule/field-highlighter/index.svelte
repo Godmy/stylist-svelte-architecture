@@ -33,10 +33,10 @@
 
 <style>
 	.fh-edge {
-		border-radius: var(--border-radius-base, 0.375rem);
+		border-radius: var(--radius-1-5, 0.375rem);
 		border: 1px solid var(--color-border-primary);
 		padding: 0.25rem 0.5rem;
-		font-size: var(--text-size-xs, 0.75rem);
+		font-size: var(--font-size-3, 0.75rem);
 	}
 
 	.fh-edge--highlighted {
@@ -45,7 +45,7 @@
 
 	.fh-node {
 		position: absolute;
-		border-radius: var(--border-radius-base, 0.375rem);
+		border-radius: var(--radius-1-5, 0.375rem);
 		border: 1px solid var(--color-border-primary);
 		background-color: var(--color-background-primary);
 		padding: 0.5rem 0.75rem;
@@ -64,7 +64,7 @@
 
 	.fh-node__meta {
 		margin-block-start: 0.25rem;
-		font-size: var(--text-size-xs, 0.75rem);
+		font-size: var(--font-size-3, 0.75rem);
 		color: var(--color-text-secondary);
 	}
 </style>

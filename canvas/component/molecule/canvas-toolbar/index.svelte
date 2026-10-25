@@ -82,26 +82,26 @@
 	.canvas-toolbar {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-3);
-		padding: var(--spacing-4);
+		gap: var(--space-3);
+		padding: var(--space-4);
 		background-color: var(--color-background-secondary);
 		border: 1px solid var(--color-border-primary);
-		border-radius: var(--border-radius-lg);
+		border-radius: var(--radius-2);
 		box-shadow: var(--shadow-custom36);
 		width: 250px;
 	}
 
 	.tool-selector {
 		display: flex;
-		gap: var(--spacing-2);
+		gap: var(--space-2);
 		justify-content: space-between;
 	}
 
 	.tool-btn {
 		flex: 1;
-		padding: var(--spacing-2) var(--spacing-3);
+		padding: var(--space-2) var(--space-3);
 		border: 1px solid var(--color-border-secondary);
-		border-radius: var(--border-radius-base);
+		border-radius: var(--radius-1-5);
 		background-color: var(--color-background-primary);
 		cursor: pointer;
 		transition: all var(--duration-200);
@@ -121,13 +121,13 @@
 	.action-buttons {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
-		gap: var(--spacing-2);
+		gap: var(--space-2);
 	}
 
 	.action-btn {
-		padding: var(--spacing-2);
+		padding: var(--space-2);
 		border: 1px solid var(--color-border-secondary);
-		border-radius: var(--border-radius-base);
+		border-radius: var(--radius-1-5);
 		background-color: var(--color-background-primary);
 		cursor: pointer;
 		transition: all var(--duration-200);
@@ -139,14 +139,14 @@
 	}
 
 	.tool-specific-options {
-		margin-top: var(--spacing-3);
+		margin-top: var(--space-3);
 	}
 
 	.option-group {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-1);
-		margin-bottom: var(--spacing-3);
+		gap: var(--space-1);
+		margin-bottom: var(--space-3);
 	}
 
 	.option-label {
@@ -157,7 +157,7 @@
 
 	.option-input {
 		width: 100%;
-		margin-top: var(--spacing-1);
+		margin-top: var(--space-1);
 	}
 
 	.option-value {
