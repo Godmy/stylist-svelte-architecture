@@ -2,6 +2,8 @@ import { ClassNamesManager } from '$stylist/layout/class/manager/class-names';
 import { GraphScriptManager } from '$stylist/graph/class/manager/graph-script';
 import { InstancedGraphManager } from '$stylist/graph/class/manager/instanced-graph';
 import type { RecipeZwickyScene } from '$stylist/graph/interface/recipe/zwicky-scene';
+import { GRAPH_ZWICKY_SCENE_MESSAGE } from '$stylist/graph/const/record/zwicky-scene-message';
+import { useMessage } from '$stylist/localization/function/hook/use-message';
 import type { ZwickyNode } from '$stylist/graph/interface/slot/zwicky-node';
 
 export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
@@ -28,16 +30,17 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	const overlayClass = $derived(
 		ClassNamesManager.merge('zwicky-scene__overlay', props.overlayClass?.toString() ?? '')
 	);
-	const title = $derived(props.title ?? 'Zwicky Graph');
+	const t = useMessage('zwicky-scene', GRAPH_ZWICKY_SCENE_MESSAGE);
+	const title = $derived(props.title ?? t('title'));
 	const text = $derived({
-		badge: props.text?.badge ?? 'WebGL2 · Instanced',
-		nodes: props.text?.nodes ?? 'nodes',
-		edges: props.text?.edges ?? 'edges',
-		render: props.text?.render ?? 'render',
-		selected: props.text?.selected ?? 'selected',
-		dependencies: props.text?.dependencies ?? 'deps',
-		clear: props.text?.clear ?? '✕ clear all filters',
-		hint: props.text?.hint ?? 'Drag · Wheel · F fit · Click select · Pills filter',
+		badge: props.text?.badge ?? t('badge'),
+		nodes: props.text?.nodes ?? t('nodes'),
+		edges: props.text?.edges ?? t('edges'),
+		render: props.text?.render ?? t('render'),
+		selected: props.text?.selected ?? t('selected'),
+		dependencies: props.text?.dependencies ?? t('dependencies'),
+		clear: props.text?.clear ?? t('clear'),
+		hint: props.text?.hint ?? t('hint'),
 		clusters: props.text?.clusters,
 		domains: props.text?.domains
 	});

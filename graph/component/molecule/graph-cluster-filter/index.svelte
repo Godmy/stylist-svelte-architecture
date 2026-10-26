@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { ZWICKY_CLUSTER_ORDER } from '$stylist/graph/const/array/zwicky-cluster-order';
 	import { ZWICKY_CLUSTER_COLOR } from '$stylist/graph/const/record/zwicky-cluster-color';
+	import { GRAPH_GRAPH_CLUSTER_FILTER_MESSAGE } from '$stylist/graph/const/record/graph-cluster-filter-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
 	import type { RecipeGraphClusterFilter } from '$stylist/graph/interface/recipe/graph-cluster-filter';
 
 	let { activeClusters, onClusterClick, clusters, title }: RecipeGraphClusterFilter = $props();
+	const t = useMessage('graph-cluster-filter', GRAPH_GRAPH_CLUSTER_FILTER_MESSAGE);
 
 	// Own clusters, or the library's assembly layers in their fixed order.
 	const entries = $derived(
@@ -24,8 +27,8 @@
 	}
 </script>
 
-<nav class="graph-cluster-filter" aria-label="Cluster filter">
-	<p class="graph-cluster-filter__label">{title ?? 'Assembly layer'}</p>
+<nav class="graph-cluster-filter" aria-label={t('label')}>
+	<p class="graph-cluster-filter__label">{title ?? t('title')}</p>
 	<ul class="graph-cluster-filter__list">
 		{#each entries as { id: cluster, label, color } (cluster)}
 			{@const cssColor = toHex(color)}
@@ -36,7 +39,7 @@
 					class:graph-cluster-filter__pill--active={active}
 					style="--c:{cssColor}"
 					onclick={() => onClusterClick?.(cluster)}
-					title={clusters ? label : `Toggle ${cluster} layer`}
+					title={clusters ? label : t('toggle', { cluster })}
 				>
 					<span class="graph-cluster-filter__dot"></span>
 					{label}

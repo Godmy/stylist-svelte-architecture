@@ -1,7 +1,10 @@
 <script lang="ts">
+	import { GRAPH_GRAPH_TOOLTIP_MESSAGE } from '$stylist/graph/const/record/graph-tooltip-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
 	import type { RecipeGraphTooltip } from '$stylist/graph/interface/recipe/graph-tooltip';
 
 	let { node, x, y, containerWidth = 800, containerHeight = 600 }: RecipeGraphTooltip = $props();
+	const t = useMessage('graph-tooltip', GRAPH_GRAPH_TOOLTIP_MESSAGE);
 
 	const TOOLTIP_W = 280;
 	const TOOLTIP_H = 200;
@@ -51,18 +54,20 @@
 		<!-- Deps -->
 		{#if node.dependencyIds.length > 0}
 			<div class="graph-tooltip__deps">
-				<span class="graph-tooltip__deps-label">{node.dependencyIds.length} deps</span>
+				<span class="graph-tooltip__deps-label"
+					>{t('deps', { count: node.dependencyIds.length })}</span
+				>
 				<ul class="graph-tooltip__dep-list">
 					{#each shownDeps as dep (dep)}
 						<li class="graph-tooltip__dep-item">{dep}</li>
 					{/each}
 					{#if extraDeps > 0}
-						<li class="graph-tooltip__dep-more">+{extraDeps} more</li>
+						<li class="graph-tooltip__dep-more">{t('more', { count: extraDeps })}</li>
 					{/if}
 				</ul>
 			</div>
 		{:else}
-			<span class="graph-tooltip__no-deps">no dependencies</span>
+			<span class="graph-tooltip__no-deps">{t('none')}</span>
 		{/if}
 	</div>
 {/if}

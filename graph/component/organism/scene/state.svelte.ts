@@ -3,10 +3,9 @@ import { SceneObjectManager } from '$stylist/graph/class/manager/scene/index';
 import { GraphScriptManager } from '$stylist/graph/class/manager/graph-script';
 import type { RecipeScene } from '$stylist/graph/interface/recipe/scene';
 import type { SceneDebugInfo } from '$stylist/graph/interface/slot/scene-debug-info';
+import { GRAPH_SCENE_MESSAGE } from '$stylist/graph/const/record/scene-message';
+import { useMessage } from '$stylist/localization/function/hook/use-message';
 
-const DEFAULT_SCENE_TITLE = 'WebGL Graph';
-const DEFAULT_SCENE_ROTATE_HINT = 'LMB + drag to orbit the camera';
-const DEFAULT_SCENE_ZOOM_HINT = 'Mouse wheel to zoom';
 const DEFAULT_CAMERA_CONTROL = {
 	radius: 18,
 	minRadius: 2,
@@ -21,6 +20,7 @@ const DEFAULT_CAMERA_CONTROL = {
 
 export function createSceneState(getProps: () => RecipeScene) {
 	const props = $derived(getProps());
+	const t = useMessage('scene', GRAPH_SCENE_MESSAGE);
 	const sceneManager = new SceneObjectManager();
 	let cameraControl = $state(DEFAULT_CAMERA_CONTROL);
 	let debugInfo = $state<SceneDebugInfo>({
@@ -55,9 +55,9 @@ export function createSceneState(getProps: () => RecipeScene) {
 	});
 	let debugTimer: ReturnType<typeof setInterval> | null = null;
 
-	const title = $derived(props.title ?? DEFAULT_SCENE_TITLE);
-	const rotateHint = $derived(props.rotateHint ?? DEFAULT_SCENE_ROTATE_HINT);
-	const zoomHint = $derived(props.zoomHint ?? DEFAULT_SCENE_ZOOM_HINT);
+	const title = $derived(props.title ?? t('title'));
+	const rotateHint = $derived(props.rotateHint ?? t('rotate'));
+	const zoomHint = $derived(props.zoomHint ?? t('zoom'));
 	const containerClass = $derived(ClassNamesManager.merge('scene', props.class?.toString() ?? ''));
 	const canvasClass = $derived(
 		ClassNamesManager.merge('scene__canvas', props.canvasClass?.toString() ?? '')

@@ -6,8 +6,11 @@
 	import GraphTooltip from '$stylist/graph/component/atom/graph-tooltip/index.svelte';
 	import type { RecipeZwickyScene } from '$stylist/graph/interface/recipe/zwicky-scene';
 
+	import { useFormat } from '$stylist/localization/function/hook/use-format';
+
 	let props: RecipeZwickyScene = $props();
 	const state = createZwickySceneState(() => props);
+	const format = useFormat();
 	let canvasRef: HTMLCanvasElement | null = null;
 
 	onMount(() => {
@@ -37,11 +40,11 @@
 
 		<div class="zwicky-scene__metrics">
 			<div class="zwicky-scene__metric">
-				<span>{state.nodeCount.toLocaleString()}</span>
+				<span>{format.number(state.nodeCount)}</span>
 				<small>{state.text.nodes}</small>
 			</div>
 			<div class="zwicky-scene__metric">
-				<span>{state.edgeCount.toLocaleString()}</span>
+				<span>{format.number(state.edgeCount)}</span>
 				<small>{state.text.edges}</small>
 			</div>
 			<div class="zwicky-scene__metric">

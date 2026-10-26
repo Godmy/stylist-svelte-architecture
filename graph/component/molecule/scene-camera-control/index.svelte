@@ -2,26 +2,30 @@
 	import type { RecipeSceneCameraControl } from '$stylist/graph/interface/recipe/scene-camera-control';
 	import createSceneCameraControlState from '$stylist/graph/component/molecule/scene-camera-control/state.svelte';
 
+	import { GRAPH_SCENE_CAMERA_CONTROL_MESSAGE } from '$stylist/graph/const/record/scene-camera-control-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	let props: RecipeSceneCameraControl = $props();
 	const state = createSceneCameraControlState(() => props);
+	const t = useMessage('scene-camera-control', GRAPH_SCENE_CAMERA_CONTROL_MESSAGE);
 </script>
 
 <section
 	class={state.containerClass}
-	aria-label="Camera zoom and movement"
+	aria-label={t('label')}
 	{...state.restProps}
 	onpointerdown={state.stopPointerPropagation}
 	onwheel={state.stopWheelPropagation}
 >
 	<div class="scene-camera-control__map">
 		<div class="scene-camera-control__label-row">
-			<span>Camera plane</span>
+			<span>{t('plane')}</span>
 			<span>{state.roundedTargetX}, {state.roundedTargetY}</span>
 		</div>
 		<div
 			class="scene-camera-control__pad"
 			role="slider"
-			aria-label="Camera movement plane"
+			aria-label={t('planeLabel')}
 			aria-valuetext={`x ${state.roundedTargetX}, y ${state.roundedTargetY}`}
 			aria-valuenow={props.targetX}
 			aria-valuemin={-100}
@@ -44,7 +48,7 @@
 
 	<div class="scene-camera-control__depth">
 		<div class="scene-camera-control__label-row">
-			<span>Zoom depth</span>
+			<span>{t('depth')}</span>
 			<span>{Math.round(state.zoomProgress)}%</span>
 		</div>
 		<div class="scene-camera-control__slider-row">
@@ -55,17 +59,17 @@
 				max={props.maxRadius}
 				step="0.1"
 				value={props.radius}
-				aria-label="Zoom depth"
+				aria-label={t('depth')}
 				oninput={state.updateRadius}
 			/>
 			<div class="scene-camera-control__depth-readout">
-				<span>near</span>
+				<span>{t('near')}</span>
 				<strong>{state.radiusText}</strong>
-				<span>far</span>
+				<span>{t('far')}</span>
 			</div>
 		</div>
 		<div class="scene-camera-control__fit">
-			<span>fit radius</span>
+			<span>{t('fit')}</span>
 			<span>{state.sceneFitRadiusText}</span>
 		</div>
 	</div>
