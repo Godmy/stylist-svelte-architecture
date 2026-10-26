@@ -2,11 +2,14 @@
 	import Button from '$stylist/button/component/atom/button/index.svelte';
 	import ConcentricCirclesScene from '$stylist/webgl/component/molecule/concentric-circles-scene/index.svelte';
 	import HyperspaceScene from '$stylist/webgl/component/molecule/hyperspace-scene/index.svelte';
+	import { WEBGL_SCENE_LAUNCHER_MESSAGE } from '$stylist/webgl/const/record/scene-launcher-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
 	import type { RecipeSceneLauncher } from '$stylist/webgl/interface/recipe/scene-launcher';
 
 	type ActiveScene = 'circle' | 'hyperspace' | null;
 
 	let { ringCount = 100 }: RecipeSceneLauncher = $props();
+	const t = useMessage('scene-launcher', WEBGL_SCENE_LAUNCHER_MESSAGE);
 
 	let container: HTMLDivElement;
 	let activeScene = $state<ActiveScene>(null);
@@ -35,8 +38,9 @@
 		<HyperspaceScene />
 	{:else}
 		<div class="scene-launcher__buttons">
-			<Button variant="primary" size="lg" onclick={() => open('circle')}>Open circle</Button>
-			<Button variant="primary" size="lg" onclick={() => open('hyperspace')}>Open hyperspace</Button
+			<Button variant="primary" size="lg" onclick={() => open('circle')}>{t('circle')}</Button>
+			<Button variant="primary" size="lg" onclick={() => open('hyperspace')}
+				>{t('hyperspace')}</Button
 			>
 		</div>
 	{/if}

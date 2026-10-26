@@ -8,42 +8,46 @@
 	import HtmlSmall from '$stylist/html/component/atom/small/index.svelte';
 	import HtmlSection from '$stylist/html/component/organism/section/index.svelte';
 	import InterferenceFieldScene from '$stylist/webgl/component/molecule/interference-field-scene/index.svelte';
+	import { WEBGL_SHADER_FIELD_MESSAGE } from '$stylist/webgl/const/record/shader-field-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
 	import type { RecipeShaderField } from '$stylist/webgl/interface/recipe/shader-field';
 
-	let {
-		element = $bindable(null),
-		title = 'Световое поле',
-		class: className,
-		...rest
-	}: RecipeShaderField = $props();
+	let { element = $bindable(null), title, class: className, ...rest }: RecipeShaderField = $props();
+
+	const t = useMessage('shader-field', WEBGL_SHADER_FIELD_MESSAGE);
 
 	let speed = $state(1);
 	let color = $state('#80b7eb');
 	let supported = $state(true);
 </script>
 
-<HtmlSection bind:element {...rest} class={['c-shader-field', className]} aria-label={title}>
+<HtmlSection
+	bind:element
+	{...rest}
+	class={['c-shader-field', className]}
+	aria-label={title ?? t('title')}
+>
 	<HtmlSection
 		class="c-shader-field__stage"
 		data-renderer={supported ? 'webgl' : 'fallback'}
-		aria-label="Шейдер светового поля"
+		aria-label={t('stage')}
 	>
 		{#if supported}
 			<InterferenceFieldScene {speed} {color} onUnsupported={() => (supported = false)} />
 		{/if}
 		<HtmlSmall role="status" class="c-shader-field__status">
-			{supported ? 'WebGL2 / GLSL' : 'WebGL недоступен. Показан статичный фон.'}
+			{supported ? t('renderer') : t('unsupported')}
 		</HtmlSmall>
 	</HtmlSection>
 	<HtmlSection class="c-shader-field__panel">
-		<HtmlH2 class="c-shader-field__title">Параметры поля</HtmlH2>
+		<HtmlH2 class="c-shader-field__title">{t('panel')}</HtmlH2>
 		<HtmlLabel class="c-shader-field__field">
-			Скорость поля
+			{t('speed')}
 			<HtmlInputRange min="0" max="3" step="0.1" bind:value={speed} />
 			{speed}
 		</HtmlLabel>
 		<HtmlLabel class="c-shader-field__field">
-			Цвет поля
+			{t('color')}
 			<HtmlInputColor bind:value={color} />
 		</HtmlLabel>
 		<HtmlButton
@@ -51,12 +55,12 @@
 			class="c-shader-field__button"
 			onclick={() => (speed = speed === 0 ? 1 : 0)}
 		>
-			{speed === 0 ? 'Продолжить поле' : 'Остановить поле'}
+			{speed === 0 ? t('resume') : t('pause')}
 		</HtmlButton>
 		<HtmlP>
-			Размер canvas адаптируется к контейнеру. При reduced motion время сцены остаётся неподвижным.
+			{t('resize')}
 		</HtmlP>
-		<HtmlP>Это настоящий WebGL-шейдер без зависимости от Three.js.</HtmlP>
+		<HtmlP>{t('native')}</HtmlP>
 	</HtmlSection>
 </HtmlSection>
 
