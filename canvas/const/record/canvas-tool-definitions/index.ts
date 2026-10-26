@@ -1,3 +1,4 @@
+/** Tools of SharedCanvas; `title` is the English fallback, the component shows catalog names by id. */
 export const SHARED_CANVAS_TOOL_DEFINITIONS = [
 	{
 		id: 'select',

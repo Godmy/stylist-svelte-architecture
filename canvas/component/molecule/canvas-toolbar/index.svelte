@@ -13,7 +13,11 @@
 		save: undefined;
 	}>();
 
+	import { CANVAS_CANVAS_TOOLBAR_MESSAGE } from '$stylist/canvas/const/record/canvas-toolbar-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	let props: RecipeCanvasToolbar = $props();
+	const t = useMessage('canvas-toolbar', CANVAS_CANVAS_TOOLBAR_MESSAGE);
 	const state = createCanvasToolbarState(
 		() => props,
 		(type, detail) => dispatch(type as never, detail as never)
@@ -32,20 +36,20 @@
 			onclick={() => state.selectTool('pen')}
 			type="button"
 		>
-			Pen
+			{t('pen')}
 		</button>
 		<button
 			class="tool-btn {state.currentTool === 'eraser' ? 'active' : ''}"
 			onclick={() => state.selectTool('eraser')}
 			type="button"
 		>
-			Eraser
+			{t('eraser')}
 		</button>
 	</div>
 
 	<div class="tool-specific-options">
 		<div class="option-group">
-			<label for="line-width" class="option-label">Line width:</label>
+			<label for="line-width" class="option-label">{t('lineWidth')}</label>
 			<input
 				id="line-width"
 				type="range"
@@ -59,7 +63,7 @@
 		</div>
 
 		<div class="option-group">
-			<label for="color-picker" class="option-label">Color:</label>
+			<label for="color-picker" class="option-label">{t('color')}</label>
 			<input
 				id="color-picker"
 				type="color"
@@ -71,10 +75,16 @@
 	</div>
 
 	<div class="action-buttons">
-		<button class="action-btn" onclick={() => state.clearCanvas()} type="button"> Clear </button>
-		<button class="action-btn" onclick={() => state.save()} type="button"> Save </button>
-		<button class="action-btn" onclick={() => state.undo()} type="button" disabled> Undo </button>
-		<button class="action-btn" onclick={() => state.redo()} type="button" disabled> Redo </button>
+		<button class="action-btn" onclick={() => state.clearCanvas()} type="button"
+			>{t('clear')}</button
+		>
+		<button class="action-btn" onclick={() => state.save()} type="button">{t('save')}</button>
+		<button class="action-btn" onclick={() => state.undo()} type="button" disabled
+			>{t('undo')}</button
+		>
+		<button class="action-btn" onclick={() => state.redo()} type="button" disabled
+			>{t('redo')}</button
+		>
 	</div>
 </div>
 

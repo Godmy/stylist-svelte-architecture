@@ -3,9 +3,13 @@
 	import createCollaborativeEditorState from '$stylist/canvas/component/organism/collaborative-editor/state.svelte';
 	import type { RecipeCollaborativeEditor } from '$stylist/canvas/interface/recipe/collaborative-editor';
 
+	import { CANVAS_COLLABORATIVE_EDITOR_MESSAGE } from '$stylist/canvas/const/record/collaborative-editor-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	let props: RecipeCollaborativeEditor = $props();
 
 	const state = createCollaborativeEditorState(() => props);
+	const t = useMessage('collaborative-editor', CANVAS_COLLABORATIVE_EDITOR_MESSAGE);
 
 	let editorRef: HTMLDivElement | undefined;
 
@@ -21,7 +25,8 @@
 				type="button"
 				class={state.toolbarButtonClasses}
 				onclick={() => state.formatText('bold')}
-				title="Bold"
+				title={t('bold')}
+				aria-label={t('bold')}
 			>
 				<BaseIcon name={state.Bold} class="_c1" />
 			</button>
@@ -29,7 +34,8 @@
 				type="button"
 				class={state.toolbarButtonClasses}
 				onclick={() => state.formatText('italic')}
-				title="Italic"
+				title={t('italic')}
+				aria-label={t('italic')}
 			>
 				<BaseIcon name={state.Italic} class="_c1" />
 			</button>
@@ -37,7 +43,8 @@
 				type="button"
 				class={state.toolbarButtonClasses}
 				onclick={() => state.formatText('underline')}
-				title="Underline"
+				title={t('underline')}
+				aria-label={t('underline')}
 			>
 				<BaseIcon name={state.Underline} class="_c1" />
 			</button>
@@ -46,7 +53,8 @@
 				type="button"
 				class={state.toolbarButtonClasses}
 				onclick={() => state.formatText('justifyLeft')}
-				title="Align Left"
+				title={t('alignLeft')}
+				aria-label={t('alignLeft')}
 			>
 				<BaseIcon name={state.AlignLeft} class="_c1" />
 			</button>
@@ -54,7 +62,8 @@
 				type="button"
 				class={state.toolbarButtonClasses}
 				onclick={() => state.formatText('justifyCenter')}
-				title="Align Center"
+				title={t('alignCenter')}
+				aria-label={t('alignCenter')}
 			>
 				<BaseIcon name={state.AlignCenter} class="_c1" />
 			</button>
@@ -62,7 +71,8 @@
 				type="button"
 				class={state.toolbarButtonClasses}
 				onclick={() => state.formatText('justifyRight')}
-				title="Align Right"
+				title={t('alignRight')}
+				aria-label={t('alignRight')}
 			>
 				<BaseIcon name={state.AlignRight} class="_c1" />
 			</button>
@@ -71,7 +81,8 @@
 				type="button"
 				class={state.toolbarButtonClasses}
 				onclick={() => state.formatText('insertUnorderedList')}
-				title="Bullet List"
+				title={t('bulletList')}
+				aria-label={t('bulletList')}
 			>
 				<BaseIcon name={state.List} class="_c1" />
 			</button>
@@ -79,7 +90,8 @@
 				type="button"
 				class={state.toolbarButtonClasses}
 				onclick={() => state.formatText('insertOrderedList')}
-				title="Numbered List"
+				title={t('numberedList')}
+				aria-label={t('numberedList')}
 			>
 				<BaseIcon name={state.ListOrdered} class="_c1" />
 			</button>
@@ -88,7 +100,8 @@
 				type="button"
 				class={state.toolbarButtonClasses}
 				onclick={state.insertComment}
-				title="Insert Comment"
+				title={t('comment')}
+				aria-label={t('comment')}
 			>
 				<BaseIcon name={state.MessageCircle} class="_c1" />
 			</button>
@@ -112,7 +125,7 @@
 			<div class={state.userListClasses}>
 				<div class={state.userListHeaderClasses}>
 					<BaseIcon name={state.Users} class="_c2" />
-					Collaborators ({state.users.length})
+					{t('collaborators', { count: state.users.length })}
 				</div>
 				<div class="c-collaborative-editor__user-entries">
 					{#each state.users as user}
@@ -131,7 +144,7 @@
 							{/if}
 							<span class={state.userNameClasses}>{user.name}</span>
 							{#if state.currentUser?.id === user.id}
-								<span class={state.userIndicatorClasses}>(You)</span>
+								<span class={state.userIndicatorClasses}>{t('you')}</span>
 							{/if}
 						</div>
 					{/each}

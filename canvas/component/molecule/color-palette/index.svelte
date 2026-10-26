@@ -2,8 +2,12 @@
 	import type { RecipeColorPalette } from '$stylist/canvas/interface/recipe/color-palette';
 	import createColorPaletteState from '$stylist/canvas/component/molecule/color-palette/state.svelte';
 
+	import { CANVAS_COLOR_PALETTE_MESSAGE } from '$stylist/canvas/const/record/color-palette-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	let props: RecipeColorPalette = $props();
 	const state = createColorPaletteState(() => props);
+	const t = useMessage('color-palette', CANVAS_COLOR_PALETTE_MESSAGE);
 </script>
 
 <div class={state.rootClass} {...state.restProps}>
@@ -31,7 +35,7 @@
 					{#each state.palette as color}
 						<button
 							type="button"
-							aria-label={`Select color ${color}`}
+							aria-label={t('select', { color })}
 							class={state.paletteButtonClass}
 							style={`background-color: ${color}`}
 							onclick={() => state.setColor(color)}
@@ -46,7 +50,7 @@
 				onchange={state.handleChange}
 			/>
 			<button type="button" class={state.acceptButtonClass} onclick={() => state.setOpen(false)}>
-				OK
+				{t('accept')}
 			</button>
 		</div>
 	{/if}

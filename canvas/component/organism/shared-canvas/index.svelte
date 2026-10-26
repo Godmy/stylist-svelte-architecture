@@ -5,8 +5,12 @@
 	import { ObjectManagerSharedCanvas } from '$stylist/canvas/class/manager/shared-canvas/index';
 	import createSharedCanvasState from '$stylist/canvas/component/organism/shared-canvas/state.svelte';
 
+	import { CANVAS_SHARED_CANVAS_MESSAGE } from '$stylist/canvas/const/record/shared-canvas-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	const contract: RecipeSharedCanvas = $props();
 	const state = createSharedCanvasState(() => contract);
+	const t = useMessage('shared-canvas', CANVAS_SHARED_CANVAS_MESSAGE);
 
 	let canvasRef: HTMLCanvasElement | null = null;
 	let ctx: CanvasRenderingContext2D | null = null;
@@ -52,8 +56,8 @@
 						type="button"
 						class={state.toolButtonClass(tool.id)}
 						onclick={() => state.selectTool(tool.id)}
-						title={tool.title}
-						aria-label={tool.title}
+						title={t(tool.id)}
+						aria-label={t(tool.id)}
 					>
 						<BaseIcon name={tool.icon} class="_c1" />
 					</button>
@@ -72,7 +76,7 @@
 						value={state.selectedColor}
 						oninput={(event) =>
 							state.setSelectedColor((event.currentTarget as HTMLInputElement).value)}
-						aria-label="Select color"
+						aria-label={t('color')}
 					/>
 				</label>
 			</div>
@@ -84,8 +88,8 @@
 					type="button"
 					class={state.actionButtonClass}
 					onclick={state.undo}
-					title="Undo"
-					aria-label="Undo"
+					title={t('undo')}
+					aria-label={t('undo')}
 					disabled={state.undoStack.length === 0}
 				>
 					<BaseIcon name={state.actionIcons.undo} class="_c1" />
@@ -94,8 +98,8 @@
 					type="button"
 					class={state.actionButtonClass}
 					onclick={state.redo}
-					title="Redo"
-					aria-label="Redo"
+					title={t('redo')}
+					aria-label={t('redo')}
 					disabled={state.redoStack.length === 0}
 				>
 					<BaseIcon name={state.actionIcons.redo} class="_c1" />
@@ -104,8 +108,8 @@
 					type="button"
 					class={state.actionButtonClass}
 					onclick={state.deleteSelected}
-					title="Delete Selected"
-					aria-label="Delete Selected"
+					title={t('delete')}
+					aria-label={t('delete')}
 					disabled={state.localObjects.length === 0}
 				>
 					<BaseIcon name={state.actionIcons.delete} class="_c1" />
@@ -115,8 +119,8 @@
 					class={state.actionButtonClass}
 					onclick={() =>
 						CanvasManager.exportCanvasImage(canvasRef, ObjectManagerSharedCanvas.exportFilename)}
-					title="Export Canvas"
-					aria-label="Export Canvas"
+					title={t('export')}
+					aria-label={t('export')}
 				>
 					<BaseIcon name={state.actionIcons.export} class="_c1" />
 				</button>
@@ -144,7 +148,7 @@
 							class={state.remoteCursorClass}
 							style={`left: ${user.cursorPosition.x}px; top: ${user.cursorPosition.y}px; background-color: ${user.color};`}
 							title={user.name}
-							aria-label={`Cursor of ${user.name}`}
+							aria-label={t('cursor', { name: user.name })}
 						></div>
 					{/if}
 				{/each}
@@ -153,7 +157,7 @@
 
 		{#if state.showUsers}
 			<div class={state.userPanelClass}>
-				<h4 class={state.userPanelTitleClass}>Collaborators</h4>
+				<h4 class={state.userPanelTitleClass}>{t('collaborators')}</h4>
 				<div class={state.userListClass}>
 					{#each contract.users ?? [] as user}
 						<div class={state.userItemClass}>
@@ -165,7 +169,7 @@
 							></div>
 							<span class={state.userNameClass}>{user.name}</span>
 							{#if user.id === contract.currentUserId}
-								<span class={state.currentUserClass}>(You)</span>
+								<span class={state.currentUserClass}>{t('you')}</span>
 							{/if}
 						</div>
 					{/each}

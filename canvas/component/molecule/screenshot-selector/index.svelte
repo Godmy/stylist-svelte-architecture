@@ -2,8 +2,12 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import type { RecipeScreenshotSelector } from '$stylist/canvas/interface/recipe/screenshot-selector';
 	import { createScreenshotSelectorState } from '$stylist/canvas/component/molecule/screenshot-selector/state.svelte';
+	import { CANVAS_SCREENSHOT_SELECTOR_MESSAGE } from '$stylist/canvas/const/record/screenshot-selector-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	let props: RecipeScreenshotSelector & HTMLAttributes<HTMLDivElement> = $props();
 	const state = createScreenshotSelectorState(() => props);
+	const t = useMessage('screenshot-selector', CANVAS_SCREENSHOT_SELECTOR_MESSAGE);
 
 	$effect(() => {
 		if (state.canvasElement && typeof window !== 'undefined') {
@@ -22,7 +26,7 @@
 
 <div
 	role="application"
-	aria-label="Screenshot selection area"
+	aria-label={t('label')}
 	bind:this={state.overlayElement}
 	class="screenshot-overlay {state.drawingMode && state.selectionFixed ? 'drawing-mode' : ''}"
 	onpointerdown={state.handlePointerDown}
