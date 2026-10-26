@@ -3,8 +3,12 @@
 	import { createNodeHeaderState } from '$stylist/workspace/component/atom/node-header/state.svelte';
 	import BaseIcon from '$stylist/svg/component/atom/icon/index.svelte';
 
+	import { WORKSPACE_NODE_HEADER_MESSAGE } from '$stylist/workspace/const/record/node-header-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	let props: RecipeNodeHeader = $props();
 	const state = createNodeHeaderState(() => props);
+	const t = useMessage('node-header', WORKSPACE_NODE_HEADER_MESSAGE);
 </script>
 
 <div
@@ -45,8 +49,8 @@
 					type="button"
 					class="node-header__action-btn"
 					onclick={() => props.onduplicate?.()}
-					title="Duplicate"
-					aria-label="Duplicate node"><BaseIcon name="copy" size={14} /></button
+					title={t('duplicate')}
+					aria-label={t('duplicateLabel')}><BaseIcon name="copy" size={14} /></button
 				>
 			{/if}
 			{#if props.showSettings}
@@ -54,8 +58,8 @@
 					type="button"
 					class="node-header__action-btn"
 					onclick={() => props.onsettings?.()}
-					title="Settings"
-					aria-label="Node settings"><BaseIcon name="settings" size={14} /></button
+					title={t('settings')}
+					aria-label={t('settingsLabel')}><BaseIcon name="settings" size={14} /></button
 				>
 			{/if}
 			{#if props.showClose}
@@ -63,16 +67,16 @@
 					type="button"
 					class="node-header__action-btn node-header__action-btn--danger"
 					onclick={() => props.onclose?.()}
-					title="Close"
-					aria-label="Close node"><BaseIcon name="x" size={14} /></button
+					title={t('close')}
+					aria-label={t('closeLabel')}><BaseIcon name="x" size={14} /></button
 				>
 			{:else if props.showDelete}
 				<button
 					type="button"
 					class="node-header__action-btn node-header__action-btn--danger"
 					onclick={() => props.ondelete?.()}
-					title="Delete"
-					aria-label="Delete node"><BaseIcon name="trash-2" size={14} /></button
+					title={t('delete')}
+					aria-label={t('deleteLabel')}><BaseIcon name="trash-2" size={14} /></button
 				>
 			{/if}
 		</div>

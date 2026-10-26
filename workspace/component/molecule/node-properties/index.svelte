@@ -5,9 +5,13 @@
 	import NodeProperty from '$stylist/workspace/component/atom/node-property/index.svelte';
 	import type { TokenPropertyType } from '$stylist/workspace/type/alias/property-type';
 
+	import { WORKSPACE_NODE_PROPERTIES_MESSAGE } from '$stylist/workspace/const/record/node-properties-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	let props: NodePropertiesProps = $props();
 	const state = createNodePropertiesState(() => props);
-	const title = $derived(props.title ?? 'Properties');
+	const t = useMessage('node-properties', WORKSPACE_NODE_PROPERTIES_MESSAGE);
+	const title = $derived(props.title ?? t('title'));
 </script>
 
 <aside
@@ -24,7 +28,7 @@
 					variant="ghost"
 					size="sm"
 					icon="x"
-					aria-label="Close properties panel"
+					aria-label={t('close')}
 					onclick={state.handleCloseClick}
 				/>
 			{/if}
@@ -74,7 +78,7 @@
 				</div>
 			{/if}
 		{:else}
-			<p class="node-properties__empty">No properties available.</p>
+			<p class="node-properties__empty">{t('empty')}</p>
 		{/if}
 
 		{#if props.children}{@render props.children()}{/if}

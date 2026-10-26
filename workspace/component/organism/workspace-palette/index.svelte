@@ -4,6 +4,8 @@
 	import Icon from '$stylist/svg/component/atom/icon/index.svelte';
 	import Divider from '$stylist/layout/component/atom/divider/index.svelte';
 	import createWorkspacePaletteState from '$stylist/workspace/component/organism/workspace-palette/state.svelte';
+	import { WORKSPACE_WORKSPACE_PALETTE_MESSAGE } from '$stylist/workspace/const/record/workspace-palette-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
 	import type { RecipeWorkspacePalette as WorkspacePaletteProps } from '$stylist/workspace/interface/recipe/workspace-palette';
 
 	let {
@@ -27,6 +29,8 @@
 		children,
 		...restProps
 	}: WorkspacePaletteProps = $props();
+
+	const t = useMessage('workspace-palette', WORKSPACE_WORKSPACE_PALETTE_MESSAGE);
 
 	const state = createWorkspacePaletteState(() => ({
 		items,
@@ -54,14 +58,9 @@
 	<div class={state.rootClass} style={state.paletteStyle} {...restProps}>
 		<div class="workspace-palette__header">
 			<div class="workspace-palette__header-title">
-				<h3 class="workspace-palette__title">Workspace Palette</h3>
+				<h3 class="workspace-palette__title">{t('title')}</h3>
 				{#if dismissible}
-					<IconButton
-						variant="ghost"
-						size="sm"
-						aria-label="Close palette"
-						onclick={state.handleClose}
-					>
+					<IconButton variant="ghost" size="sm" aria-label={t('close')} onclick={state.handleClose}>
 						<Icon name="x" size={16} />
 					</IconButton>
 				{/if}
@@ -69,7 +68,7 @@
 
 			<div class="workspace-palette__search">
 				<InputText
-					placeholder="Search nodes..."
+					placeholder={t('search')}
 					value={searchQuery}
 					size="sm"
 					oninput={(event: Event) => state.handleSearch((event.target as HTMLInputElement).value)}
@@ -80,8 +79,8 @@
 				<IconButton
 					variant={viewMode === 'list' ? 'primary' : 'ghost'}
 					size="sm"
-					aria-label="List view"
-					title="List view"
+					aria-label={t('list')}
+					title={t('list')}
 					onclick={() => {
 						if (viewMode !== 'list') state.handleViewModeToggle();
 					}}
@@ -91,8 +90,8 @@
 				<IconButton
 					variant={viewMode === 'grid' ? 'primary' : 'ghost'}
 					size="sm"
-					aria-label="Grid view"
-					title="Grid view"
+					aria-label={t('grid')}
+					title={t('grid')}
 					onclick={() => {
 						if (viewMode !== 'grid') state.handleViewModeToggle();
 					}}
@@ -109,7 +108,7 @@
 					class={`workspace-palette__category${category === selectedCategory ? ' workspace-palette__category--active' : ''}`}
 					onclick={() => state.handleCategorySelect(category)}
 				>
-					{state.getCategoryLabel(category)}
+					{category === 'all' ? t('all') : category}
 				</button>
 			{/each}
 		</div>
@@ -120,9 +119,9 @@
 			{#if state.filteredItems.length === 0}
 				<div class="workspace-palette__empty">
 					{#if searchQuery}
-						<p>No nodes found for "{searchQuery}"</p>
+						<p>{t('notFound', { query: searchQuery })}</p>
 					{:else}
-						<p>No nodes available</p>
+						<p>{t('empty')}</p>
 					{/if}
 				</div>
 			{:else}

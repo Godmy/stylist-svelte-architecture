@@ -13,6 +13,8 @@
 	import type { GraphWorkspaceConnection } from '$stylist/workspace/interface/slot/graph-workspace-connection';
 	import type { GraphWorkspaceConnectionInput } from '$stylist/workspace/type/alias/graph-workspace-connection-input';
 	import type { GraphNodeDraft } from '$stylist/workspace/interface/slot/graph-node-draft';
+	import { WORKSPACE_STYLIST_GRAPH_WORKSPACE_MESSAGE } from '$stylist/workspace/const/record/stylist-graph-workspace-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
 	import type { RecipeStylistGraphWorkspace } from '$stylist/workspace/interface/recipe/stylist-graph-workspace';
 
 	const THEME_OPTIONS: (typeof TOKEN_THEME_MODE)[number][] = ['default', 'light', 'dark'];
@@ -71,6 +73,15 @@
 		worldBounds = { width: 2200, height: 1400 }
 	}: RecipeStylistGraphWorkspace = $props();
 
+	const t = useMessage('stylist-graph-workspace', WORKSPACE_STYLIST_GRAPH_WORKSPACE_MESSAGE);
+	// Texts of a new node follow the provider locale; the rest of the draft is plain data.
+	const defaultNodeDraft = (): GraphNodeDraft => ({
+		...DEFAULT_NODE_DRAFT,
+		title: t('newNode'),
+		summary: t('newNodeSummary'),
+		details: t('newNodeDetails')
+	});
+
 	let viewportWidth = $state(1180);
 	let viewportHeight = $state(760);
 	let selectedTheme = $state<(typeof TOKEN_THEME_MODE)[number]>('default');
@@ -78,7 +89,7 @@
 	let showDebug = $state(false);
 	let selectedNodeId = $state<string>(untrack(() => initialNodes[0]?.id ?? ''));
 	let pendingConnectionTargetId = $state<string>('');
-	let nodeDraft = $state<GraphNodeDraft>({ ...DEFAULT_NODE_DRAFT });
+	let nodeDraft = $state<GraphNodeDraft>(defaultNodeDraft());
 	let nodeLayouts = $state<GraphWorkspaceNode[]>(
 		untrack(() => initialNodes.map((node) => ({ ...node })))
 	);
@@ -446,7 +457,7 @@
 		nodeLayouts = [...nodeLayouts, nextNode];
 		selectedNodeId = nextNode.id;
 		pendingConnectionTargetId = '';
-		nodeDraft = { ...DEFAULT_NODE_DRAFT };
+		nodeDraft = defaultNodeDraft();
 	}
 
 	function duplicateSelectedNode() {
@@ -597,8 +608,8 @@
 		<aside class="workspace-panel workspace-panel--left">
 			<section class="workspace-card">
 				<div class="workspace-card__header">
-					<h2>Graph</h2>
-					<span>{nodeLayouts.length} nodes</span>
+					<h2>{t('graph')}</h2>
+					<span>{t('nodes', { count: nodeLayouts.length })}</span>
 				</div>
 				<div class="workspace-list">
 					{#each nodeLayouts as node}
@@ -614,7 +625,7 @@
 						>
 							<div>
 								<strong>{node.title}</strong>
-								<span>{node.category}</span>
+								<span>{t(node.category)}</span>
 							</div>
 							<small>{node.x}, {node.y}</small>
 						</button>
@@ -624,12 +635,12 @@
 
 			<section class="workspace-card">
 				<div class="workspace-card__header">
-					<h2>Add Node</h2>
-					<span>Center of viewport</span>
+					<h2>{t('addNodeTitle')}</h2>
+					<span>{t('center')}</span>
 				</div>
 				<div class="field-grid">
 					<label class="field">
-						<span>Title</span>
+						<span>{t('title')}</span>
 						<input
 							value={nodeDraft.title}
 							oninput={(event) => {
@@ -641,7 +652,7 @@
 						/>
 					</label>
 					<label class="field">
-						<span>Category</span>
+						<span>{t('category')}</span>
 						<select
 							value={nodeDraft.category}
 							onchange={(event) => {
@@ -651,15 +662,15 @@
 								};
 							}}
 						>
-							<option value="cluster">cluster</option>
-							<option value="signal">signal</option>
-							<option value="insight">insight</option>
-							<option value="delivery">delivery</option>
-							<option value="narrative">narrative</option>
+							<option value="cluster">{t('cluster')}</option>
+							<option value="signal">{t('signal')}</option>
+							<option value="insight">{t('insight')}</option>
+							<option value="delivery">{t('delivery')}</option>
+							<option value="narrative">{t('narrative')}</option>
 						</select>
 					</label>
 					<label class="field field--full">
-						<span>Summary</span>
+						<span>{t('summary')}</span>
 						<input
 							value={nodeDraft.summary}
 							oninput={(event) => {
@@ -671,7 +682,7 @@
 						/>
 					</label>
 					<label class="field">
-						<span>Accent</span>
+						<span>{t('accent')}</span>
 						<input
 							value={nodeDraft.accent}
 							oninput={(event) => {
@@ -683,7 +694,7 @@
 						/>
 					</label>
 					<label class="field">
-						<span>Color</span>
+						<span>{t('color')}</span>
 						<input
 							value={nodeDraft.color}
 							oninput={(event) => {
@@ -695,7 +706,7 @@
 						/>
 					</label>
 					<label class="field">
-						<span>Width</span>
+						<span>{t('width')}</span>
 						<input
 							type="number"
 							value={String(nodeDraft.width)}
@@ -708,7 +719,7 @@
 						/>
 					</label>
 					<label class="field">
-						<span>Height</span>
+						<span>{t('height')}</span>
 						<input
 							type="number"
 							value={String(nodeDraft.height)}
@@ -721,7 +732,7 @@
 						/>
 					</label>
 					<label class="field field--full">
-						<span>Details</span>
+						<span>{t('details')}</span>
 						<textarea
 							rows="4"
 							value={nodeDraft.details}
@@ -735,7 +746,7 @@
 				</div>
 				<div class="action-row">
 					<button type="button" class="action-button action-button--primary" onclick={addNode}>
-						Add node
+						{t('addNode')}
 					</button>
 				</div>
 			</section>
@@ -743,7 +754,7 @@
 
 		<div
 			role="application"
-			aria-label="Graph viewport"
+			aria-label={t('viewportLabel')}
 			class={`graph-editor-page__viewport-shell ${activeTool === 'pan' ? 'graph-editor-page__viewport-shell--pan' : ''} ${isViewportDragging ? 'graph-editor-page__viewport-shell--dragging' : ''}`}
 			bind:clientWidth={viewportWidth}
 			bind:clientHeight={viewportHeight}
@@ -754,7 +765,7 @@
 			onwheel={handleViewportWheel}
 		>
 			<div class="graph-editor-page__toolbar">
-				<div class="workspace-toolbar" role="toolbar" aria-label="Graph workspace controls">
+				<div class="workspace-toolbar" role="toolbar" aria-label={t('controls')}>
 					<div class="workspace-toolbar__group">
 						{#each TOOL_OPTIONS as tool}
 							<button
@@ -764,7 +775,7 @@
 									activeTool = tool.mode;
 								}}
 							>
-								{tool.label}
+								{t(tool.mode)}
 							</button>
 						{/each}
 					</div>
@@ -773,13 +784,13 @@
 
 					<div class="workspace-toolbar__group">
 						<button type="button" class="workspace-toolbar__button" onclick={() => adjustZoom(-1)}>
-							Zoom -
+							{t('zoomOut')}
 						</button>
 						<button type="button" class="workspace-toolbar__button" onclick={() => adjustZoom(1)}>
-							Zoom +
+							{t('zoomIn')}
 						</button>
 						<button type="button" class="workspace-toolbar__button" onclick={resetViewport}>
-							Reset
+							{t('reset')}
 						</button>
 					</div>
 
@@ -787,7 +798,7 @@
 
 					<div class="workspace-toolbar__group">
 						<label class="workspace-toolbar__field">
-							<span>Theme</span>
+							<span>{t('theme')}</span>
 							<select
 								value={selectedTheme}
 								onchange={(event) => {
@@ -807,7 +818,7 @@
 								showDebug = !showDebug;
 							}}
 						>
-							Debug
+							{t('debug')}
 						</button>
 					</div>
 				</div>
@@ -889,20 +900,20 @@
 		<aside class="workspace-panel workspace-panel--right">
 			<section class="workspace-card">
 				<div class="workspace-card__header">
-					<h2>Viewport</h2>
+					<h2>{t('viewport')}</h2>
 					<span>{cameraSummary}</span>
 				</div>
 				<div class="status-grid">
 					<div>
-						<span>Tool</span>
-						<strong>{activeTool}</strong>
+						<span>{t('tool')}</span>
+						<strong>{t(activeTool)}</strong>
 					</div>
 					<div>
-						<span>Connections</span>
+						<span>{t('connections')}</span>
 						<strong>{connections.length}</strong>
 					</div>
 					<div>
-						<span>Categories</span>
+						<span>{t('categories')}</span>
 						<strong>{nodeCategories.length}</strong>
 					</div>
 				</div>
@@ -910,14 +921,14 @@
 
 			<section class="workspace-card">
 				<div class="workspace-card__header">
-					<h2>Node Properties</h2>
-					<span>{selectedNode ? selectedNode.id : 'No selection'}</span>
+					<h2>{t('properties')}</h2>
+					<span>{selectedNode ? selectedNode.id : t('noSelection')}</span>
 				</div>
 
 				{#if selectedNode}
 					<div class="field-grid">
 						<label class="field">
-							<span>Title</span>
+							<span>{t('title')}</span>
 							<input
 								value={selectedNode.title}
 								oninput={(event) =>
@@ -925,7 +936,7 @@
 							/>
 						</label>
 						<label class="field">
-							<span>Category</span>
+							<span>{t('category')}</span>
 							<select
 								value={selectedNode.category}
 								onchange={(event) =>
@@ -934,15 +945,15 @@
 										(event.target as HTMLSelectElement).value as GraphNodeCategory
 									)}
 							>
-								<option value="cluster">cluster</option>
-								<option value="signal">signal</option>
-								<option value="insight">insight</option>
-								<option value="delivery">delivery</option>
-								<option value="narrative">narrative</option>
+								<option value="cluster">{t('cluster')}</option>
+								<option value="signal">{t('signal')}</option>
+								<option value="insight">{t('insight')}</option>
+								<option value="delivery">{t('delivery')}</option>
+								<option value="narrative">{t('narrative')}</option>
 							</select>
 						</label>
 						<label class="field field--full">
-							<span>Summary</span>
+							<span>{t('summary')}</span>
 							<input
 								value={selectedNode.summary}
 								oninput={(event) =>
@@ -950,7 +961,7 @@
 							/>
 						</label>
 						<label class="field">
-							<span>Accent</span>
+							<span>{t('accent')}</span>
 							<input
 								value={selectedNode.accent}
 								oninput={(event) =>
@@ -958,7 +969,7 @@
 							/>
 						</label>
 						<label class="field">
-							<span>Color</span>
+							<span>{t('color')}</span>
 							<input
 								value={selectedNode.color}
 								oninput={(event) =>
@@ -966,7 +977,7 @@
 							/>
 						</label>
 						<label class="field">
-							<span>X</span>
+							<span>{t('x')}</span>
 							<input
 								type="number"
 								value={String(selectedNode.x)}
@@ -975,7 +986,7 @@
 							/>
 						</label>
 						<label class="field">
-							<span>Y</span>
+							<span>{t('y')}</span>
 							<input
 								type="number"
 								value={String(selectedNode.y)}
@@ -984,7 +995,7 @@
 							/>
 						</label>
 						<label class="field">
-							<span>Width</span>
+							<span>{t('width')}</span>
 							<input
 								type="number"
 								value={String(selectedNode.width)}
@@ -993,7 +1004,7 @@
 							/>
 						</label>
 						<label class="field">
-							<span>Height</span>
+							<span>{t('height')}</span>
 							<input
 								type="number"
 								value={String(selectedNode.height)}
@@ -1002,7 +1013,7 @@
 							/>
 						</label>
 						<label class="field field--full">
-							<span>Details</span>
+							<span>{t('details')}</span>
 							<textarea
 								rows="5"
 								value={selectedNode.details.join('\n')}
@@ -1014,41 +1025,41 @@
 
 					<div class="action-row">
 						<button type="button" class="action-button" onclick={() => focusNode(selectedNode.id)}>
-							Focus
+							{t('focus')}
 						</button>
 						<button type="button" class="action-button" onclick={duplicateSelectedNode}>
-							Duplicate
+							{t('duplicate')}
 						</button>
 						<button
 							type="button"
 							class="action-button action-button--danger"
 							onclick={deleteSelectedNode}
 						>
-							Delete
+							{t('delete')}
 						</button>
 					</div>
 				{:else}
-					<p class="empty-state">Select a node to edit its properties.</p>
+					<p class="empty-state">{t('selectToEdit')}</p>
 				{/if}
 			</section>
 
 			<section class="workspace-card">
 				<div class="workspace-card__header">
-					<h2>Connections</h2>
+					<h2>{t('connections')}</h2>
 					<span>{selectedNodeConnections.length}</span>
 				</div>
 
 				{#if selectedNode}
 					<div class="field-grid">
 						<label class="field field--full">
-							<span>Add outgoing connection</span>
+							<span>{t('addOutgoing')}</span>
 							<select
 								value={pendingConnectionTargetId}
 								onchange={(event) => {
 									pendingConnectionTargetId = (event.target as HTMLSelectElement).value;
 								}}
 							>
-								<option value="">Select target</option>
+								<option value="">{t('selectTarget')}</option>
 								{#each availableConnectionTargets as target}
 									<option value={target.id}>{target.title}</option>
 								{/each}
@@ -1061,7 +1072,7 @@
 							class="action-button action-button--primary"
 							onclick={addConnection}
 						>
-							Add connection
+							{t('addConnection')}
 						</button>
 					</div>
 
@@ -1077,24 +1088,24 @@
 									class="inline-remove"
 									onclick={() => removeConnection(connection.id)}
 								>
-									Remove
+									{t('remove')}
 								</button>
 							</div>
 						{/each}
 						{#if selectedNodeConnections.length === 0}
-							<p class="empty-state">No connections for the selected node.</p>
+							<p class="empty-state">{t('noConnections')}</p>
 						{/if}
 					</div>
 				{:else}
-					<p class="empty-state">Select a node to manage connections.</p>
+					<p class="empty-state">{t('selectToConnect')}</p>
 				{/if}
 			</section>
 
 			{#if showDebug}
 				<section class="workspace-card">
 					<div class="workspace-card__header">
-						<h2>Debug</h2>
-						<span>Live</span>
+						<h2>{t('debug')}</h2>
+						<span>{t('live')}</span>
 					</div>
 					<pre class="debug-block">{JSON.stringify(
 							{

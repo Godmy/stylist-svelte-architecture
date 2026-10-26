@@ -62,9 +62,6 @@ export function createWorkspacePaletteState(getProps: () => WorkspacePaletteProp
 		get paletteStyle() {
 			return paletteStyle;
 		},
-		getCategoryLabel(category: string) {
-			return ObjectManagerWorkspacePalette.getCategoryLabel(category);
-		},
 		handleSearch,
 		handleNodeClick,
 		handleClose,

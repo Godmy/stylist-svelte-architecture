@@ -59,10 +59,6 @@ export class ObjectManagerWorkspacePalette {
 		return categories?.length ? categories : ObjectManagerWorkspacePalette.defaultCategories;
 	}
 
-	static getCategoryLabel(category: string): string {
-		return category === 'all' ? 'All' : category;
-	}
-
 	static toggleViewMode(viewMode: NonNullable<WorkspacePaletteProps['viewMode']>): 'grid' | 'list' {
 		return viewMode === 'grid' ? 'list' : 'grid';
 	}

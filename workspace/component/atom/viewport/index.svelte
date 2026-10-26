@@ -4,15 +4,19 @@
 	import Stage from '$stylist/workspace/component/atom/stage/index.svelte';
 	import GridPattern from '$stylist/workspace/component/atom/grid-pattern/index.svelte';
 
+	import { WORKSPACE_VIEWPORT_MESSAGE } from '$stylist/workspace/const/record/viewport-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	let props: RecipeViewport = $props();
 	const state = createViewportState(() => props);
+	const t = useMessage('viewport', WORKSPACE_VIEWPORT_MESSAGE);
 </script>
 
 <div
 	class={state.classes}
 	role="button"
-	aria-roledescription="pan and zoom viewport"
-	aria-label="Interactive viewport"
+	aria-roledescription={t('role')}
+	aria-label={t('label')}
 	aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown + - 0"
 	tabindex="0"
 	onmousedown={state.handleMouseDown}

@@ -5,8 +5,12 @@
 	import Icon from '$stylist/svg/component/atom/icon/index.svelte';
 	import { createGraphNodeCardState } from '$stylist/workspace/component/molecule/graph-node-card/state.svelte';
 
+	import { WORKSPACE_GRAPH_NODE_CARD_MESSAGE } from '$stylist/workspace/const/record/graph-node-card-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	let props: RecipeGraphNodeCard & HTMLAttributes<HTMLDivElement> = $props();
 	const state = createGraphNodeCardState(() => props);
+	const t = useMessage('graph-node-card', WORKSPACE_GRAPH_NODE_CARD_MESSAGE);
 </script>
 
 <div class={state.containerClass} {...state.restProps}>
@@ -68,17 +72,21 @@
 					size="sm"
 					variant="ghost"
 					onclick={state.handleViewDetails}
-					aria-label={`View details for ${props.node.name ?? props.node.title ?? props.node.id ?? 'node'}`}
+					aria-label={t('detailsLabel', {
+						name: props.node.name ?? props.node.title ?? props.node.id ?? t('node')
+					})}
 				>
-					Details
+					{t('details')}
 				</Button>
 				<Button
 					size="sm"
 					variant="ghost"
 					onclick={state.handleAddField}
-					aria-label={`Add field to ${props.node.name ?? props.node.title ?? props.node.id ?? 'node'}`}
+					aria-label={t('addFieldLabel', {
+						name: props.node.name ?? props.node.title ?? props.node.id ?? t('node')
+					})}
 				>
-					Add Field
+					{t('addField')}
 				</Button>
 			</div>
 		</div>

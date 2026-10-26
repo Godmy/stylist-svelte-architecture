@@ -5,9 +5,13 @@
 	import Icon from '$stylist/svg/component/atom/icon/index.svelte';
 	import createMinimapState from '$stylist/workspace/component/organism/minimap/state.svelte';
 
+	import { WORKSPACE_MINIMAP_MESSAGE } from '$stylist/workspace/const/record/minimap-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	const contract: LayoutHTMLAttributes<HTMLDivElement> & RecipeMinimap & { class?: string } =
 		$props();
 	const state = createMinimapState(() => contract);
+	const t = useMessage('minimap', WORKSPACE_MINIMAP_MESSAGE);
 </script>
 
 <div
@@ -23,7 +27,7 @@
 		onclick={state.handleMapClick}
 		onkeydown={state.handleKeyDown}
 		role="button"
-		aria-label="Mini map navigation"
+		aria-label={t('label')}
 		tabindex="0"
 	>
 		<rect width={state.width} height={state.height} fill={state.backgroundColor} rx={8} />
@@ -73,8 +77,8 @@
 			<IconButton
 				variant="ghost"
 				size="sm"
-				aria-label="Zoom in"
-				title="Zoom in"
+				aria-label={t('zoomIn')}
+				title={t('zoomIn')}
 				onclick={state.handleZoomIn}
 			>
 				<Icon name="zoom-in" size={14} />
@@ -82,8 +86,8 @@
 			<IconButton
 				variant="ghost"
 				size="sm"
-				aria-label="Zoom out"
-				title="Zoom out"
+				aria-label={t('zoomOut')}
+				title={t('zoomOut')}
 				onclick={state.handleZoomOut}
 			>
 				<Icon name="zoom-out" size={14} />
@@ -91,8 +95,8 @@
 			<IconButton
 				variant="ghost"
 				size="sm"
-				aria-label="Zoom to fit"
-				title="Zoom to fit"
+				aria-label={t('fit')}
+				title={t('fit')}
 				onclick={state.handleZoomToFit}
 			>
 				<Icon name="maximize" size={14} />

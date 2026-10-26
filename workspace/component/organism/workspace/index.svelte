@@ -12,8 +12,12 @@
 	import type { RecipeWorkspace } from '$stylist/workspace/interface/recipe/workspace';
 	import createWorkspaceState from '$stylist/workspace/component/organism/workspace/state.svelte';
 
+	import { WORKSPACE_WORKSPACE_MESSAGE } from '$stylist/workspace/const/record/workspace-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	let props: RecipeWorkspace = $props();
 	const state = createWorkspaceState(() => props);
+	const t = useMessage('workspace', WORKSPACE_WORKSPACE_MESSAGE);
 </script>
 
 <svelte:window
@@ -132,7 +136,7 @@
 				<NodeProperties
 					id="properties-panel"
 					nodeId={state.selectedNode.id}
-					title="Node Properties"
+					title={t('properties')}
 					properties={state.selectedNode.properties ?? []}
 					size="md"
 					editable={true}
@@ -168,8 +172,8 @@
 			<IconButton
 				variant="primary"
 				size="md"
-				aria-label="Add node"
-				title="Add Node"
+				aria-label={t('addNode')}
+				title={t('addNodeTitle')}
 				onclick={state.handleTogglePalette}
 			>
 				<Icon name="plus" size={20} />
@@ -181,14 +185,14 @@
 		<IconButton
 			variant="ghost"
 			size="md"
-			aria-label="Toggle properties panel"
-			title="Toggle Properties"
+			aria-label={t('toggle')}
+			title={t('toggleTitle')}
 			onclick={state.handleToggleProperties}
 		>
 			<Icon name="settings" size={18} />
 		</IconButton>
 
-		<IconButton variant="ghost" size="md" aria-label="Help" title="Help">
+		<IconButton variant="ghost" size="md" aria-label={t('help')} title={t('help')}>
 			<Icon name="info" size={18} />
 		</IconButton>
 	</div>
