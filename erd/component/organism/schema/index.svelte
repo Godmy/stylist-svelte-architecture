@@ -24,7 +24,7 @@
 	/>
 
 	<SchemaHeader
-		title={props.title ?? 'Schema'}
+		title={props.title}
 		stats={{
 			tables: state.parseResult.document.tables.length,
 			relations: state.parseResult.document.dependencies.length,

@@ -3,7 +3,10 @@ import type { SchemaParseResult } from '$stylist/erd/type/object/schema-parse-re
 
 export function mergeSchemaDocuments(
 	liveDocument: SchemaDocument,
-	candidateDocument: SchemaDocument
+	candidateDocument: SchemaDocument,
+	/** Conflict text; components pass their translated message. */
+	conflictMessage: (table: string) => string = (table) =>
+		`Migrate conflict: table "${table}" already exists in Live.`
 ): SchemaParseResult {
 	const liveTableIds = new Set(liveDocument.tables.map((table) => table.id));
 	const candidateTableIds = new Set(candidateDocument.tables.map((table) => table.id));
@@ -12,7 +15,7 @@ export function mergeSchemaDocuments(
 
 	const candidateTables = candidateDocument.tables.filter((table) => {
 		if (liveTableIds.has(table.id)) {
-			errors.push(`Migrate conflict: table "${table.name}" already exists in Live.`);
+			errors.push(conflictMessage(table.name));
 			return false;
 		}
 

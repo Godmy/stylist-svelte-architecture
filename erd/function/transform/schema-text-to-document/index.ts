@@ -3,7 +3,29 @@ import type { SchemaField } from '$stylist/erd/type/object/schema-field';
 import type { SchemaParseResult } from '$stylist/erd/type/object/schema-parse-result';
 import type { SchemaTable } from '$stylist/erd/type/object/schema-table';
 
-export function schemaTextToDocument(source: string): SchemaParseResult {
+/** English messages for callers without a translator; components pass their own. */
+const ENGLISH_MESSAGES: SchemaParseMessages = {
+	noTables: 'SQL parser did not find CREATE TABLE blocks.',
+	closeBefore: (line, table) => `Line ${line}: close ${table} before opening a new table.`,
+	strayBrace: (line) => `Line ${line}: closing brace without a table.`,
+	expectedBlock: (line) => `Line ${line}: expected a table block or dependency.`,
+	expectedField: (line) => `Line ${line}: expected "field type" with optional modifiers.`,
+	unclosed: (line, table) => `Line ${line}: ${table} was not closed with "}".`
+};
+
+type SchemaParseMessages = {
+	noTables: string;
+	closeBefore: (line: number, table: string) => string;
+	strayBrace: (line: number) => string;
+	expectedBlock: (line: number) => string;
+	expectedField: (line: number) => string;
+	unclosed: (line: number, table: string) => string;
+};
+
+export function schemaTextToDocument(
+	source: string,
+	messages: SchemaParseMessages = ENGLISH_MESSAGES
+): SchemaParseResult {
 	function normalizeId(value: string): string {
 		return value
 			.trim()
@@ -279,7 +301,7 @@ export function schemaTextToDocument(source: string): SchemaParseResult {
 		}
 
 		if (tables.length === 0) {
-			errors.push('SQL parser did not find CREATE TABLE blocks.');
+			errors.push(messages.noTables);
 		}
 
 		return {
@@ -312,7 +334,7 @@ export function schemaTextToDocument(source: string): SchemaParseResult {
 		const tableMatch = line.match(/^(?:table\s+)?([A-Za-z][\w-]*)\s*\{\s*$/);
 		if (tableMatch) {
 			if (currentTable) {
-				errors.push(`Line ${lineNumber}: close ${currentTable.name} before opening a new table.`);
+				errors.push(messages.closeBefore(lineNumber, currentTable.name));
 				continue;
 			}
 
@@ -326,7 +348,7 @@ export function schemaTextToDocument(source: string): SchemaParseResult {
 
 		if (line === '}') {
 			if (!currentTable) {
-				errors.push(`Line ${lineNumber}: closing brace without a table.`);
+				errors.push(messages.strayBrace(lineNumber));
 				continue;
 			}
 
@@ -349,13 +371,13 @@ export function schemaTextToDocument(source: string): SchemaParseResult {
 		}
 
 		if (!currentTable) {
-			errors.push(`Line ${lineNumber}: expected a table block or dependency.`);
+			errors.push(messages.expectedBlock(lineNumber));
 			continue;
 		}
 
 		const field = parseField(line, currentTable.name);
 		if (!field) {
-			errors.push(`Line ${lineNumber}: expected "field type" with optional modifiers.`);
+			errors.push(messages.expectedField(lineNumber));
 			continue;
 		}
 
@@ -369,7 +391,7 @@ export function schemaTextToDocument(source: string): SchemaParseResult {
 
 	if (currentTable) {
 		tables.push(currentTable);
-		errors.push(`Line ${lines.length}: ${currentTable.name} was not closed with "}".`);
+		errors.push(messages.unclosed(lines.length, currentTable.name));
 	}
 
 	return {

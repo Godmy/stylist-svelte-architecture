@@ -3,6 +3,8 @@
 	import Svg from '$stylist/svg/component/atom/svg/index.svelte';
 	import ThemeModeToggle from '$stylist/theme/component/atom/theme-mode-toggle/index.svelte';
 	import type { RecipeSchemaTool } from '$stylist/erd/interface/recipe/schema-tool';
+	import { ERD_SCHEMA_TOOL_MESSAGE } from '$stylist/erd/const/record/schema-tool-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
 
 	// Inlined instead of `Icon` (which statically drags in the ~650-file icon
 	// registry barrel) -- that eager import graph is slow enough to resolve
@@ -103,13 +105,15 @@
 		textPanelVisible = true,
 		persistLayout = false
 	}: RecipeSchemaTool = $props();
+
+	const t = useMessage('schema-tool', ERD_SCHEMA_TOOL_MESSAGE);
 </script>
 
-<nav class="schema-tool" aria-label="Schema tools">
+<nav class="schema-tool" aria-label={t('label')}>
 	<button
 		type="button"
-		aria-label="Import schema"
-		title="Import schema"
+		aria-label={t('import')}
+		title={t('import')}
 		disabled={!canImport}
 		onclick={() => dispatch('import')}
 	>
@@ -117,18 +121,18 @@
 	</button>
 	<button
 		type="button"
-		aria-label="Export schema"
-		title="Export schema"
+		aria-label={t('export')}
+		title={t('export')}
 		disabled={!canExport}
 		onclick={() => dispatch('export')}
 	>
 		<Svg svg={ICON_EXPORT} size={18} />
 	</button>
 	<div class="schema-tool__separator"></div>
-	<label class="schema-tool__select" title="Mode">
-		<span>Mode</span>
+	<label class="schema-tool__select" title={t('mode')}>
+		<span>{t('mode')}</span>
 		<select
-			aria-label="Mode"
+			aria-label={t('mode')}
 			value={mode}
 			onchange={(event) =>
 				dispatch('mode-change', {
@@ -137,32 +141,42 @@
 					>
 				})}
 		>
-			<option value="live">Live</option>
-			<option value="edit">Edit</option>
-			<option value="migrate">Migrate</option>
+			<option value="live">{t('live')}</option>
+			<option value="edit">{t('edit')}</option>
+			<option value="migrate">{t('migrate')}</option>
 		</select>
 	</label>
 	<div class="schema-tool__separator"></div>
-	<button type="button" aria-label="Zoom out" title="Zoom out" onclick={() => dispatch('zoom-out')}>
+	<button
+		type="button"
+		aria-label={t('zoomOut')}
+		title={t('zoomOut')}
+		onclick={() => dispatch('zoom-out')}
+	>
 		<Svg svg={ICON_ZOOM_OUT} size={18} />
 	</button>
 	<button
 		type="button"
 		class="schema-tool__value"
-		aria-label="Reset zoom"
-		title="Reset zoom"
+		aria-label={t('zoomReset')}
+		title={t('zoomReset')}
 		onclick={() => dispatch('zoom-reset')}
 	>
 		{Math.round(zoom * 100)}%
 	</button>
-	<button type="button" aria-label="Zoom in" title="Zoom in" onclick={() => dispatch('zoom-in')}>
+	<button
+		type="button"
+		aria-label={t('zoomIn')}
+		title={t('zoomIn')}
+		onclick={() => dispatch('zoom-in')}
+	>
 		<Svg svg={ICON_ZOOM_IN} size={18} />
 	</button>
 	<div class="schema-tool__separator"></div>
-	<label class="schema-tool__select" title="Layout">
-		<span>Layout</span>
+	<label class="schema-tool__select" title={t('layout')}>
+		<span>{t('layout')}</span>
 		<select
-			aria-label="Layout"
+			aria-label={t('layout')}
 			value={layout}
 			onchange={(event) =>
 				dispatch('layout-change', {
@@ -171,28 +185,28 @@
 					>
 				})}
 		>
-			<option value="grid">Grid</option>
-			<option value="wide">Wide</option>
-			<option value="columns">Columns</option>
-			<option value="radial">Radial</option>
-			<option value="clusters">Clusters</option>
-			<option value="star">Star</option>
+			<option value="grid">{t('grid')}</option>
+			<option value="wide">{t('wide')}</option>
+			<option value="columns">{t('columns')}</option>
+			<option value="radial">{t('radial')}</option>
+			<option value="clusters">{t('clusters')}</option>
+			<option value="star">{t('star')}</option>
 		</select>
 	</label>
 	{#if persistLayout}
 		<div class="schema-tool__separator"></div>
 		<button
 			type="button"
-			aria-label="Save layout"
-			title="Save the current table positions so you can come back to them"
+			aria-label={t('saveLayout')}
+			title={t('saveLayoutHint')}
 			onclick={() => dispatch('save-layout')}
 		>
 			<Svg svg={ICON_SAVE} size={18} />
 		</button>
 		<button
 			type="button"
-			aria-label="Reset layout"
-			title="Discard the saved positions and recompute the layout"
+			aria-label={t('resetLayout')}
+			title={t('resetLayoutHint')}
 			onclick={() => dispatch('reset-layout')}
 		>
 			<Svg svg={ICON_RESET} size={18} />
@@ -202,8 +216,8 @@
 	<button
 		type="button"
 		class={showRelations ? 'schema-tool__button--active' : ''}
-		aria-label="Show relations"
-		title="Show relations"
+		aria-label={t('showRelations')}
+		title={t('showRelations')}
 		onclick={() => dispatch('toggle-relations', { enabled: !showRelations })}
 	>
 		<Svg svg={ICON_LINK} size={18} />
@@ -211,8 +225,8 @@
 	<button
 		type="button"
 		class={highlightRelations ? 'schema-tool__button--active' : ''}
-		aria-label="Highlight relations"
-		title="Highlight relations"
+		aria-label={t('highlightRelations')}
+		title={t('highlightRelations')}
 		onclick={() => dispatch('toggle-highlight', { enabled: !highlightRelations })}
 	>
 		<Svg svg={ICON_SEARCH} size={18} />
@@ -221,8 +235,8 @@
 	<button
 		type="button"
 		class={textPanelVisible ? 'schema-tool__button--active' : ''}
-		aria-label={textPanelVisible ? 'Hide schema text' : 'Show schema text'}
-		title={textPanelVisible ? 'Hide schema text' : 'Show schema text'}
+		aria-label={textPanelVisible ? t('hideText') : t('showText')}
+		title={textPanelVisible ? t('hideText') : t('showText')}
 		onclick={() => dispatch('toggle-text-panel', { visible: !textPanelVisible })}
 	>
 		<Svg svg={ICON_PANEL} size={18} />

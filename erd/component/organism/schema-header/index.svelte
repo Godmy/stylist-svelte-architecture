@@ -1,9 +1,11 @@
 <script lang="ts">
 	import SchemaTool from '$stylist/erd/component/organism/schema-tool/index.svelte';
+	import { ERD_SCHEMA_HEADER_MESSAGE } from '$stylist/erd/const/record/schema-header-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
 	import type { RecipeSchemaHeader } from '$stylist/erd/interface/recipe/schema-header';
 
 	let {
-		title = 'Schema',
+		title,
 		stats,
 		zoom = 1,
 		showRelations = true,
@@ -15,21 +17,22 @@
 		textPanelVisible = true,
 		persistLayout = false
 	}: RecipeSchemaHeader = $props();
+
+	const t = useMessage('schema-header', ERD_SCHEMA_HEADER_MESSAGE);
+	const heading = $derived(title ?? t('title'));
 </script>
 
 <header class="schema-header">
 	<div class="schema-header__titles">
-		{#if title}<h1 class="schema-header__title">{title}</h1>{/if}
+		{#if heading}<h1 class="schema-header__title">{heading}</h1>{/if}
 		{#if stats}
 			<div class="schema-header__stats">
-				<span>{stats.tables} tables</span>
-				<span>{stats.relations} relations</span>
+				<span>{t('tables', { count: stats.tables })}</span>
+				<span>{t('relations', { count: stats.relations })}</span>
 				<span class={stats.errors > 0 ? 'schema-header__stats-error' : ''}>
-					{stats.errors} errors
+					{t('errors', { count: stats.errors })}
 				</span>
-				<span class="schema-header__hint"
-					>hover/click a table to trace its relations · drag a domain's label to move it</span
-				>
+				<span class="schema-header__hint">{t('hint')}</span>
 			</div>
 		{/if}
 	</div>

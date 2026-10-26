@@ -8,6 +8,8 @@ import { schemaTextToDocument } from '$stylist/erd/function/transform/schema-tex
 import type { SchemaMode } from '$stylist/erd/type/alias/schema-mode';
 import type { SchemaLayout } from '$stylist/erd/type/alias/schema-layout';
 import type { RecipeSchema } from '$stylist/erd/interface/recipe/schema';
+import { ERD_SCHEMA_TEXT_MESSAGE } from '$stylist/erd/const/record/schema-text-message';
+import { useMessage } from '$stylist/localization/function/hook/use-message';
 
 export function createSchemaState(getProps: () => RecipeSchema) {
 	const props = $derived(getProps());
@@ -30,9 +32,23 @@ export function createSchemaState(getProps: () => RecipeSchema) {
 	let schemaView: { saveLayout: () => void; resetLayout: () => void } | undefined = $state();
 
 	let scienceDomainSource = $state<string>(SCIENCE_DOMAIN_SCHEMA_TEXT);
-	const liveParseResult = $derived(schemaTextToDocument(liveSource));
-	const editParseResult = $derived(schemaTextToDocument(editSource));
-	const scienceDomainParseResult = $derived(schemaTextToDocument(scienceDomainSource));
+	const tp = useMessage('schema-text', ERD_SCHEMA_TEXT_MESSAGE);
+	// Parser messages in the provider locale; read at call time, so they follow locale changes.
+	const parseMessages = {
+		get noTables() {
+			return tp('noTables');
+		},
+		closeBefore: (line: number, table: string) => tp('closeBefore', { line, table }),
+		strayBrace: (line: number) => tp('strayBrace', { line }),
+		expectedBlock: (line: number) => tp('expectedBlock', { line }),
+		expectedField: (line: number) => tp('expectedField', { line }),
+		unclosed: (line: number, table: string) => tp('unclosed', { line, table })
+	};
+	const liveParseResult = $derived(schemaTextToDocument(liveSource, parseMessages));
+	const editParseResult = $derived(schemaTextToDocument(editSource, parseMessages));
+	const scienceDomainParseResult = $derived(
+		schemaTextToDocument(scienceDomainSource, parseMessages)
+	);
 	const migrateParseResult = $derived.by(() => {
 		const merged = mergeSchemaDocuments(
 			liveParseResult.document,

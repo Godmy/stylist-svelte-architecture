@@ -1,13 +1,27 @@
 <script lang="ts">
 	import { DEFAULT_SCHEMA_TEXT } from '$stylist/erd/const/value/schema-text';
 	import { schemaTextToDocument } from '$stylist/erd/function/transform/schema-text-to-document';
+	import { ERD_SCHEMA_TEXT_MESSAGE } from '$stylist/erd/const/record/schema-text-message';
+	import { useMessage } from '$stylist/localization/function/hook/use-message';
 	import type { RecipeSchemaText } from '$stylist/erd/interface/recipe/schema-text';
 
 	let {
 		value = $bindable(DEFAULT_SCHEMA_TEXT),
 		placeholder = DEFAULT_SCHEMA_TEXT
 	}: RecipeSchemaText = $props();
-	let result = $derived(schemaTextToDocument(value));
+	const tp = useMessage('schema-text', ERD_SCHEMA_TEXT_MESSAGE);
+	// Parser messages in the provider locale; read at call time, so they follow locale changes.
+	const parseMessages = {
+		get noTables() {
+			return tp('noTables');
+		},
+		closeBefore: (line: number, table: string) => tp('closeBefore', { line, table }),
+		strayBrace: (line: number) => tp('strayBrace', { line }),
+		expectedBlock: (line: number) => tp('expectedBlock', { line }),
+		expectedField: (line: number) => tp('expectedField', { line }),
+		unclosed: (line: number, table: string) => tp('unclosed', { line, table })
+	};
+	let result = $derived(schemaTextToDocument(value, parseMessages));
 
 	function handleInput(event: Event): void {
 		value = (event.target as HTMLTextAreaElement).value;
