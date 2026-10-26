@@ -1,3 +1,4 @@
 [submodule "treejs"]
 	path = treejs
 	url = https://github.com/Godmy/stylist-svelte-treejs.git
+	update = none
