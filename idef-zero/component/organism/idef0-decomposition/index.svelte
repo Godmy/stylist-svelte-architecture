@@ -45,7 +45,12 @@
 							<tspan x={box.x + box.width / 2} dy={i ? 17 : 0}>{line}</tspan>
 						{/each}
 					</text>
-					<text class="idef0-decomposition__box-id" x={box.x + box.width - 10} y={box.y + box.height - 9} text-anchor="end">
+					<text
+						class="idef0-decomposition__box-id"
+						x={box.x + box.width - 10}
+						y={box.y + box.height - 9}
+						text-anchor="end"
+					>
 						{box.id}
 					</text>
 				</g>

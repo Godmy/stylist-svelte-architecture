@@ -215,7 +215,12 @@ export function layoutIdef0Decomposition(props: RecipeIdef0Decomposition) {
 					internal: false,
 					points: [[end[0], b.y - offset + 4], end],
 					head: head(end, 'top'),
-					label: { lines, x: end[0] + 5, y: b.y - offset - (lines.length - 1) * LINE - 2, anchor: 'start' }
+					label: {
+						lines,
+						x: end[0] + 5,
+						y: b.y - offset - (lines.length - 1) * LINE - 2,
+						anchor: 'start'
+					}
 				});
 			}
 		}
@@ -229,7 +234,12 @@ export function layoutIdef0Decomposition(props: RecipeIdef0Decomposition) {
 				internal: false,
 				points: [start, end],
 				head: head(end, 'right'),
-				label: { lines: [label(id)?.label ?? id], x: width - MARGIN - 4, y: start[1] - 6, anchor: 'end' }
+				label: {
+					lines: [label(id)?.label ?? id],
+					x: width - MARGIN - 4,
+					y: start[1] - 6,
+					anchor: 'end'
+				}
 			});
 		}
 		(a.mechanisms ?? []).forEach((id, k) => {

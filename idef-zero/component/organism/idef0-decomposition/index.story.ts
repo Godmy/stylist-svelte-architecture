@@ -19,8 +19,21 @@ export default {
 			{ id: 'warehouse', label: 'Warehouse' }
 		],
 		activities: [
-			{ id: 'A1', title: 'Accept order', inputs: ['request'], controls: ['policy'], outputs: ['order'], mechanisms: ['staff'] },
-			{ id: 'A2', title: 'Ship goods', inputs: ['order', 'stock'], outputs: ['shipment'], mechanisms: ['warehouse'] }
+			{
+				id: 'A1',
+				title: 'Accept order',
+				inputs: ['request'],
+				controls: ['policy'],
+				outputs: ['order'],
+				mechanisms: ['staff']
+			},
+			{
+				id: 'A2',
+				title: 'Ship goods',
+				inputs: ['order', 'stock'],
+				outputs: ['shipment'],
+				mechanisms: ['warehouse']
+			}
 		]
 	},
 	controls: {

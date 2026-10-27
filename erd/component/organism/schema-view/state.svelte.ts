@@ -753,8 +753,7 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 					const row = clusters.slice(start, start + columns);
 					width = Math.max(
 						width,
-						row.reduce((sum, cluster) => sum + cluster.width, 0) +
-							(row.length - 1) * clusterGapX
+						row.reduce((sum, cluster) => sum + cluster.width, 0) + (row.length - 1) * clusterGapX
 					);
 					height += Math.max(...row.map((cluster) => cluster.height));
 					if (start > 0) height += clusterGapY;
