@@ -102,7 +102,7 @@
 		</div>
 
 		<div class="workspace-palette__categories">
-			{#each state.categories as category}
+			{#each state.categories as category (category)}
 				<button
 					type="button"
 					class={`workspace-palette__category${category === selectedCategory ? ' workspace-palette__category--active' : ''}`}
@@ -125,13 +125,13 @@
 					{/if}
 				</div>
 			{:else}
-				{#each Object.entries(state.groupedItems) as [category, categoryItems]}
+				{#each Object.entries(state.groupedItems) as [category, categoryItems] (category)}
 					{#if viewMode === 'list'}
 						<div class="workspace-palette__group">
 							{#if category !== 'all'}
 								<h4 class="workspace-palette__group-title">{category}</h4>
 							{/if}
-							{#each categoryItems as item}
+							{#each categoryItems as item, index (item.id ?? index)}
 								<button
 									type="button"
 									class="workspace-palette__item"
@@ -152,7 +152,7 @@
 						</div>
 					{:else}
 						<div class="workspace-palette__grid">
-							{#each categoryItems as item}
+							{#each categoryItems as item, index (item.id ?? index)}
 								<button
 									type="button"
 									class="workspace-palette__grid-item"

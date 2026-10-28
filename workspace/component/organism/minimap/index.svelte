@@ -42,7 +42,7 @@
 		</pattern>
 		<rect width={state.width} height={state.height} fill="url(#minimap-grid)" />
 
-		{#each state.nodes as node}
+		{#each state.nodes as node, index (node.id ?? index)}
 			{@const rect = state.getNodeRect(node)}
 			<rect
 				x={rect.x}

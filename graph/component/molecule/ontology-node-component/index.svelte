@@ -20,7 +20,7 @@
 
 	{#if props.node.attributes && props.node.attributes.length > 0}
 		<div class="ontology-node-component__attributes">
-			{#each props.node.attributes as attr}
+			{#each props.node.attributes as attr, index (index)}
 				<span class="ontology-node-component__attr">{attr}</span>
 			{/each}
 		</div>

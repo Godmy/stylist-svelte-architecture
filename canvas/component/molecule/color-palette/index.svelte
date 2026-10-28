@@ -32,7 +32,7 @@
 		<div class={state.panelClass}>
 			{#if props.showPalette ?? true}
 				<div class={state.paletteClass}>
-					{#each state.palette as color}
+					{#each state.palette as color, i (i)}
 						<button
 							type="button"
 							aria-label={t('select', { color })}

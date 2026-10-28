@@ -8,7 +8,6 @@ export function createDrawingOverlayState(
 	const onClose = $derived(props.onClose);
 
 	let isDrawing = $state(false);
-	const paths: Array<{ points: Array<{ x: number; y: number }>; color: string }> = $state([]);
 	let lastPoint: { x: number; y: number } | null = null;
 	let canvasElement: HTMLCanvasElement | undefined = $state();
 	let ctx: CanvasRenderingContext2D | null = null;

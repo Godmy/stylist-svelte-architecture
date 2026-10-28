@@ -32,7 +32,7 @@
 	<textarea spellcheck="false" {placeholder} {value} oninput={handleInput}></textarea>
 	{#if result.errors.length > 0}
 		<ul class="schema-text__errors">
-			{#each result.errors as error}
+			{#each result.errors as error, index (index)}
 				<li>{error}</li>
 			{/each}
 		</ul>

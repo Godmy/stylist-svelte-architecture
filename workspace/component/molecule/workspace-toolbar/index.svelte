@@ -33,7 +33,7 @@
 				onchange={(event) =>
 					state.handleValueChange(item, (event.target as HTMLSelectElement).value)}
 			>
-				{#each item.options ?? [] as option}
+				{#each item.options ?? [] as option, index (index)}
 					<option value={option}>{option}</option>
 				{/each}
 			</select>

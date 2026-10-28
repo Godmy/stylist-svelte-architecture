@@ -612,7 +612,7 @@
 					<span>{t('nodes', { count: nodeLayouts.length })}</span>
 				</div>
 				<div class="workspace-list">
-					{#each nodeLayouts as node}
+					{#each nodeLayouts as node (node.id)}
 						<button
 							type="button"
 							class={`workspace-list__item ${node.id === selectedNodeId ? 'workspace-list__item--active' : ''}`}
@@ -767,7 +767,7 @@
 			<div class="graph-editor-page__toolbar">
 				<div class="workspace-toolbar" role="toolbar" aria-label={t('controls')}>
 					<div class="workspace-toolbar__group">
-						{#each TOOL_OPTIONS as tool}
+						{#each TOOL_OPTIONS as tool (tool.mode)}
 							<button
 								type="button"
 								class={`workspace-toolbar__button ${activeTool === tool.mode ? 'workspace-toolbar__button--active' : ''}`}
@@ -806,7 +806,7 @@
 										.value as (typeof TOKEN_THEME_MODE)[number];
 								}}
 							>
-								{#each THEME_OPTIONS as theme}
+								{#each THEME_OPTIONS as theme (theme)}
 									<option value={theme}>{theme}</option>
 								{/each}
 							</select>
@@ -1060,7 +1060,7 @@
 								}}
 							>
 								<option value="">{t('selectTarget')}</option>
-								{#each availableConnectionTargets as target}
+								{#each availableConnectionTargets as target (target.id)}
 									<option value={target.id}>{target.title}</option>
 								{/each}
 							</select>
@@ -1077,7 +1077,7 @@
 					</div>
 
 					<div class="workspace-list workspace-list--compact">
-						{#each selectedNodeConnections as connection}
+						{#each selectedNodeConnections as connection (connection.id)}
 							<div class="workspace-list__entry">
 								<div>
 									<strong>{connection.startId}</strong>

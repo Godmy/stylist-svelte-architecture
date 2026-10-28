@@ -7,14 +7,14 @@
 </script>
 
 <div class="field-highlighter-visualization">
-	{#each state.data.edges as edge}
+	{#each state.data.edges as edge (edge.id)}
 		<div class={`fh-edge ${state.isEdgeHighlighted(edge) ? 'fh-edge--highlighted' : ''}`}>
 			{edge.fromNodeId} -> {edge.toNodeId}{#if edge.label}
 				({edge.label}){/if}
 		</div>
 	{/each}
 
-	{#each state.data.nodes as node}
+	{#each state.data.nodes as node (node.id)}
 		<button
 			type="button"
 			class={`fh-node ${state.selectedNode?.id === node.id || state.isNodeHighlighted(node) ? 'fh-node--selected' : ''}`}

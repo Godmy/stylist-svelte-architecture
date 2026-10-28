@@ -64,7 +64,7 @@
 					class="workspace__canvas"
 				>
 					<svg class="workspace__connections" style="overflow: visible;">
-						{#each props.connections ?? [] as connection}
+						{#each props.connections ?? [] as connection, index (connection.id ?? index)}
 							<NodeConnection
 								id={connection.id}
 								startX={connection.startX ?? 0}
@@ -93,7 +93,7 @@
 						{/if}
 					</svg>
 
-					{#each props.nodes ?? [] as node}
+					{#each props.nodes ?? [] as node, index (node.id ?? index)}
 						<WorkspaceNode
 							id={node.id}
 							title={node.title}
