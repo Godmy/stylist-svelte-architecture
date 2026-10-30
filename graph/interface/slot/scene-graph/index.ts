@@ -18,4 +18,6 @@ export interface SceneGraph {
 		z: number;
 	};
 	defaultPreset: SceneCameraPreset;
+	/** Merge stationary atoms into one draw call for large maps. */
+	batchStatic?: boolean;
 }

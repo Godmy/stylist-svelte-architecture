@@ -15,6 +15,10 @@ export interface SceneAtom {
 	metadata?: SceneAtomMetadata;
 	moleculeId?: string;
 	selectable?: boolean;
+	/** Larger values give other geometry priority when pointer targets overlap. */
+	pickPriority?: number;
+	/** Atoms sharing a logical node or route highlight together. */
+	interactionGroup?: string;
 	boundsRadius?: number;
 	visible?: boolean;
 }

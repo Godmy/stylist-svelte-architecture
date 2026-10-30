@@ -1,5 +1,6 @@
 import { GraphScriptManager } from '$stylist/graph/class/manager/graph-script';
 import { Camera } from '$stylist/graph/class/manager/camera';
+import { Matrix4 } from '$stylist/graph/class/manager/matrix4';
 import type { SceneBufferSet } from '$stylist/graph/interface/slot/scene-buffer-set';
 import type { SceneDebugInfo } from '$stylist/graph/interface/slot/scene-debug-info';
 import type { SceneAtom } from '$stylist/graph/interface/slot/scene-atom';
@@ -27,6 +28,7 @@ export class SceneObjectManager {
 	private sceneGraph: SceneGraph | null = null;
 	private sceneAtoms: readonly SceneAtom[] = [];
 	private atomBuffers = new Map<string, SceneBufferSet>();
+	private staticBuffers: SceneBufferSet | null = null;
 	private modelLocation: WebGLUniformLocation | null = null;
 	private viewLocation: WebGLUniformLocation | null = null;
 	private projectionLocation: WebGLUniformLocation | null = null;
@@ -85,11 +87,18 @@ export class SceneObjectManager {
 		this.sceneGraph = graph ?? GraphScriptManager.createDemoSceneGraph();
 		this.sceneAtoms = this.sceneGraph.atoms;
 		this.atomBuffers = new Map(
-			this.sceneAtoms.map((atom) => [
-				atom.id,
-				GraphScriptManager.createSceneAtomBuffers(this.gl!, atom)
-			])
+			this.sceneAtoms
+				.filter((atom) => !this.sceneGraph?.batchStatic || atom.motion)
+				.map((atom) => [atom.id, GraphScriptManager.createSceneAtomBuffers(this.gl!, atom)])
 		);
+		if (this.sceneGraph.batchStatic) {
+			this.staticBuffers = GraphScriptManager.createSceneBuffers(
+				this.gl,
+				GraphScriptManager.mergeSceneGeometry(
+					this.sceneAtoms.filter((atom) => atom.visible !== false && !atom.motion)
+				)
+			);
+		}
 		this.focusTarget = [
 			this.sceneGraph.focusTarget.x,
 			this.sceneGraph.focusTarget.y,
@@ -134,6 +143,7 @@ export class SceneObjectManager {
 		window.removeEventListener('keydown', this.handleKeyDown);
 
 		if (this.gl) {
+			GraphScriptManager.destroySceneBuffers(this.gl, this.staticBuffers);
 			for (const buffers of this.atomBuffers.values()) {
 				GraphScriptManager.destroySceneBuffers(this.gl, buffers);
 			}
@@ -149,6 +159,7 @@ export class SceneObjectManager {
 		this.sceneGraph = null;
 		this.sceneAtoms = [];
 		this.atomBuffers = new Map();
+		this.staticBuffers = null;
 		this.modelLocation = null;
 		this.viewLocation = null;
 		this.projectionLocation = null;
@@ -214,11 +225,19 @@ export class SceneObjectManager {
 		}
 
 		event.preventDefault();
-		this.radius = GraphScriptManager.clampSceneRadius(this.radius + event.deltaY * 0.012);
+		this.radius = GraphScriptManager.clampSceneRadius(
+			this.radius + event.deltaY * 0.012 * Math.max(1, this.radius / 20),
+			Math.max(50, this.sceneFitRadius * 2)
+		);
 		this.camera.rotateAroundTarget(this.horizontalAngle, this.verticalAngle, this.radius);
 	};
 
 	private readonly handleKeyDown = (event: KeyboardEvent): void => {
+		if (
+			event.target instanceof HTMLElement &&
+			(event.target.matches('input, textarea, select') || event.target.isContentEditable)
+		)
+			return;
 		if (event.key === '1') {
 			this.applyCameraPreset('iso');
 			return;
@@ -249,7 +268,10 @@ export class SceneObjectManager {
 			return;
 		}
 
-		this.radius = GraphScriptManager.clampSceneRadius(radius);
+		this.radius = GraphScriptManager.clampSceneRadius(
+			radius,
+			Math.max(50, this.sceneFitRadius * 2)
+		);
 		this.camera.rotateAroundTarget(this.horizontalAngle, this.verticalAngle, this.radius);
 	}
 
@@ -267,7 +289,7 @@ export class SceneObjectManager {
 		return {
 			radius: this.radius,
 			minRadius: 2,
-			maxRadius: 50,
+			maxRadius: Math.max(50, this.sceneFitRadius * 2),
 			sceneFitRadius: this.sceneFitRadius,
 			targetX: this.focusTarget[0],
 			targetY: this.focusTarget[1],
@@ -275,6 +297,28 @@ export class SceneObjectManager {
 			horizontalAngle: this.horizontalAngle,
 			verticalAngle: this.verticalAngle
 		};
+	}
+
+	updateGraph(graph: SceneGraph): void {
+		if (this.sceneGraph === graph || !this.canvas) return;
+		const canvas = this.canvas;
+		this.stop();
+		this.start(canvas, graph);
+	}
+
+	focusNode(id: string): void {
+		const node = this.sceneGraph?.nodes.find((node) => node.id === id);
+		if (!node || !this.camera) return;
+		this.selectedAtomId = `node-${id}`;
+		const position =
+			this.sceneAtoms.find((atom) => atom.id === this.selectedAtomId)?.transform.position ??
+			node.position;
+		this.applyCameraPreset(this.cameraPreset, [position.x, position.y, position.z], 8);
+	}
+
+	getPointerHint(clientX: number, clientY: number) {
+		const atom = this.pickAtom(clientX, clientY);
+		return atom?.metadata ? { id: atom.id, ...atom.metadata } : null;
 	}
 
 	private readonly render = (): void => {
@@ -341,6 +385,34 @@ export class SceneObjectManager {
 		const bounds = this.sceneGraph?.boundsRadius ?? 12;
 
 		this.radius = this.calculateFitRadius(bounds, width, height, 1.12);
+		// Flat maps should fill the viewport instead of fitting an unnecessarily tall sphere.
+		if (this.sceneGraph?.batchStatic && this.sceneGraph.nodes.length) {
+			const { horizontal, vertical } = SceneObjectManager.PRESET_ANGLES[this.cameraPreset];
+			const sh = Math.sin(horizontal),
+				ch = Math.cos(horizontal),
+				sv = Math.sin(vertical),
+				cv = Math.cos(vertical);
+			const tanV = Math.tan(SceneObjectManager.CAMERA_FOV / 2),
+				tanH = (tanV * width) / height;
+			let radius = 2;
+			for (const node of this.sceneGraph.nodes)
+				for (const dx of [-0.8, 0.8])
+					for (const dz of [-0.8, 0.8])
+						for (const y of [0, node.position.y + 0.5]) {
+							const x = node.position.x + dx - this.focusTarget[0],
+								z = node.position.z + dz - this.focusTarget[2],
+								dy = y - this.focusTarget[1];
+							const depth = x * sh * cv + dy * sv + z * ch * cv;
+							const right = x * ch - z * sh;
+							const up = -x * sh * sv + dy * cv - z * ch * sv;
+							radius = Math.max(
+								radius,
+								depth + (Math.abs(right) / tanH) * 1.1,
+								depth + (Math.abs(up) / tanV) * 1.1
+							);
+						}
+			this.radius = radius;
+		}
 		this.sceneFitRadius = this.radius;
 		this.applyCameraPreset(this.cameraPreset, this.focusTarget, this.radius);
 		this.hasFittedScene = true;
@@ -379,7 +451,8 @@ export class SceneObjectManager {
 		const limitingHalfFov = Math.min(halfVerticalFov, halfHorizontalFov);
 
 		return GraphScriptManager.clampSceneRadius(
-			(boundsRadius / Math.tan(limitingHalfFov)) * padding
+			(boundsRadius / Math.tan(limitingHalfFov)) * padding,
+			Number.POSITIVE_INFINITY
 		);
 	}
 
@@ -408,22 +481,50 @@ export class SceneObjectManager {
 			return;
 		}
 
+		if (this.staticBuffers) {
+			GraphScriptManager.drawSceneBuffers(
+				this.gl,
+				this.staticBuffers,
+				this.modelLocation,
+				new Matrix4(),
+				this.tintColorLocation,
+				this.tintStrengthLocation
+			);
+		}
+		const hoveredGroup = this.sceneAtoms.find(
+			(atom) => atom.id === this.hoveredAtomId
+		)?.interactionGroup;
+		const selectedGroup = this.sceneAtoms.find(
+			(atom) => atom.id === this.selectedAtomId
+		)?.interactionGroup;
 		for (const atom of this.sceneAtoms) {
 			if (atom.visible === false) {
 				continue;
 			}
 
-			const buffers = this.atomBuffers.get(atom.id);
+			const hovered =
+				atom.id === this.hoveredAtomId ||
+				Boolean(hoveredGroup && atom.interactionGroup === hoveredGroup);
+			const selected =
+				atom.id === this.selectedAtomId ||
+				Boolean(selectedGroup && atom.interactionGroup === selectedGroup);
+			if (this.staticBuffers && !atom.motion && !hovered && !selected) continue;
+			let buffers = this.atomBuffers.get(atom.id);
+			if (!buffers && this.staticBuffers) {
+				buffers = GraphScriptManager.createSceneAtomBuffers(this.gl, atom);
+				this.atomBuffers.set(atom.id, buffers);
+			}
 
 			if (!buffers) {
 				continue;
 			}
 
 			const tint = GraphScriptManager.resolveSceneAtomTint(atom, {
-				hovered: this.hoveredAtomId === atom.id,
-				selected: this.selectedAtomId === atom.id
+				hovered,
+				selected
 			});
 
+			this.gl.depthFunc(this.staticBuffers ? this.gl.LEQUAL : this.gl.LESS);
 			GraphScriptManager.drawSceneBuffers(
 				this.gl,
 				buffers,
@@ -435,6 +536,7 @@ export class SceneObjectManager {
 				tint.strength
 			);
 		}
+		this.gl.depthFunc(this.gl.LESS);
 	}
 
 	private updateHoveredAtom(event: MouseEvent): void {

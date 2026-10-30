@@ -781,6 +781,19 @@ export class GraphScriptManager {
 		const canvasRect = canvas.getBoundingClientRect();
 		const localX = clientX - canvasRect.left;
 		const localY = clientY - canvasRect.top;
+		const inverse = GraphScriptManager.invertMat4(
+			GraphScriptManager.multiplyMat4(
+				Array.from(camera.getProjectionMatrix().toArray()),
+				Array.from(camera.getViewMatrix().toArray())
+			)
+		);
+		if (!inverse) return null;
+		const x = (localX / canvasRect.width) * 2 - 1;
+		const y = 1 - (localY / canvasRect.height) * 2;
+		const near = GraphScriptManager.transformVec4(inverse, [x, y, -1, 1]);
+		const far = GraphScriptManager.transformVec4(inverse, [x, y, 1, 1]);
+		const origin = near.slice(0, 3).map((value) => value / near[3]);
+		const direction = far.slice(0, 3).map((value, index) => value / far[3] - origin[index]);
 		let bestAtom: SceneAtom | null = null;
 		let bestScore = Number.POSITIVE_INFINITY;
 
@@ -789,33 +802,72 @@ export class GraphScriptManager {
 				continue;
 			}
 
-			const projection = GraphScriptManager.projectPointToScreen(
-				camera,
-				canvas,
-				atom.transform.position
+			const inverseModel = GraphScriptManager.invertMat4(
+				Array.from(GraphScriptManager.resolveSceneAtomModelMatrix(atom).toArray())
 			);
-
-			if (!projection) {
-				continue;
+			if (!inverseModel) continue;
+			const rayOrigin = GraphScriptManager.transformVec4(inverseModel, [
+				origin[0],
+				origin[1],
+				origin[2],
+				1
+			]);
+			const rayDirection = GraphScriptManager.transformVec4(inverseModel, [
+				direction[0],
+				direction[1],
+				direction[2],
+				0
+			]);
+			const half =
+				atom.geometry.type === 'cube'
+					? [1, 1, 1]
+					: [
+							(atom.geometry.width ?? 1) / 2,
+							(atom.geometry.height ?? 1) / 2,
+							(atom.geometry.depth ?? 1) / 2
+						];
+			let entry = 0;
+			let exit = Infinity;
+			for (let axis = 0; axis < 3; axis++) {
+				if (Math.abs(rayDirection[axis]) < 1e-12) {
+					if (Math.abs(rayOrigin[axis]) > half[axis]) exit = -1;
+					continue;
+				}
+				const a = (-half[axis] - rayOrigin[axis]) / rayDirection[axis];
+				const b = (half[axis] - rayOrigin[axis]) / rayDirection[axis];
+				entry = Math.max(entry, Math.min(a, b));
+				exit = Math.min(exit, Math.max(a, b));
+			}
+			let score = exit >= entry ? entry : Infinity;
+			// A thin connection remains targetable along its full projected length.
+			if (atom.kind === 'connection') {
+				const matrix = GraphScriptManager.resolveSceneAtomModelMatrix(atom).toArray();
+				const ends = [-half[0], half[0]].map((value) => {
+					const point = GraphScriptManager.multiplyMatrixVector(matrix, [value, 0, 0, 1]);
+					return GraphScriptManager.projectPointToScreen(camera, canvas, {
+						x: point[0],
+						y: point[1],
+						z: point[2]
+					});
+				});
+				if (ends[0] && ends[1]) {
+					const dx = ends[1].x - ends[0].x,
+						dy = ends[1].y - ends[0].y;
+					const t = Math.max(
+						0,
+						Math.min(
+							1,
+							((localX - ends[0].x) * dx + (localY - ends[0].y) * dy) / (dx * dx + dy * dy || 1)
+						)
+					);
+					if (Math.hypot(localX - ends[0].x - dx * t, localY - ends[0].y - dy * t) <= 4) {
+						// Prefer an actual box hit (the visible column) over an expanded line hit.
+						score = Math.min(score, 2 + (ends[0].depth + ends[1].depth) / 2);
+					}
+				}
 			}
 
-			const dx = projection.x - localX;
-			const dy = projection.y - localY;
-			const distanceToPointer = Math.hypot(dx, dy);
-			const projectedRadius = GraphScriptManager.projectWorldRadiusToPixels(
-				camera,
-				canvas,
-				GraphScriptManager.getAtomBoundsRadius(atom),
-				projection.distance
-			);
-			const threshold = Math.min(20, Math.max(8, projectedRadius * 0.45));
-
-			if (distanceToPointer > threshold) {
-				continue;
-			}
-
-			const score = distanceToPointer + Math.max(0, projection.depth) * 8;
-
+			score += atom.pickPriority ?? 0;
 			if (score < bestScore) {
 				bestScore = score;
 				bestAtom = atom;
@@ -825,8 +877,43 @@ export class GraphScriptManager {
 		return bestAtom;
 	}
 
-	static clampSceneRadius(radius: number): number {
-		return Math.max(2, Math.min(50, radius));
+	static clampSceneRadius(radius: number, maximum = 50): number {
+		return Math.max(2, Math.min(maximum, radius));
+	}
+
+	/** Bake static model transforms once; pointer picking still uses the original atoms. */
+	static mergeSceneGeometry(atoms: readonly SceneAtom[]): SceneGeometry {
+		const positions = new Float32Array(atoms.length * 36 * 3);
+		const colors = new Float32Array(positions.length);
+		let offset = 0;
+		for (const atom of atoms) {
+			const geometry =
+				atom.geometry.type === 'cube'
+					? GraphScriptManager.createSceneCubeGeometry()
+					: GraphScriptManager.createSceneBoxGeometry(
+							atom.geometry.width ?? 1,
+							atom.geometry.height ?? 1,
+							atom.geometry.depth ?? 1,
+							GraphScriptManager.resolveSceneAtomBaseColor(atom)
+						);
+			const matrix = GraphScriptManager.resolveSceneAtomModelMatrix(atom).toArray();
+			for (let i = 0; i < geometry.positions.length; i += 3) {
+				const point = GraphScriptManager.multiplyMatrixVector(matrix, [
+					geometry.positions[i],
+					geometry.positions[i + 1],
+					geometry.positions[i + 2],
+					1
+				]);
+				positions.set(point.slice(0, 3), offset + i);
+			}
+			colors.set(geometry.colors, offset);
+			offset += geometry.positions.length;
+		}
+		return {
+			positions: positions.subarray(0, offset),
+			colors: colors.subarray(0, offset),
+			vertexCount: offset / 3
+		};
 	}
 
 	static clampSceneVerticalAngle(angle: number): number {

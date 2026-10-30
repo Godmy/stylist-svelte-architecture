@@ -19,8 +19,32 @@
 	});
 </script>
 
+<svelte:window
+	onkeydown={(event) => {
+		if (event.key === 'Escape') state.hideHint();
+	}}
+/>
+
 <div class={state.containerClass} data-theme={state.theme} {...state.restProps}>
-	<canvas bind:this={canvasRef} class={state.canvasClass}></canvas>
+	<canvas
+		bind:this={canvasRef}
+		class={state.canvasClass}
+		onmousemove={state.showHint}
+		onmouseleave={state.hideHint}
+		aria-label={state.title}
+	></canvas>
+	{#if state.hint}
+		<div
+			class="scene__hint"
+			role="tooltip"
+			style:left="{state.hint.x}px"
+			style:top="{state.hint.y}px"
+		>
+			<strong>{state.hint.label}</strong>{#if state.hint.description}<span
+					>{state.hint.description}</span
+				>{/if}
+		</div>
+	{/if}
 	<SceneCameraControl
 		radius={state.cameraControl.radius}
 		minRadius={state.cameraControl.minRadius}
@@ -31,34 +55,67 @@
 		onradiuschange={state.setCameraRadius}
 		ontargetchange={state.setCameraTarget}
 	/>
-	<div class={state.overlayClass}>
-		<div class="scene__eyebrow">{state.debugInfo.context}</div>
-		<h2>{state.title}</h2>
-		<div class="scene__metric-grid">
-			<div>
-				<span>{state.debugInfo.graphNodes}</span>
-				<small>{state.text.nodes}</small>
+	{#if props.showOverlay !== false}
+		<div class={state.overlayClass}>
+			<div class="scene__eyebrow">{state.debugInfo.context}</div>
+			<h2>{state.title}</h2>
+			<div class="scene__metric-grid">
+				<div>
+					<span>{state.debugInfo.graphNodes}</span>
+					<small>{state.text.nodes}</small>
+				</div>
+				<div>
+					<span>{state.debugInfo.graphConnections}</span>
+					<small>{state.text.links}</small>
+				</div>
+				<div>
+					<span>{state.debugInfo.drawCount}</span>
+					<small>{state.text.frames}</small>
+				</div>
 			</div>
-			<div>
-				<span>{state.debugInfo.graphConnections}</span>
-				<small>{state.text.links}</small>
+			<div class="scene__selection">
+				<small>{state.text.selected}</small>
+				<span>{state.debugInfo.selectedAtom}</span>
 			</div>
-			<div>
-				<span>{state.debugInfo.drawCount}</span>
-				<small>{state.text.frames}</small>
-			</div>
+			{#if state.debugInfo.lastError}
+				<p class="scene__error">{state.debugInfo.lastError}</p>
+			{/if}
 		</div>
-		<div class="scene__selection">
-			<small>{state.text.selected}</small>
-			<span>{state.debugInfo.selectedAtom}</span>
-		</div>
-		{#if state.debugInfo.lastError}
-			<p class="scene__error">{state.debugInfo.lastError}</p>
-		{/if}
-	</div>
+	{:else if state.debugInfo.lastError}
+		<p class="scene__error scene__error--standalone" role="alert">{state.debugInfo.lastError}</p>
+	{/if}
 </div>
 
 <style>
+	.scene__error--standalone {
+		position: absolute;
+		top: 1rem;
+		left: 1rem;
+		max-width: calc(100% - 2rem);
+		margin: 0;
+		padding: 12px 16px;
+		border-radius: 6px;
+		background: #fffffff0;
+	}
+	.scene__hint {
+		position: fixed;
+		z-index: 1000;
+		max-width: 310px;
+		background: #153348;
+		color: white;
+		padding: 12px 15px;
+		border-radius: 8px;
+		font:
+			13px/1.5 system-ui,
+			sans-serif;
+		pointer-events: none;
+		overflow-wrap: anywhere;
+		box-shadow: 0 8px 28px #0003;
+	}
+	.scene__hint span {
+		display: block;
+		margin-top: 5px;
+	}
 	.scene {
 		position: relative;
 		width: 100%;
