@@ -894,6 +894,37 @@ export class GraphScriptManager {
 		return { instancePositions, instanceColors, instanceSizes, instanceHighlights, count };
 	}
 
+	static matchZwickyFilters(
+		groups: NonNullable<ZwickyScheme['filterGroups']>,
+		selected: ReadonlyMap<string, ReadonlySet<string>>,
+		allIds: readonly string[]
+	): Set<string> | null {
+		let result: Set<string> | null = null;
+		for (const group of groups) {
+			const active = selected.get(group.id);
+			if (!active?.size) continue;
+			const union = new Set(group.options.filter((option) => active.has(option.id)).flatMap((option) => option.nodeIds));
+			result = new Set([...(result ?? new Set(allIds))].filter((id) => union.has(id)));
+		}
+		return result;
+	}
+
+	static resolveZwickyView(
+		nodes: ZwickyNode[],
+		edges: readonly [string, string][],
+		focus: ReadonlySet<string> | null,
+		includeRelated: boolean
+	): { nodes: ZwickyNode[]; edges: readonly [string, string][] } {
+		if (focus === null) return { nodes, edges };
+		const visible = new Set(focus);
+		if (includeRelated) for (const [from, to] of edges)
+			if (focus.has(from) || focus.has(to)) { visible.add(from); visible.add(to); }
+		return {
+			nodes: nodes.filter((node) => visible.has(node.id)),
+			edges: edges.filter(([from, to]) => visible.has(from) && visible.has(to) && (focus.has(from) || focus.has(to)))
+		};
+	}
+
 	static buildInstancedEdgeBuffers(
 		nodes: readonly ZwickyNode[],
 		edges: readonly [string, string][],
@@ -902,7 +933,8 @@ export class GraphScriptManager {
 		clusterFilter: ReadonlySet<string>,
 		theme: GraphTheme = 'dark',
 		tint: readonly [number, number, number] = [1, 1, 1],
-		edgeFilter: 'both' | 'any' = 'both'
+		edgeFilter: 'both' | 'any' = 'both',
+		selectionOnly = false
 	): Float32Array {
 		const nodeIndex = new Map<string, ZwickyNode>();
 		for (const node of nodes) nodeIndex.set(node.id, node);
@@ -930,6 +962,7 @@ export class GraphScriptManager {
 			if (edgeFilter === 'any' ? !fromOk && !toOk : !fromOk || !toOk) continue;
 
 			const isActive = selectedId !== null && (fromId === selectedId || toId === selectedId);
+			if (selectionOnly && selectedId !== null && !isActive) continue;
 			// Dark: the source colour, dimmed unless the edge touches the selection.
 			// Light: a gradient from the source's colour to the target's, both mixed with
 			// `tint` (white by default), more so for edges away from the selection, so links
@@ -974,10 +1007,90 @@ export class GraphScriptManager {
 		])
 	);
 
-	/** `clusterOrder` places own clusters as evenly spaced lanes centred on X = 0. */
-	static layoutZwickyNodes(nodes: ZwickyNode[], clusterOrder?: readonly string[]): void {
+	/** Apply authored positions and a common scene scale without changing node sizes. */
+	static applyZwickyPositions(
+		nodes: ZwickyNode[],
+		positions?: ZwickyScheme['positions'],
+		scale = 1,
+		nodeScale?: ZwickyScheme['nodeScale']
+	): void {
+		for (const node of nodes) {
+			const position = positions?.[node.id];
+			node.x = (position?.[0] ?? node.x) * scale;
+			node.y = (position?.[1] ?? node.y) * scale;
+			node.z = (position?.[2] ?? node.z) * scale;
+			node.size *= nodeScale?.[node.cluster] ?? 1;
+		}
+	}
+
+	/** Matrix lanes by default; optional concentric groups share the vertical Y axis. */
+	static layoutZwickyNodes(
+		nodes: ZwickyNode[],
+		clusterOrder?: readonly string[],
+		heightScale = 1,
+		radialLayout?: ZwickyScheme['radialLayout']
+	): void {
 		const { domainZStep, laneScatterX, laneScatterY, laneScatterZ, goldenAngle } =
 			ZWICKY_LAYOUT_SCALE;
+
+		if (radialLayout) {
+			const height = laneScatterY * 2 * heightScale;
+			for (const group of radialLayout) {
+				if (group.shape === 'spheres') continue;
+				const members = nodes
+					.filter((node) => node.cluster === group.cluster)
+					.sort((a, b) => a.path.localeCompare(b.path));
+				for (let i = 0; i < members.length; i++) {
+					const node = members[i];
+					const t = members.length > 1 ? i / (members.length - 1) : 0.5;
+					const angle =
+						group.shape === 'ring' ? (i * Math.PI * 2) / members.length : i * goldenAngle;
+					// The cone narrows upward; the centre remains a slim vertical column.
+					const radius = group.radius * (group.shape === 'cone' ? 1 - t * 0.85 : 1);
+					node.x = Math.cos(angle) * radius;
+					node.z = Math.sin(angle) * radius;
+					node.y =
+						group.shape === 'ring' ? Math.sin(angle * 3) * height * 0.08 : (t - 0.5) * height;
+					node.size = 0.42 + Math.min(node.dependencyIds.length * 0.045, 0.45);
+				}
+			}
+			// Anchored groups run after the other clusters so their coordinates stay unchanged.
+			const byId = new Map(nodes.map((node) => [node.id, node]));
+			for (const group of radialLayout.filter((group) => group.shape === 'spheres')) {
+				const buckets = new Map<string, { anchor?: ZwickyNode; members: ZwickyNode[] }>();
+				for (const node of nodes.filter((node) => node.cluster === group.cluster)) {
+					const anchor = node.dependencyIds
+						.map((id) => byId.get(id))
+						.find((target) => target && target.cluster === group.anchorCluster);
+					const key = anchor ? `anchor:${anchor.id}` : `domain:${node.domain}`;
+					if (!buckets.has(key)) buckets.set(key, { anchor, members: [] });
+					buckets.get(key)!.members.push(node);
+				}
+				const ordered = [...buckets.entries()].sort(([a], [b]) => a.localeCompare(b));
+				for (let bucketIndex = 0; bucketIndex < ordered.length; bucketIndex++) {
+					const { anchor, members } = ordered[bucketIndex][1];
+					members.sort((a, b) => a.path.localeCompare(b.path));
+					const radius = Math.max(2.5, Math.cbrt(members.length) * group.radius);
+					const direction = bucketIndex * goldenAngle;
+					const offset = anchor ? radius + 4 : radius + 18;
+					const cx = (anchor?.x ?? 0) + Math.cos(direction) * offset;
+					const cy = anchor?.y ?? ((bucketIndex + 0.5) / ordered.length - 0.5) * height;
+					const cz = (anchor?.z ?? 0) + Math.sin(direction) * offset;
+					for (let i = 0; i < members.length; i++) {
+						const node = members[i];
+						const vertical = 1 - (2 * (i + 0.5)) / members.length;
+						const horizontal = Math.sqrt(1 - vertical * vertical);
+						const angle = i * goldenAngle;
+						const spread = members.length === 1 ? 0 : radius;
+						node.x = cx + Math.cos(angle) * horizontal * spread;
+						node.y = cy + vertical * spread;
+						node.z = cz + Math.sin(angle) * horizontal * spread;
+						node.size = 0.42 + Math.min(node.dependencyIds.length * 0.045, 0.45);
+					}
+				}
+			}
+			return;
+		}
 
 		// Group: cluster → domain → [nodes]
 		const clusterMap = new Map<string, Map<string, ZwickyNode[]>>();
@@ -1015,7 +1128,7 @@ export class GraphScriptManager {
 
 					// Constrain X scatter to stay within lane; spread Y vertically
 					node.x = baseX + r * laneScatterX * Math.cos(theta);
-					node.y = r * laneScatterY * Math.sin(theta);
+					node.y = r * laneScatterY * Math.sin(theta) * heightScale;
 					node.z = baseZ + r * laneScatterZ * Math.cos(theta + Math.PI / 3);
 
 					node.size = 0.42 + Math.min(node.dependencyIds.length * 0.045, 0.45);

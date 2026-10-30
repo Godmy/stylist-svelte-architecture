@@ -3,6 +3,7 @@ import { Camera } from '$stylist/graph/class/manager/camera';
 import { ZWICKY_LAYOUT_SCALE } from '$stylist/graph/const/value/zwicky-layout-scale';
 import type { ZwickyNode } from '$stylist/graph/interface/slot/zwicky-node';
 import type { GraphTheme } from '$stylist/graph/type/alias/graph-theme';
+import type { ZwickyScheme } from '$stylist/graph/interface/slot/zwicky-scheme';
 import instancedVert from '$stylist/graph/data/shader/vertex/instanced.vert?raw';
 import instancedFrag from '$stylist/graph/data/shader/fragment/instanced.frag?raw';
 import edgeVert from '$stylist/graph/data/shader/vertex/edge.vert?raw';
@@ -20,6 +21,7 @@ export class InstancedGraphManager {
 	private theme: GraphTheme = 'dark';
 	private edgeTint: readonly [number, number, number] = [1, 1, 1];
 	private edgeFilter: 'both' | 'any' = 'both';
+	private edgeOpacity: number | undefined;
 	private animFrameId: number | null = null;
 	private time = 0;
 
@@ -38,10 +40,18 @@ export class InstancedGraphManager {
 	private edgeVAO: WebGLVertexArrayObject | null = null;
 	private edgeVBO: WebGLBuffer | null = null;
 	private edgeVertexCount = 0;
+	private graphEdgeVertexCount = 0;
 
 	// Graph data
 	private nodes: ZwickyNode[] = [];
 	private edges: readonly [string, string][] = [];
+	private visibleNodes: ZwickyNode[] = [];
+	private visibleEdges: readonly [string, string][] = [];
+	private nodeFilter: ReadonlySet<string> | null = null;
+	private includeRelated = true;
+	private facetMode = false;
+	private linksVisible = true;
+	private referenceLines: NonNullable<ZwickyScheme['referenceLines']> = [];
 	private hoveredId: string | null = null;
 	private selectedId: string | null = null;
 	private domainFilter = new Set<string>();
@@ -59,6 +69,7 @@ export class InstancedGraphManager {
 	private horizontalAngle = 0.72;
 	private verticalAngle = 0.42;
 	private radius: number = ZWICKY_LAYOUT_SCALE.cameraInitRadius;
+	private maxRadius: number = ZWICKY_LAYOUT_SCALE.cameraMaxRadius;
 	private isDragging = false;
 	private lastX = 0;
 	private lastY = 0;
@@ -78,7 +89,7 @@ export class InstancedGraphManager {
 	private uProjEdge: WebGLUniformLocation | null = null;
 	private uAlphaEdge: WebGLUniformLocation | null = null;
 
-	onSelect: ((node: ZwickyNode) => void) | null = null;
+	onSelect: ((node: ZwickyNode | null) => void) | null = null;
 
 	/** Canvas clear colour (RGB 0..1); applies at once when the scene is running. */
 	setBackground(color: readonly [number, number, number]): void {
@@ -104,7 +115,7 @@ export class InstancedGraphManager {
 		this.stop();
 		this.canvas = canvas;
 
-		const gl = canvas.getContext('webgl2');
+		const gl = canvas.getContext('webgl2', { alpha: false });
 		if (!gl) throw new Error('WebGL2 is required');
 		this.gl = gl;
 
@@ -126,7 +137,7 @@ export class InstancedGraphManager {
 
 		gl.enable(gl.DEPTH_TEST);
 		gl.enable(gl.BLEND);
-		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+		gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 		gl.clearColor(...this.background, 1);
 
 		this.setupNodeVAO();
@@ -181,9 +192,59 @@ export class InstancedGraphManager {
 	setGraph(nodes: ZwickyNode[], edges: readonly [string, string][]): void {
 		this.nodes = nodes;
 		this.edges = edges;
+		this.refreshVisibility();
 		this.needsNodeRebuild = true;
 		this.needsEdgeRebuild = true;
 		this.hasFitted = false;
+	}
+
+	private refreshVisibility(): void {
+		const view = GraphScriptManager.resolveZwickyView(this.nodes, this.edges, this.nodeFilter, this.includeRelated);
+		this.visibleNodes = view.nodes;
+		this.visibleEdges = view.edges;
+		this.needsNodeRebuild = true;
+		this.needsEdgeRebuild = true;
+	}
+
+	setNodeFilter(ids: ReadonlySet<string> | null, includeRelated: boolean): void {
+		this.facetMode = true;
+		this.nodeFilter = ids;
+		this.includeRelated = includeRelated;
+		this.hoveredId = null;
+		this.setSelected(null);
+		this.refreshVisibility();
+	}
+
+	setLinksVisible(visible: boolean): void {
+		this.linksVisible = visible;
+		this.needsEdgeRebuild = true;
+	}
+
+	getViewCounts(): { nodes: number; edges: number; matched: number; related: number } {
+		const edges = !this.linksVisible ? 0 : this.facetMode && this.selectedId
+			? this.visibleEdges.filter(([from, to]) => from === this.selectedId || to === this.selectedId).length
+			: this.visibleEdges.length;
+		const matched = this.nodeFilter?.size ?? this.nodes.length;
+		return { nodes: this.visibleNodes.length, edges, matched, related: this.visibleNodes.length - matched };
+	}
+
+	setReferenceLines(lines: NonNullable<ZwickyScheme['referenceLines']>, scale = 1): void {
+		this.referenceLines = lines.map((line) => ({
+			color: line.color,
+			points: line.points.map(([x, y, z]) => [x * scale, y * scale, z * scale] as const)
+		}));
+		this.needsEdgeRebuild = true;
+	}
+
+	setCameraOrbit(orbit: NonNullable<ZwickyScheme['camera']>): void {
+		this.horizontalAngle = orbit.horizontalAngle;
+		this.verticalAngle = GraphScriptManager.clampSceneVerticalAngle(orbit.verticalAngle);
+		this.camera?.rotateAroundTarget(this.horizontalAngle, this.verticalAngle, this.radius);
+		this.hasFitted = false;
+	}
+
+	setEdgeOpacity(opacity: number): void {
+		this.edgeOpacity = Math.max(0, Math.min(1, opacity));
 	}
 
 	setHovered(id: string | null): void {
@@ -211,14 +272,14 @@ export class InstancedGraphManager {
 		return {
 			radius: this.radius,
 			minRadius: ZWICKY_LAYOUT_SCALE.cameraMinRadius,
-			maxRadius: ZWICKY_LAYOUT_SCALE.cameraMaxRadius,
+			maxRadius: this.maxRadius,
 			horizontalAngle: this.horizontalAngle,
 			verticalAngle: this.verticalAngle
 		};
 	}
 
 	setCameraRadius(radius: number): void {
-		this.radius = GraphScriptManager.clampZwickyRadius(radius);
+		this.radius = Math.max(ZWICKY_LAYOUT_SCALE.cameraMinRadius, Math.min(this.maxRadius, radius));
 		this.camera?.rotateAroundTarget(this.horizontalAngle, this.verticalAngle, this.radius);
 	}
 
@@ -243,7 +304,7 @@ export class InstancedGraphManager {
 	}
 
 	getHoveredNode(): ZwickyNode | null {
-		return this.nodes.find((n) => n.id === this.hoveredId) ?? null;
+		return this.visibleNodes.find((n) => n.id === this.hoveredId) ?? null;
 	}
 
 	getHoverPos(): { x: number; y: number } | null {
@@ -321,7 +382,7 @@ export class InstancedGraphManager {
 		if (!gl) return;
 
 		const draw = GraphScriptManager.buildInstancedNodeBuffers(
-			this.nodes,
+			this.visibleNodes,
 			this.hoveredId,
 			this.selectedId,
 			this.domainFilter,
@@ -364,16 +425,29 @@ export class InstancedGraphManager {
 		const gl = this.gl;
 		if (!gl) return;
 
-		const data = GraphScriptManager.buildInstancedEdgeBuffers(
-			this.nodes,
-			this.edges,
+		const edges = GraphScriptManager.buildInstancedEdgeBuffers(
+			this.visibleNodes,
+			this.linksVisible ? this.visibleEdges : [],
 			this.selectedId,
 			this.domainFilter,
 			this.clusterFilter,
 			this.theme,
 			this.edgeTint,
-			this.edgeFilter
+			this.edgeFilter,
+			this.facetMode
 		);
+		const extraLength = this.referenceLines.reduce(
+			(sum, line) => sum + Math.max(0, line.points.length - 1) * 12, 0
+		);
+		const data = new Float32Array(edges.length + extraLength);
+		this.graphEdgeVertexCount = edges.length / 6;
+		data.set(edges);
+		let offset = edges.length;
+		for (const line of this.referenceLines)
+			for (let i = 1; i < line.points.length; i++) {
+				data.set([...line.points[i - 1], ...line.color, ...line.points[i], ...line.color], offset);
+				offset += 12;
+			}
 		this.edgeVertexCount = data.length / 6;
 
 		gl.bindVertexArray(this.edgeVAO);
@@ -393,6 +467,7 @@ export class InstancedGraphManager {
 
 		const gl = this.gl;
 		this.syncCanvasSize();
+		if (!this.hasFitted && this.nodes.length > 0) this.fitToScene();
 
 		if (this.needsNodeRebuild) this.uploadNodeData();
 		if (this.needsEdgeRebuild) this.uploadEdgeData();
@@ -405,17 +480,24 @@ export class InstancedGraphManager {
 
 		// Draw edges first (behind nodes)
 		if (this.edgeVertexCount > 0 && this.edgeProgram && this.edgeVAO) {
+			gl.depthMask(false);
 			gl.useProgram(this.edgeProgram);
 			gl.uniformMatrix4fv(this.uViewEdge, false, view);
 			gl.uniformMatrix4fv(this.uProjEdge, false, proj);
 			// Pastel lines on a light canvas need more opacity than dimmed ones on the dark.
 			gl.uniform1f(
 				this.uAlphaEdge,
-				this.theme === 'light' ? (this.selectedId ? 0.95 : 0.85) : this.selectedId ? 0.65 : 0.15
+				this.selectedId ? (this.theme === 'light' ? 0.95 : 0.65)
+					: (this.edgeOpacity ?? (this.theme === 'light' ? 0.85 : 0.15))
 			);
 			gl.bindVertexArray(this.edgeVAO);
-			gl.drawArrays(gl.LINES, 0, this.edgeVertexCount);
+			gl.drawArrays(gl.LINES, 0, this.graphEdgeVertexCount);
+			if (this.edgeVertexCount > this.graphEdgeVertexCount) {
+				gl.uniform1f(this.uAlphaEdge, 0.85);
+				gl.drawArrays(gl.LINES, this.graphEdgeVertexCount, this.edgeVertexCount - this.graphEdgeVertexCount);
+			}
 			gl.bindVertexArray(null);
+			gl.depthMask(true);
 		}
 
 		// Draw nodes (instanced billboard quads)
@@ -424,7 +506,7 @@ export class InstancedGraphManager {
 			gl.uniformMatrix4fv(this.uViewNode, false, view);
 			gl.uniformMatrix4fv(this.uProjNode, false, proj);
 			gl.uniform1f(this.uTimeNode, this.time);
-			gl.uniform1f(this.uFogStart, 0.6);
+			gl.uniform1f(this.uFogStart, this.theme === 'light' ? 1 : 0.6);
 			gl.uniform1f(this.uFogEnd, 1.0);
 			gl.bindVertexArray(this.nodeVAO);
 			gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, this.instanceCount);
@@ -450,7 +532,7 @@ export class InstancedGraphManager {
 			gl.viewport(0, 0, w, h);
 			camera.setAspect(w / h);
 
-			if (!this.hasFitted && this.nodes.length > 0) {
+			if ((!this.hasFitted || this.referenceLines.length > 0) && this.nodes.length > 0) {
 				this.fitToScene();
 			}
 		}
@@ -465,6 +547,33 @@ export class InstancedGraphManager {
 		const halfH = Math.tan(halfFov);
 		const halfW = halfH * aspect;
 		const limiting = Math.min(halfH, halfW);
+		if (this.referenceLines.length) {
+			const points = [
+				...this.nodes.map((node) => [node.x, node.y, node.z] as const),
+				...this.referenceLines.flatMap((line) => line.points)
+			];
+			const target = [0, 0, 0] as [number, number, number];
+			for (let axis = 0; axis < 3; axis++) {
+				const values = points.map((point) => point[axis]);
+				target[axis] = (Math.min(...values) + Math.max(...values)) / 2;
+			}
+			const sh = Math.sin(this.horizontalAngle), ch = Math.cos(this.horizontalAngle);
+			const sv = Math.sin(this.verticalAngle), cv = Math.cos(this.verticalAngle);
+			let radius: number = ZWICKY_LAYOUT_SCALE.cameraMinRadius;
+			for (const point of points) {
+				const x = point[0] - target[0], y = point[1] - target[1], z = point[2] - target[2];
+				const right = x * ch - z * sh;
+				const up = -x * sh * sv + y * cv - z * ch * sv;
+				const depth = x * sh * cv + y * sv + z * ch * cv;
+				radius = Math.max(radius, depth + Math.max(Math.abs(right) / halfW, Math.abs(up) / halfH));
+			}
+			this.radius = radius * 1.12;
+			this.maxRadius = Math.max(ZWICKY_LAYOUT_SCALE.cameraMaxRadius, this.radius * 1.5);
+			this.camera.setTarget(target);
+			this.camera.rotateAroundTarget(this.horizontalAngle, this.verticalAngle, this.radius);
+			this.hasFitted = true;
+			return;
+		}
 		const bounds = ZWICKY_LAYOUT_SCALE.domainRadius + ZWICKY_LAYOUT_SCALE.familyMaxRadius + 5;
 
 		this.radius = GraphScriptManager.clampZwickyRadius((bounds / limiting) * 1.15);
@@ -503,7 +612,7 @@ export class InstancedGraphManager {
 		this.hoverY = e.clientY;
 
 		const hit = GraphScriptManager.pickZwickyNodeFromScreen(
-			this.nodes,
+			this.visibleNodes,
 			this.camera,
 			this.canvas,
 			e.clientX,
@@ -521,14 +630,14 @@ export class InstancedGraphManager {
 
 		if (moved) {
 			const hit = GraphScriptManager.pickZwickyNodeFromScreen(
-				this.nodes,
+				this.visibleNodes,
 				this.camera,
 				this.canvas,
 				e.clientX,
 				e.clientY
 			);
 			this.setSelected(hit?.id ?? null);
-			if (hit) this.onSelect?.(hit);
+			this.onSelect?.(hit);
 		}
 
 		this.isDragging = false;

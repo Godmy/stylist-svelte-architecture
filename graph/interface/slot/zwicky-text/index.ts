@@ -10,4 +10,18 @@ export interface ZwickyText {
 	hint?: string;
 	clusters?: string;
 	domains?: string;
+	filters?: string;
+	searchFilters?: string;
+	related?: string;
+	showLinks?: string;
+	filterHelp?: string;
+	filtersEmpty?: string;
+	matched?: string;
+	context?: string;
+	empty?: string;
+	noOptions?: string;
+	clearSelection?: string;
+	selectionHint?: string;
+	showFilters?: string;
+	hideFilters?: string;
 }

@@ -19,6 +19,11 @@ export interface RecipeZwickyScene extends ComputeIntersectAll<
 			overlayClass?: string;
 			class?: string;
 			onNodeSelect?: (nodeId: string, path: string) => void;
+			panelHeading?: boolean;
+			panelMetrics?: boolean;
+			onViewChange?: (view: {
+				nodes: number; edges: number; totalNodes: number; totalEdges: number; filters: number;
+			}) => void;
 		}
 	]
 > {}

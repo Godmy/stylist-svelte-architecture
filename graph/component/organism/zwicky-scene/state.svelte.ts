@@ -20,6 +20,21 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	let clusterFilter = $state(new Set<string>());
 	let containerWidth = $state(800);
 	let containerHeight = $state(600);
+	let facetFilter = $state(new Map<string, Set<string>>());
+	let filterQuery = $state('');
+	let includeRelated = $state(true);
+	let showLinks = $state(true);
+	let panelOpen = $state(true);
+	let viewCounts = $state({ nodes: 0, edges: 0, matched: 0, related: 0 });
+	let allNodeIds: string[] = [];
+	const filterGroups = $derived((props.scheme?.filterGroups ?? []).map((group) => ({
+		...group,
+		options: group.options.filter((option) => !filterQuery.trim()
+			|| (group.label + ' ' + option.label).toLocaleLowerCase().includes(filterQuery.trim().toLocaleLowerCase()))
+	})).filter((group) => group.options.length));
+	const activeFacets = $derived((props.scheme?.filterGroups ?? []).flatMap((group) =>
+		group.options.filter((option) => facetFilter.get(group.id)?.has(option.id))
+			.map((option) => ({ group: group.id, id: option.id, label: option.label }))));
 
 	const containerClass = $derived(
 		ClassNamesManager.merge('zwicky-scene', props.class?.toString() ?? '')
@@ -42,7 +57,21 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 		clear: props.text?.clear ?? t('clear'),
 		hint: props.text?.hint ?? t('hint'),
 		clusters: props.text?.clusters,
-		domains: props.text?.domains
+		domains: props.text?.domains,
+		filters: props.text?.filters ?? 'Filters',
+		searchFilters: props.text?.searchFilters ?? 'Search filters',
+		related: props.text?.related ?? 'Include directly connected nodes',
+		showLinks: props.text?.showLinks ?? 'Show connections',
+		filterHelp: props.text?.filterHelp ?? 'OR within a group, AND between groups.',
+		filtersEmpty: props.text?.filtersEmpty ?? 'No filters selected: all nodes are shown.',
+		matched: props.text?.matched ?? 'Matching',
+		context: props.text?.context ?? 'Connected',
+		empty: props.text?.empty ?? 'No matching nodes. Clear a filter to broaden the result.',
+		noOptions: props.text?.noOptions ?? 'No matching filters',
+		clearSelection: props.text?.clearSelection ?? 'Clear node selection',
+		selectionHint: props.text?.selectionHint ?? 'Only connections of the selected node are shown.',
+		showFilters: props.text?.showFilters ?? 'Show filters',
+		hideFilters: props.text?.hideFilters ?? 'Hide filters'
 	});
 
 	const restProps = $derived.by(() => {
@@ -53,6 +82,9 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 			overlayClass: _oc,
 			class: _c,
 			onNodeSelect: _ns,
+			onViewChange: _vc,
+			panelHeading: _ph,
+			panelMetrics: _pm,
 			scheme: _s,
 			text: _tx,
 			theme: _th,
@@ -63,10 +95,49 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 
 	let pollTimer: ReturnType<typeof setInterval> | null = null;
 
-	manager.onSelect = (node: ZwickyNode) => {
+	function updateViewCounts(): void {
+		viewCounts = manager.getViewCounts();
+		props.onViewChange?.({
+			nodes: viewCounts.nodes, edges: viewCounts.edges,
+			totalNodes: nodeCount, totalEdges: edgeCount, filters: activeFacets.length
+		});
+	}
+
+	manager.onSelect = (node: ZwickyNode | null) => {
 		selectedNode = node;
-		props.onNodeSelect?.(node.id, node.path);
+		props.onNodeSelect?.(node?.id ?? '', node?.path ?? '');
+		updateViewCounts();
 	};
+
+	function clearSelection(): void {
+		selectedNode = null;
+		manager.setSelected(null);
+		props.onNodeSelect?.('', '');
+		updateViewCounts();
+	}
+
+	function applyFacets(): void {
+		clearSelection();
+		const ids = GraphScriptManager.matchZwickyFilters(props.scheme?.filterGroups ?? [], facetFilter, allNodeIds);
+		manager.setNodeFilter(ids, includeRelated);
+		updateViewCounts();
+	}
+
+	function toggleFacet(group: string, id: string): void {
+		const next = new Map(facetFilter);
+		const selected = new Set(next.get(group) ?? []);
+		if (selected.has(id)) selected.delete(id); else selected.add(id);
+		if (selected.size) next.set(group, selected); else next.delete(group);
+		facetFilter = next;
+		applyFacets();
+	}
+
+	function toggleRelated(): void { includeRelated = !includeRelated; applyFacets(); }
+	function toggleLinks(): void {
+		showLinks = !showLinks;
+		manager.setLinksVisible(showLinks);
+		updateViewCounts();
+	}
 
 	function loadData(): void {
 		const input = props.data;
@@ -75,19 +146,30 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 		const { nodes, edges } = GraphScriptManager.parseZwickyGraph(input, props.scheme);
 		GraphScriptManager.layoutZwickyNodes(
 			nodes,
-			props.scheme?.clusters.map((group) => group.id)
+			props.scheme?.clusters.map((group) => group.id),
+			props.scheme?.heightScale,
+			props.scheme?.radialLayout
 		);
+		const scale = props.scheme?.layoutScale ?? 1;
+		GraphScriptManager.applyZwickyPositions(nodes, props.scheme?.positions, scale, props.scheme?.nodeScale);
+		manager.setReferenceLines(props.scheme?.referenceLines ?? [], scale);
 		manager.setGraph(nodes, edges);
+		allNodeIds = nodes.map((node) => node.id);
 		nodeCount = nodes.length;
 		edgeCount = edges.length;
+		if (props.scheme?.filterGroups) applyFacets();
+		updateViewCounts();
 		isLoaded = true;
 	}
 
 	function mount(canvas: HTMLCanvasElement | null): void {
 		if (!canvas) return;
+		if (props.scheme?.filterGroups && canvas.clientWidth < 640) panelOpen = false;
 		// A light page gets a warm off-white canvas and pastel edges instead of the night sky.
 		if (props.theme === 'light') manager.setTheme('light', props.scheme?.edgeTint);
 		if (props.scheme?.edgeFilter) manager.setEdgeFilter(props.scheme.edgeFilter);
+		if (props.scheme?.edgeOpacity !== undefined) manager.setEdgeOpacity(props.scheme.edgeOpacity);
+		if (props.scheme?.camera) manager.setCameraOrbit(props.scheme.camera);
 		manager.start(canvas);
 		loadData();
 
@@ -122,10 +204,13 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	}
 
 	function clearFilter(): void {
+		facetFilter = new Map();
+		filterQuery = '';
 		domainFilter = new Set();
 		clusterFilter = new Set();
 		manager.setDomainFilter(new Set());
 		manager.setClusterFilter(new Set());
+		if (props.scheme?.filterGroups) applyFacets(); else clearSelection();
 	}
 
 	function toggleCluster(cluster: string): void {
@@ -137,6 +222,20 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	}
 
 	return {
+		get facetFilter() { return facetFilter; },
+		get filterGroups() { return filterGroups; },
+		get activeFacets() { return activeFacets; },
+		get filterQuery() { return filterQuery; },
+		get includeRelated() { return includeRelated; },
+		get showLinks() { return showLinks; },
+		get panelOpen() { return panelOpen; },
+		get viewCounts() { return viewCounts; },
+		toggleFacet,
+		toggleRelated,
+		toggleLinks,
+		setFilterQuery(value: string) { filterQuery = value; },
+		togglePanel() { panelOpen = !panelOpen; },
+		clearSelection,
 		get containerClass() {
 			return containerClass;
 		},
