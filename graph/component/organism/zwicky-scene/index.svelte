@@ -18,13 +18,19 @@
 		return () => state.destroy();
 	});
 
-	const hasFilter = $derived(state.facetFilter.size > 0 || state.domainFilter.size > 0 || state.clusterFilter.size > 0);
+	const hasFilter = $derived(
+		state.facetFilter.size > 0 || state.domainFilter.size > 0 || state.clusterFilter.size > 0
+	);
 </script>
 
 <div class={state.containerClass} data-theme={state.theme} {...state.restProps}>
 	<canvas bind:this={canvasRef} class={state.canvasClass}></canvas>
 	{#if state.scheme?.filterGroups}
-		<button class="zwicky-scene__filter-toggle" aria-expanded={state.panelOpen} onclick={state.togglePanel}>
+		<button
+			class="zwicky-scene__filter-toggle"
+			aria-expanded={state.panelOpen}
+			onclick={state.togglePanel}
+		>
 			{state.panelOpen ? state.text.hideFilters : state.text.showFilters}
 			{#if state.activeFacets.length}<span>{state.activeFacets.length}</span>{/if}
 		</button>
@@ -41,155 +47,316 @@
 
 	<!-- Main info overlay -->
 	{#if !state.scheme?.filterGroups || state.panelOpen}
-	<div class={state.overlayClass}>
-		{#if props.panelHeading !== false}
-		<span class="zwicky-scene__badge">{state.text.badge}</span>
-		<h2 class="zwicky-scene__title">{state.title}</h2>
-		{/if}
+		<div class={state.overlayClass}>
+			{#if props.panelHeading !== false}
+				<span class="zwicky-scene__badge">{state.text.badge}</span>
+				<h2 class="zwicky-scene__title">{state.title}</h2>
+			{/if}
 
-		{#if props.panelMetrics !== false}
-		<div class="zwicky-scene__metrics">
-			<div class="zwicky-scene__metric">
-				<span>{format.number(state.scheme?.filterGroups ? state.viewCounts.nodes : state.nodeCount)}
-					{#if state.scheme?.filterGroups}<small> / {format.number(state.nodeCount)}</small>{/if}</span>
-				<small>{state.text.nodes}</small>
-			</div>
-			<div class="zwicky-scene__metric">
-				<span>{format.number(state.scheme?.filterGroups ? state.viewCounts.edges : state.edgeCount)}
-					{#if state.scheme?.filterGroups}<small> / {format.number(state.edgeCount)}</small>{/if}</span>
-				<small>{state.text.edges}</small>
-			</div>
-			<div class="zwicky-scene__metric">
-				<span>{state.scheme?.filterGroups ? state.activeFacets.length : state.isLoaded ? 'GPU' : '—'}</span>
-				<small>{state.scheme?.filterGroups ? state.text.filters : state.text.render}</small>
-			</div>
-		</div>
-		{/if}
+			{#if props.panelMetrics !== false}
+				<div class="zwicky-scene__metrics">
+					<div class="zwicky-scene__metric">
+						<span
+							>{format.number(
+								state.scheme?.filterGroups ? state.viewCounts.nodes : state.nodeCount
+							)}
+							{#if state.scheme?.filterGroups}<small>
+									/ {format.number(state.nodeCount)}</small
+								>{/if}</span
+						>
+						<small>{state.text.nodes}</small>
+					</div>
+					<div class="zwicky-scene__metric">
+						<span
+							>{format.number(
+								state.scheme?.filterGroups ? state.viewCounts.edges : state.edgeCount
+							)}
+							{#if state.scheme?.filterGroups}<small>
+									/ {format.number(state.edgeCount)}</small
+								>{/if}</span
+						>
+						<small>{state.text.edges}</small>
+					</div>
+					<div class="zwicky-scene__metric">
+						<span
+							>{state.scheme?.filterGroups
+								? state.activeFacets.length
+								: state.isLoaded
+									? 'GPU'
+									: '—'}</span
+						>
+						<small>{state.scheme?.filterGroups ? state.text.filters : state.text.render}</small>
+					</div>
+				</div>
+			{/if}
 
-		{#if state.selectedNode}
-			<div class="zwicky-scene__selection">
-				<small>{state.text.selected}</small>
-				{#if state.selectedNode.label}<strong class="zwicky-scene__label"
-						>{state.selectedNode.label}</strong
-					>{/if}
-				{#if !state.scheme?.filterGroups}<code class="zwicky-scene__path">{state.selectedNode.path}</code>{/if}
-				<div class="zwicky-scene__tags">
+			{#if state.selectedNode}
+				<div class="zwicky-scene__selection">
+					<small>{state.text.selected}</small>
+					{#if state.selectedNode.label}<strong class="zwicky-scene__label"
+							>{state.selectedNode.label}</strong
+						>{/if}
+					{#if !state.scheme?.filterGroups}<code class="zwicky-scene__path"
+							>{state.selectedNode.path}</code
+						>{/if}
+					<div class="zwicky-scene__tags">
+						{#if state.scheme?.filterGroups}
+							<span
+								>{state.scheme.clusters.find((group) => group.id === state.selectedNode?.cluster)
+									?.label}</span
+							>
+						{:else}
+							<span class="zwicky-scene__tag--domain">{state.selectedNode.domain}</span>
+							<span>{state.selectedNode.cluster}</span>
+							{#if state.selectedNode.joint}<span>{state.selectedNode.joint}</span>{/if}
+						{/if}
+					</div>
+					<span class="zwicky-scene__deps-count"
+						>{state.scheme?.filterGroups
+							? state.viewCounts.edges
+							: state.selectedNode.dependencyIds.length}
+						{state.text.dependencies}</span
+					>
 					{#if state.scheme?.filterGroups}
-						<span>{state.scheme.clusters.find((group) => group.id === state.selectedNode?.cluster)?.label}</span>
-					{:else}
-					<span class="zwicky-scene__tag--domain">{state.selectedNode.domain}</span>
-					<span>{state.selectedNode.cluster}</span>
-					{#if state.selectedNode.joint}<span>{state.selectedNode.joint}</span>{/if}
+						<p class="zwicky-scene__filter-note">{state.text.selectionHint}</p>
+						<button class="zwicky-scene__clear-btn" onclick={state.clearSelection}
+							>{state.text.clearSelection}</button
+						>
 					{/if}
 				</div>
-				<span class="zwicky-scene__deps-count"
-					>{state.scheme?.filterGroups ? state.viewCounts.edges : state.selectedNode.dependencyIds.length} {state.text.dependencies}</span
-				>
-				{#if state.scheme?.filterGroups}
-					<p class="zwicky-scene__filter-note">{state.text.selectionHint}</p>
-					<button class="zwicky-scene__clear-btn" onclick={state.clearSelection}>{state.text.clearSelection}</button>
-				{/if}
-			</div>
-		{/if}
+			{/if}
 
-		{#if state.scheme?.filterGroups}
-			<div class="zwicky-scene__facets">
-				<label class="zwicky-scene__search">
-					<span>{state.text.searchFilters}</span>
-					<input type="search" value={state.filterQuery} oninput={(event) => state.setFilterQuery(event.currentTarget.value)} />
-				</label>
-				<div class="zwicky-scene__view-options">
-					<label><input type="checkbox" checked={state.showLinks} onchange={state.toggleLinks} />{state.text.showLinks}</label>
-					<label><input type="checkbox" checked={state.includeRelated} onchange={state.toggleRelated} />{state.text.related}</label>
-				</div>
-				{#if hasFilter}
-					<p class="zwicky-scene__filter-summary" aria-live="polite">{state.text.matched}: {format.number(state.viewCounts.matched)}
-						{#if state.includeRelated} · {state.text.context}: {format.number(state.viewCounts.related)}{/if}</p>
-					<div class="zwicky-scene__active-filters">
-						{#each state.activeFacets as item (item.group + ':' + item.id)}
-							<button onclick={() => state.toggleFacet(item.group, item.id)}>{item.label} ×</button>
-						{/each}
+			{#if state.scheme?.filterGroups}
+				<div class="zwicky-scene__facets">
+					<label class="zwicky-scene__search">
+						<span>{state.text.searchFilters}</span>
+						<input
+							type="search"
+							value={state.filterQuery}
+							oninput={(event) => state.setFilterQuery(event.currentTarget.value)}
+						/>
+					</label>
+					<div class="zwicky-scene__view-options">
+						<label
+							><input
+								type="checkbox"
+								checked={state.showLinks}
+								onchange={state.toggleLinks}
+							/>{state.text.showLinks}</label
+						>
+						<label
+							><input
+								type="checkbox"
+								checked={state.includeRelated}
+								onchange={state.toggleRelated}
+							/>{state.text.related}</label
+						>
 					</div>
-					<button class="zwicky-scene__clear-btn" onclick={state.clearFilter}>{state.text.clear}</button>
-				{:else}
-					<p class="zwicky-scene__filter-note">{state.text.filtersEmpty}</p>
-				{/if}
-				{#if hasFilter && state.viewCounts.matched === 0}<p role="status" class="zwicky-scene__filter-note">{state.text.empty}</p>{/if}
-				<p class="zwicky-scene__filter-note">{state.text.filterHelp}</p>
-				{#each state.filterGroups as group (group.id)}
-					<details class="zwicky-scene__facet-group" data-filter-group={group.id} open={group.id === 'sections' || !!state.filterQuery.trim()}>
-						<summary>{group.label} <span>{group.options.length}</span>
-							{#if state.facetFilter.get(group.id)?.size}<strong> · {state.facetFilter.get(group.id)?.size}</strong>{/if}</summary>
-						<div class="zwicky-scene__facet-options">
-							{#each group.options as option (option.id)}
-								<label class:active={state.facetFilter.get(group.id)?.has(option.id)}>
-									<input type="checkbox" checked={state.facetFilter.get(group.id)?.has(option.id) ?? false} onchange={() => state.toggleFacet(group.id, option.id)} />
-									<span>{option.label}</span><small>{option.nodeIds.length}</small>
-								</label>
+					{#if hasFilter}
+						<p class="zwicky-scene__filter-summary" aria-live="polite">
+							{state.text.matched}: {format.number(state.viewCounts.matched)}
+							{#if state.includeRelated}
+								· {state.text.context}: {format.number(state.viewCounts.related)}{/if}
+						</p>
+						<div class="zwicky-scene__active-filters">
+							{#each state.activeFacets as item (item.group + ':' + item.id)}
+								<button onclick={() => state.toggleFacet(item.group, item.id)}
+									>{item.label} ×</button
+								>
 							{/each}
 						</div>
-					</details>
-				{/each}
-				{#if state.filterGroups.length === 0}<p class="zwicky-scene__filter-note">{state.text.noOptions}</p>{/if}
-			</div>
-		{:else}
-		<!-- Cluster filter pills (primary) -->
-		<div class="zwicky-scene__panel">
-			<GraphClusterFilter
-				activeClusters={state.clusterFilter}
-				onClusterClick={state.toggleCluster}
-				clusters={state.scheme?.clusters}
-				title={state.text.clusters}
-			/>
+						<button class="zwicky-scene__clear-btn" onclick={state.clearFilter}
+							>{state.text.clear}</button
+						>
+					{:else}
+						<p class="zwicky-scene__filter-note">{state.text.filtersEmpty}</p>
+					{/if}
+					{#if hasFilter && state.viewCounts.matched === 0}<p
+							role="status"
+							class="zwicky-scene__filter-note"
+						>
+							{state.text.empty}
+						</p>{/if}
+					<p class="zwicky-scene__filter-note">{state.text.filterHelp}</p>
+					{#each state.filterGroups as group (group.id)}
+						<details
+							class="zwicky-scene__facet-group"
+							data-filter-group={group.id}
+							open={group.id === 'sections' || !!state.filterQuery.trim()}
+						>
+							<summary
+								>{group.label} <span>{group.options.length}</span>
+								{#if state.facetFilter.get(group.id)?.size}<strong>
+										· {state.facetFilter.get(group.id)?.size}</strong
+									>{/if}</summary
+							>
+							<div class="zwicky-scene__facet-options">
+								{#each group.options as option (option.id)}
+									<label class:active={state.facetFilter.get(group.id)?.has(option.id)}>
+										<input
+											type="checkbox"
+											checked={state.facetFilter.get(group.id)?.has(option.id) ?? false}
+											onchange={() => state.toggleFacet(group.id, option.id)}
+										/>
+										<span>{option.label}</span><small>{option.nodeIds.length}</small>
+									</label>
+								{/each}
+							</div>
+						</details>
+					{/each}
+					{#if state.filterGroups.length === 0}<p class="zwicky-scene__filter-note">
+							{state.text.noOptions}
+						</p>{/if}
+				</div>
+			{:else}
+				<!-- Cluster filter pills (primary) -->
+				<div class="zwicky-scene__panel">
+					<GraphClusterFilter
+						activeClusters={state.clusterFilter}
+						onClusterClick={state.toggleCluster}
+						clusters={state.scheme?.clusters}
+						title={state.text.clusters}
+					/>
+				</div>
+
+				<!-- Domain legend (secondary) -->
+				<div class="zwicky-scene__panel">
+					<GraphLegend
+						activeDomains={state.domainFilter}
+						onDomainClick={state.toggleDomain}
+						domains={state.scheme?.domains}
+						title={state.text.domains}
+					/>
+				</div>
+
+				{#if hasFilter}
+					<button class="zwicky-scene__clear-btn" onclick={state.clearFilter}>
+						{state.text.clear}
+					</button>
+				{/if}
+			{/if}
+
+			<p class="zwicky-scene__hint">{state.text.hint}</p>
 		</div>
-
-		<!-- Domain legend (secondary) -->
-		<div class="zwicky-scene__panel">
-			<GraphLegend
-				activeDomains={state.domainFilter}
-				onDomainClick={state.toggleDomain}
-				domains={state.scheme?.domains}
-				title={state.text.domains}
-			/>
-		</div>
-
-		{#if hasFilter}
-			<button class="zwicky-scene__clear-btn" onclick={state.clearFilter}>
-				{state.text.clear}
-			</button>
-		{/if}
-		{/if}
-
-		<p class="zwicky-scene__hint">{state.text.hint}</p>
-	</div>
 	{/if}
 </div>
 
 <style>
 	.zwicky-scene__filter-toggle {
-		position: absolute; top: 1rem; right: 1rem; z-index: 2;
-		border: 1px solid #a2b8b2; border-radius: 0.5rem; padding: 0.6rem 0.8rem;
-		background: #fff; color: #183b35; cursor: pointer; font: inherit; font-size: 0.8rem;
+		position: absolute;
+		top: 1rem;
+		right: 1rem;
+		z-index: 2;
+		border: 1px solid #a2b8b2;
+		border-radius: 0.5rem;
+		padding: 0.6rem 0.8rem;
+		background: #fff;
+		color: #183b35;
+		cursor: pointer;
+		font: inherit;
+		font-size: 0.8rem;
 	}
-	.zwicky-scene__facets { display: grid; gap: 0.7rem; }
-	.zwicky-scene__metric > span > small { display: inline; }
-	.zwicky-scene__search { display: grid; gap: 0.3rem; font-size: 0.75rem; }
-	.zwicky-scene__search input { min-width: 0; padding: 0.6rem; border-radius: 0.4rem; border: 1px solid #a2b8b2; background: #fff; color: #183b35; font: inherit; }
-	.zwicky-scene__view-options { display: grid; gap: 0.4rem; font-size: 0.75rem; }
-	.zwicky-scene__view-options label { display: flex; align-items: center; gap: 0.45rem; cursor: pointer; }
-	.zwicky-scene__facets input[type='checkbox'] { accent-color: #16877b; flex: 0 0 auto; width: 1rem; height: 1rem; }
-	.zwicky-scene__filter-note { margin: 0; font-size: 0.72rem; line-height: 1.5; opacity: 0.8; }
-	.zwicky-scene__filter-summary { margin: 0; font-size: 0.75rem; font-weight: 650; }
-	.zwicky-scene__active-filters { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-	.zwicky-scene__active-filters button { border: 1px solid #8dbbb0; border-radius: 1rem; padding: 0.3rem 0.5rem; background: #e8f5ef; color: #183b35; cursor: pointer; font: inherit; font-size: 0.7rem; }
-	.zwicky-scene__facet-group { border-top: 1px solid #93b5ac50; padding-top: 0.5rem; }
-	.zwicky-scene__facet-group summary { cursor: pointer; font-weight: 650; font-size: 0.8rem; }
-	.zwicky-scene__facet-group summary span { opacity: 0.6; font-size: 0.7rem; }
-	.zwicky-scene__facet-options { display: grid; gap: 0.15rem; margin-top: 0.4rem; }
-	.zwicky-scene__facet-options label { display: flex; gap: 0.45rem; align-items: center; padding: 0.35rem; border-radius: 0.35rem; cursor: pointer; font-size: 0.75rem; }
-	.zwicky-scene__facet-options label:hover, .zwicky-scene__facet-options label.active { background: #16877b18; }
-	.zwicky-scene__facet-options label span { flex: 1; }
-	.zwicky-scene__facet-options small { opacity: 0.65; }
+	.zwicky-scene__facets {
+		display: grid;
+		gap: 0.7rem;
+	}
+	.zwicky-scene__metric > span > small {
+		display: inline;
+	}
+	.zwicky-scene__search {
+		display: grid;
+		gap: 0.3rem;
+		font-size: 0.75rem;
+	}
+	.zwicky-scene__search input {
+		min-width: 0;
+		padding: 0.6rem;
+		border-radius: 0.4rem;
+		border: 1px solid #a2b8b2;
+		background: #fff;
+		color: #183b35;
+		font: inherit;
+	}
+	.zwicky-scene__view-options {
+		display: grid;
+		gap: 0.4rem;
+		font-size: 0.75rem;
+	}
+	.zwicky-scene__view-options label {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+		cursor: pointer;
+	}
+	.zwicky-scene__facets input[type='checkbox'] {
+		accent-color: #16877b;
+		flex: 0 0 auto;
+		width: 1rem;
+		height: 1rem;
+	}
+	.zwicky-scene__filter-note {
+		margin: 0;
+		font-size: 0.72rem;
+		line-height: 1.5;
+		opacity: 0.8;
+	}
+	.zwicky-scene__filter-summary {
+		margin: 0;
+		font-size: 0.75rem;
+		font-weight: 650;
+	}
+	.zwicky-scene__active-filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.3rem;
+	}
+	.zwicky-scene__active-filters button {
+		border: 1px solid #8dbbb0;
+		border-radius: 1rem;
+		padding: 0.3rem 0.5rem;
+		background: #e8f5ef;
+		color: #183b35;
+		cursor: pointer;
+		font: inherit;
+		font-size: 0.7rem;
+	}
+	.zwicky-scene__facet-group {
+		border-top: 1px solid #93b5ac50;
+		padding-top: 0.5rem;
+	}
+	.zwicky-scene__facet-group summary {
+		cursor: pointer;
+		font-weight: 650;
+		font-size: 0.8rem;
+	}
+	.zwicky-scene__facet-group summary span {
+		opacity: 0.6;
+		font-size: 0.7rem;
+	}
+	.zwicky-scene__facet-options {
+		display: grid;
+		gap: 0.15rem;
+		margin-top: 0.4rem;
+	}
+	.zwicky-scene__facet-options label {
+		display: flex;
+		gap: 0.45rem;
+		align-items: center;
+		padding: 0.35rem;
+		border-radius: 0.35rem;
+		cursor: pointer;
+		font-size: 0.75rem;
+	}
+	.zwicky-scene__facet-options label:hover,
+	.zwicky-scene__facet-options label.active {
+		background: #16877b18;
+	}
+	.zwicky-scene__facet-options label span {
+		flex: 1;
+	}
+	.zwicky-scene__facet-options small {
+		opacity: 0.65;
+	}
 	.zwicky-scene {
 		position: relative;
 		width: 100%;

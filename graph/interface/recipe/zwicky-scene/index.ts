@@ -22,7 +22,11 @@ export interface RecipeZwickyScene extends ComputeIntersectAll<
 			panelHeading?: boolean;
 			panelMetrics?: boolean;
 			onViewChange?: (view: {
-				nodes: number; edges: number; totalNodes: number; totalEdges: number; filters: number;
+				nodes: number;
+				edges: number;
+				totalNodes: number;
+				totalEdges: number;
+				filters: number;
 			}) => void;
 		}
 	]

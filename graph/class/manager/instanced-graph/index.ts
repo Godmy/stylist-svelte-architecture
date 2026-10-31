@@ -199,7 +199,12 @@ export class InstancedGraphManager {
 	}
 
 	private refreshVisibility(): void {
-		const view = GraphScriptManager.resolveZwickyView(this.nodes, this.edges, this.nodeFilter, this.includeRelated);
+		const view = GraphScriptManager.resolveZwickyView(
+			this.nodes,
+			this.edges,
+			this.nodeFilter,
+			this.includeRelated
+		);
 		this.visibleNodes = view.nodes;
 		this.visibleEdges = view.edges;
 		this.needsNodeRebuild = true;
@@ -221,11 +226,20 @@ export class InstancedGraphManager {
 	}
 
 	getViewCounts(): { nodes: number; edges: number; matched: number; related: number } {
-		const edges = !this.linksVisible ? 0 : this.facetMode && this.selectedId
-			? this.visibleEdges.filter(([from, to]) => from === this.selectedId || to === this.selectedId).length
-			: this.visibleEdges.length;
+		const edges = !this.linksVisible
+			? 0
+			: this.facetMode && this.selectedId
+				? this.visibleEdges.filter(
+						([from, to]) => from === this.selectedId || to === this.selectedId
+					).length
+				: this.visibleEdges.length;
 		const matched = this.nodeFilter?.size ?? this.nodes.length;
-		return { nodes: this.visibleNodes.length, edges, matched, related: this.visibleNodes.length - matched };
+		return {
+			nodes: this.visibleNodes.length,
+			edges,
+			matched,
+			related: this.visibleNodes.length - matched
+		};
 	}
 
 	setReferenceLines(lines: NonNullable<ZwickyScheme['referenceLines']>, scale = 1): void {
@@ -437,7 +451,8 @@ export class InstancedGraphManager {
 			this.facetMode
 		);
 		const extraLength = this.referenceLines.reduce(
-			(sum, line) => sum + Math.max(0, line.points.length - 1) * 12, 0
+			(sum, line) => sum + Math.max(0, line.points.length - 1) * 12,
+			0
 		);
 		const data = new Float32Array(edges.length + extraLength);
 		this.graphEdgeVertexCount = edges.length / 6;
@@ -487,14 +502,21 @@ export class InstancedGraphManager {
 			// Pastel lines on a light canvas need more opacity than dimmed ones on the dark.
 			gl.uniform1f(
 				this.uAlphaEdge,
-				this.selectedId ? (this.theme === 'light' ? 0.95 : 0.65)
+				this.selectedId
+					? this.theme === 'light'
+						? 0.95
+						: 0.65
 					: (this.edgeOpacity ?? (this.theme === 'light' ? 0.85 : 0.15))
 			);
 			gl.bindVertexArray(this.edgeVAO);
 			gl.drawArrays(gl.LINES, 0, this.graphEdgeVertexCount);
 			if (this.edgeVertexCount > this.graphEdgeVertexCount) {
 				gl.uniform1f(this.uAlphaEdge, 0.85);
-				gl.drawArrays(gl.LINES, this.graphEdgeVertexCount, this.edgeVertexCount - this.graphEdgeVertexCount);
+				gl.drawArrays(
+					gl.LINES,
+					this.graphEdgeVertexCount,
+					this.edgeVertexCount - this.graphEdgeVertexCount
+				);
 			}
 			gl.bindVertexArray(null);
 			gl.depthMask(true);
@@ -557,11 +579,15 @@ export class InstancedGraphManager {
 				const values = points.map((point) => point[axis]);
 				target[axis] = (Math.min(...values) + Math.max(...values)) / 2;
 			}
-			const sh = Math.sin(this.horizontalAngle), ch = Math.cos(this.horizontalAngle);
-			const sv = Math.sin(this.verticalAngle), cv = Math.cos(this.verticalAngle);
+			const sh = Math.sin(this.horizontalAngle),
+				ch = Math.cos(this.horizontalAngle);
+			const sv = Math.sin(this.verticalAngle),
+				cv = Math.cos(this.verticalAngle);
 			let radius: number = ZWICKY_LAYOUT_SCALE.cameraMinRadius;
 			for (const point of points) {
-				const x = point[0] - target[0], y = point[1] - target[1], z = point[2] - target[2];
+				const x = point[0] - target[0],
+					y = point[1] - target[1],
+					z = point[2] - target[2];
 				const right = x * ch - z * sh;
 				const up = -x * sh * sv + y * cv - z * ch * sv;
 				const depth = x * sh * cv + y * sv + z * ch * cv;

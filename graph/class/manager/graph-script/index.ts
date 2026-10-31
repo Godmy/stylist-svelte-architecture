@@ -990,7 +990,9 @@ export class GraphScriptManager {
 		for (const group of groups) {
 			const active = selected.get(group.id);
 			if (!active?.size) continue;
-			const union = new Set(group.options.filter((option) => active.has(option.id)).flatMap((option) => option.nodeIds));
+			const union = new Set(
+				group.options.filter((option) => active.has(option.id)).flatMap((option) => option.nodeIds)
+			);
 			result = new Set([...(result ?? new Set(allIds))].filter((id) => union.has(id)));
 		}
 		return result;
@@ -1004,11 +1006,17 @@ export class GraphScriptManager {
 	): { nodes: ZwickyNode[]; edges: readonly [string, string][] } {
 		if (focus === null) return { nodes, edges };
 		const visible = new Set(focus);
-		if (includeRelated) for (const [from, to] of edges)
-			if (focus.has(from) || focus.has(to)) { visible.add(from); visible.add(to); }
+		if (includeRelated)
+			for (const [from, to] of edges)
+				if (focus.has(from) || focus.has(to)) {
+					visible.add(from);
+					visible.add(to);
+				}
 		return {
 			nodes: nodes.filter((node) => visible.has(node.id)),
-			edges: edges.filter(([from, to]) => visible.has(from) && visible.has(to) && (focus.has(from) || focus.has(to)))
+			edges: edges.filter(
+				([from, to]) => visible.has(from) && visible.has(to) && (focus.has(from) || focus.has(to))
+			)
 		};
 	}
 

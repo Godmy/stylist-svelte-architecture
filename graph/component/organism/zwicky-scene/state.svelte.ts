@@ -27,14 +27,27 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	let panelOpen = $state(true);
 	let viewCounts = $state({ nodes: 0, edges: 0, matched: 0, related: 0 });
 	let allNodeIds: string[] = [];
-	const filterGroups = $derived((props.scheme?.filterGroups ?? []).map((group) => ({
-		...group,
-		options: group.options.filter((option) => !filterQuery.trim()
-			|| (group.label + ' ' + option.label).toLocaleLowerCase().includes(filterQuery.trim().toLocaleLowerCase()))
-	})).filter((group) => group.options.length));
-	const activeFacets = $derived((props.scheme?.filterGroups ?? []).flatMap((group) =>
-		group.options.filter((option) => facetFilter.get(group.id)?.has(option.id))
-			.map((option) => ({ group: group.id, id: option.id, label: option.label }))));
+	const filterGroups = $derived(
+		(props.scheme?.filterGroups ?? [])
+			.map((group) => ({
+				...group,
+				options: group.options.filter(
+					(option) =>
+						!filterQuery.trim() ||
+						(group.label + ' ' + option.label)
+							.toLocaleLowerCase()
+							.includes(filterQuery.trim().toLocaleLowerCase())
+				)
+			}))
+			.filter((group) => group.options.length)
+	);
+	const activeFacets = $derived(
+		(props.scheme?.filterGroups ?? []).flatMap((group) =>
+			group.options
+				.filter((option) => facetFilter.get(group.id)?.has(option.id))
+				.map((option) => ({ group: group.id, id: option.id, label: option.label }))
+		)
+	);
 
 	const containerClass = $derived(
 		ClassNamesManager.merge('zwicky-scene', props.class?.toString() ?? '')
@@ -98,8 +111,11 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	function updateViewCounts(): void {
 		viewCounts = manager.getViewCounts();
 		props.onViewChange?.({
-			nodes: viewCounts.nodes, edges: viewCounts.edges,
-			totalNodes: nodeCount, totalEdges: edgeCount, filters: activeFacets.length
+			nodes: viewCounts.nodes,
+			edges: viewCounts.edges,
+			totalNodes: nodeCount,
+			totalEdges: edgeCount,
+			filters: activeFacets.length
 		});
 	}
 
@@ -118,7 +134,11 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 
 	function applyFacets(): void {
 		clearSelection();
-		const ids = GraphScriptManager.matchZwickyFilters(props.scheme?.filterGroups ?? [], facetFilter, allNodeIds);
+		const ids = GraphScriptManager.matchZwickyFilters(
+			props.scheme?.filterGroups ?? [],
+			facetFilter,
+			allNodeIds
+		);
 		manager.setNodeFilter(ids, includeRelated);
 		updateViewCounts();
 	}
@@ -126,13 +146,18 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	function toggleFacet(group: string, id: string): void {
 		const next = new Map(facetFilter);
 		const selected = new Set(next.get(group) ?? []);
-		if (selected.has(id)) selected.delete(id); else selected.add(id);
-		if (selected.size) next.set(group, selected); else next.delete(group);
+		if (selected.has(id)) selected.delete(id);
+		else selected.add(id);
+		if (selected.size) next.set(group, selected);
+		else next.delete(group);
 		facetFilter = next;
 		applyFacets();
 	}
 
-	function toggleRelated(): void { includeRelated = !includeRelated; applyFacets(); }
+	function toggleRelated(): void {
+		includeRelated = !includeRelated;
+		applyFacets();
+	}
 	function toggleLinks(): void {
 		showLinks = !showLinks;
 		manager.setLinksVisible(showLinks);
@@ -151,7 +176,12 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 			props.scheme?.radialLayout
 		);
 		const scale = props.scheme?.layoutScale ?? 1;
-		GraphScriptManager.applyZwickyPositions(nodes, props.scheme?.positions, scale, props.scheme?.nodeScale);
+		GraphScriptManager.applyZwickyPositions(
+			nodes,
+			props.scheme?.positions,
+			scale,
+			props.scheme?.nodeScale
+		);
 		manager.setReferenceLines(props.scheme?.referenceLines ?? [], scale);
 		manager.setGraph(nodes, edges);
 		allNodeIds = nodes.map((node) => node.id);
@@ -210,7 +240,8 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 		clusterFilter = new Set();
 		manager.setDomainFilter(new Set());
 		manager.setClusterFilter(new Set());
-		if (props.scheme?.filterGroups) applyFacets(); else clearSelection();
+		if (props.scheme?.filterGroups) applyFacets();
+		else clearSelection();
 	}
 
 	function toggleCluster(cluster: string): void {
@@ -222,19 +253,39 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	}
 
 	return {
-		get facetFilter() { return facetFilter; },
-		get filterGroups() { return filterGroups; },
-		get activeFacets() { return activeFacets; },
-		get filterQuery() { return filterQuery; },
-		get includeRelated() { return includeRelated; },
-		get showLinks() { return showLinks; },
-		get panelOpen() { return panelOpen; },
-		get viewCounts() { return viewCounts; },
+		get facetFilter() {
+			return facetFilter;
+		},
+		get filterGroups() {
+			return filterGroups;
+		},
+		get activeFacets() {
+			return activeFacets;
+		},
+		get filterQuery() {
+			return filterQuery;
+		},
+		get includeRelated() {
+			return includeRelated;
+		},
+		get showLinks() {
+			return showLinks;
+		},
+		get panelOpen() {
+			return panelOpen;
+		},
+		get viewCounts() {
+			return viewCounts;
+		},
 		toggleFacet,
 		toggleRelated,
 		toggleLinks,
-		setFilterQuery(value: string) { filterQuery = value; },
-		togglePanel() { panelOpen = !panelOpen; },
+		setFilterQuery(value: string) {
+			filterQuery = value;
+		},
+		togglePanel() {
+			panelOpen = !panelOpen;
+		},
 		clearSelection,
 		get containerClass() {
 			return containerClass;
