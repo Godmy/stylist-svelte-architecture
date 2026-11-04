@@ -24,6 +24,7 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	let filterQuery = $state('');
 	let includeRelated = $state(true);
 	let showLinks = $state(true);
+	let hiddenEdgeToggles = $state<ReadonlySet<string>>(new Set());
 	let panelOpen = $state(true);
 	let viewCounts = $state({ nodes: 0, edges: 0, matched: 0, related: 0 });
 	let allNodeIds: string[] = [];
@@ -164,6 +165,20 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 		updateViewCounts();
 	}
 
+	function toggleEdgeKind(id: string): void {
+		const next = new Set(hiddenEdgeToggles);
+		if (!next.delete(id)) next.add(id);
+		hiddenEdgeToggles = next;
+		manager.setHiddenEdgeKinds(
+			new Set(
+				(props.scheme?.edgeToggles ?? [])
+					.filter((toggle) => next.has(toggle.id))
+					.map((toggle) => `${toggle.from}>${toggle.to}`)
+			)
+		);
+		updateViewCounts();
+	}
+
 	function loadData(): void {
 		const input = props.data;
 		if (!input) return;
@@ -271,6 +286,9 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 		get showLinks() {
 			return showLinks;
 		},
+		get hiddenEdgeToggles() {
+			return hiddenEdgeToggles;
+		},
 		get panelOpen() {
 			return panelOpen;
 		},
@@ -280,6 +298,7 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 		toggleFacet,
 		toggleRelated,
 		toggleLinks,
+		toggleEdgeKind,
 		setFilterQuery(value: string) {
 			filterQuery = value;
 		},

@@ -151,6 +151,15 @@
 								onchange={state.toggleRelated}
 							/>{state.text.related}</label
 						>
+						{#each scheme?.edgeToggles ?? [] as toggle (toggle.id)}
+							<label
+								><input
+									type="checkbox"
+									checked={state.hiddenEdgeToggles.has(toggle.id)}
+									onchange={() => state.toggleEdgeKind(toggle.id)}
+								/>{toggle.label}</label
+							>
+						{/each}
 					</div>
 					{#if hasFilter}
 						<p class="zwicky-scene__filter-summary" aria-live="polite">

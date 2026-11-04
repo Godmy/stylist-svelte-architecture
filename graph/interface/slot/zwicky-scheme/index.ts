@@ -45,4 +45,6 @@ export interface ZwickyScheme {
 	edgeOpacity?: number;
 	/** Under a filter: 'both' (default) keeps edges inside the chosen groups, 'any' also their links out. */
 	edgeFilter?: 'both' | 'any';
+	/** Panel checkboxes: a checked one hides every edge leading from one cluster to another. */
+	edgeToggles?: readonly { id: string; label: string; from: string; to: string }[];
 }

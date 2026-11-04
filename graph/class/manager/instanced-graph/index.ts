@@ -51,6 +51,8 @@ export class InstancedGraphManager {
 	private includeRelated = true;
 	private facetMode = false;
 	private linksVisible = true;
+	/** `from>to` cluster pairs whose edges stay out of the view. */
+	private hiddenEdgeKinds: ReadonlySet<string> = new Set();
 	private referenceLines: NonNullable<ZwickyScheme['referenceLines']> = [];
 	private hoveredId: string | null = null;
 	private selectedId: string | null = null;
@@ -199,9 +201,15 @@ export class InstancedGraphManager {
 	}
 
 	private refreshVisibility(): void {
+		const cluster = new Map(this.nodes.map((node) => [node.id, node.cluster]));
+		const edges = this.hiddenEdgeKinds.size
+			? this.edges.filter(
+					([from, to]) => !this.hiddenEdgeKinds.has(`${cluster.get(from)}>${cluster.get(to)}`)
+				)
+			: this.edges;
 		const view = GraphScriptManager.resolveZwickyView(
 			this.nodes,
-			this.edges,
+			edges,
 			this.nodeFilter,
 			this.includeRelated
 		);
@@ -217,6 +225,12 @@ export class InstancedGraphManager {
 		this.includeRelated = includeRelated;
 		this.hoveredId = null;
 		this.setSelected(null);
+		this.refreshVisibility();
+	}
+
+	/** Hides whole kinds of edges, given as `from>to` cluster pairs; nodes stay on the scene. */
+	setHiddenEdgeKinds(kinds: ReadonlySet<string>): void {
+		this.hiddenEdgeKinds = kinds;
 		this.refreshVisibility();
 	}
 
