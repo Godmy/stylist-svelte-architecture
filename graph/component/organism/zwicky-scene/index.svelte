@@ -151,7 +151,7 @@
 								onchange={state.toggleRelated}
 							/>{state.text.related}</label
 						>
-						{#each scheme?.edgeToggles ?? [] as toggle (toggle.id)}
+						{#each state.scheme?.edgeToggles ?? [] as toggle (toggle.id)}
 							<label
 								><input
 									type="checkbox"
