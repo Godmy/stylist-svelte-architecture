@@ -61,6 +61,9 @@
 				highlightRelations={state.relationHighlight}
 				layout={state.currentLayout}
 				clusterAspectRatio={props.clusterAspectRatio}
+				tableGroups={props.tableGroups}
+				leadingCluster={props.leadingCluster}
+				gravity={props.gravity}
 				draggable={props.draggable ?? true}
 				persistLayout={props.persistLayout ?? false}
 			/>

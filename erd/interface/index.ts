@@ -6,6 +6,7 @@ export type {
 	RecipeErdTableField,
 	RecipeErdTableHeader,
 	RecipeSchema,
+	RecipeSchemaGravity,
 	RecipeSchemaHeader,
 	RecipeSchemaText,
 	RecipeSchemaTool

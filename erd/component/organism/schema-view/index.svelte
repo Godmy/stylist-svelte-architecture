@@ -1,5 +1,6 @@
 <script lang="ts">
 	import SchemaDependency from '$stylist/erd/component/atom/schema-dependency/index.svelte';
+	import SchemaGravity from '$stylist/erd/component/molecule/schema-gravity/index.svelte';
 	import SchemaTable from '$stylist/erd/component/molecule/schema-table/index.svelte';
 	import type { RecipeErdSchemaView } from '$stylist/erd/interface/recipe/erd-schema-view';
 	import createSchemaViewState from '$stylist/erd/component/organism/schema-view/state.svelte';
@@ -38,7 +39,13 @@
 	}}
 />
 
-<section class={`schema-view ${state.compact ? 'schema-view--compact' : ''}`}>
+<section bind:this={state.viewport} class={`schema-view ${state.compact ? 'schema-view--compact' : ''}`}>
+	<div class="schema-view__gravity-dock">
+		<SchemaGravity radius={state.gravityRadius} strength={state.gravityStrength} zones={state.gravityZones}
+			selectedId={state.selectedGravityZoneId} onRadiusChange={state.setGravityRadius}
+			onStrengthChange={state.setGravityStrength} onAdd={state.addGravityZone} onSelect={state.selectGravityZone}
+			onUpdate={state.updateGravityZone} onRemove={state.removeGravityZone} onToggle={state.setGravityEditing} onReset={state.resetGravity} />
+	</div>
 	<div
 		class="schema-view__scaled-space"
 		style={`width:${state.scaledCanvasSize.width}px; height:${state.scaledCanvasSize.height}px;`}
@@ -48,6 +55,19 @@
 			class="schema-view__canvas"
 			style={`width:${state.canvasSize.width}px; height:${state.canvasSize.height}px; transform: scale(${state.zoom});`}
 		>
+			{#if state.gravityEditing}
+				<div class="schema-view__gravity-layer">
+					{#each state.gravityZones as zone,i (zone.id)}
+						<div class="schema-view__gravity-zone" class:schema-view__gravity-zone--selected={zone.id===state.selectedGravityZoneId}
+							style={`left:${zone.x-zone.radius}px;top:${zone.y-zone.radius}px;width:${zone.radius*2}px;height:${zone.radius*2}px`}
+							data-gravity-zone={zone.id}>
+							<button type="button" aria-label={`Move gravity zone ${i+1}`} onclick={()=>state.selectGravityZone(zone.id)}
+								onpointerdown={(event)=>state.startGravityDrag(event,zone.id)} onpointermove={(event)=>state.moveGravityDrag(event,zone.id)}
+								onpointerup={(event)=>state.stopGravityDrag(event,zone.id)} onpointercancel={(event)=>state.stopGravityDrag(event,zone.id)}>{i+1}</button>
+						</div>
+					{/each}
+				</div>
+			{/if}
 			{#if state.clusterPanels.length > 0}
 				<div class="schema-view__cluster-layer">
 					{#each state.clusterPanels as panel (panel.domain)}
@@ -81,7 +101,7 @@
 					{#each state.document.dependencies as dependency (dependency.id)}
 						{@const points = state.getDependencyPoints(dependency)}
 						{@const focused = state.isDependencyFocused(dependency)}
-						{@const dimmed = state.focusTableId !== null && !focused}
+						{@const dimmed = state.hasFocus && !focused}
 						{#if points}
 							<SchemaDependency
 								{dependency}
@@ -89,6 +109,8 @@
 								y1={points.y1}
 								x2={points.x2}
 								y2={points.y2}
+								pathData={points.pathData}
+								onHover={(hovered) => state.setHoveredDependency(dependency.id,hovered)}
 								active={!dimmed && (state.highlightRelations || focused)}
 								{dimmed}
 							/>
@@ -106,6 +128,7 @@
 						role="group"
 						aria-roledescription={state.draggable ? 'draggable table' : 'table'}
 						aria-label={`Table ${table.name}`}
+						data-table-id={table.id}
 						onpointerdown={(event) => state.startTableDrag(event, table.id)}
 						onpointermove={(event) => state.moveTable(event, table.id)}
 						onpointerup={(event) => state.stopTableDrag(event, table.id)}
@@ -115,7 +138,7 @@
 					>
 						<SchemaTable
 							{table}
-							active={state.activeTableId === table.id || state.focusTableId === table.id}
+							active={state.activeTableId === table.id || state.focusTableIds.has(table.id)}
 							dimmed={state.focusTableId !== null &&
 								state.focusTableId !== table.id &&
 								!state.focusNeighborIds.has(table.id)}
@@ -129,6 +152,11 @@
 </section>
 
 <style>
+	.schema-view__gravity-dock {position:sticky;left:0;top:0;height:0;width:100%;z-index:20;pointer-events:none;}
+	.schema-view__gravity-layer {position:absolute;inset:0;pointer-events:none;z-index:5;}
+	.schema-view__gravity-zone {position:absolute;border:1px dashed #dda45280;border-radius:50%;background:#dda45208;pointer-events:none;}
+	.schema-view__gravity-zone--selected {border-color:#e3ab54;background:#dda45210;}
+	.schema-view__gravity-zone button {position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border:1px solid #e3ab54;border-radius:50%;background:#65431f;color:#fff;pointer-events:auto;cursor:move;touch-action:none;}
 	.schema-view {
 		height: 100%;
 		min-height: 560px;

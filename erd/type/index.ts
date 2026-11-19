@@ -5,8 +5,11 @@ export type {
 } from './alias';
 export type {
 	SchemaDependency,
+	SchemaDependencyRoute,
 	SchemaDocument,
 	SchemaField,
+	SchemaGravitySettings,
+	SchemaGravityZone,
 	SchemaParseResult,
 	SchemaTable,
 	SchemaTablePosition

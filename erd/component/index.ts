@@ -4,7 +4,10 @@ export {
 	SchemaTableField,
 	SchemaTableHeader
 } from './atom';
-export { SchemaTable } from './molecule';
+export {
+	SchemaGravity,
+	SchemaTable
+} from './molecule';
 export {
 	Schema,
 	SchemaHeader,

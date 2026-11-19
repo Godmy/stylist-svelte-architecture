@@ -5,6 +5,8 @@ export interface RecipeErdDependency {
 	y1: number;
 	x2: number;
 	y2: number;
+	pathData?: string;
 	active?: boolean;
 	dimmed?: boolean;
+	onHover?: (hovered: boolean) => void;
 }

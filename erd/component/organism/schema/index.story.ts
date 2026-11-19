@@ -14,12 +14,14 @@ export default {
 		zoom: 1,
 		showRelations: true,
 		highlightRelations: true,
+		layout: 'clusters',
 		draggable: true
 	},
 	controls: {
 		zoom: { type: 'number', min: 0.5, max: 1.6, step: 0.1 },
 		showRelations: { type: 'boolean' },
 		highlightRelations: { type: 'boolean' },
+		layout: { type: 'select', options: ['grid', 'wide', 'columns', 'radial', 'clusters', 'star'] },
 		draggable: { type: 'boolean' }
 	},
 	layout: 'fullscreen'
