@@ -123,6 +123,10 @@ export function createSchemaState(getProps: () => RecipeSchema) {
 		input.value = '';
 	}
 
+	function setZoom(value: number): void {
+		currentZoom = clampZoom(value);
+	}
+
 	function zoomIn(): void {
 		currentZoom = clampZoom(currentZoom + 0.1);
 	}
@@ -156,6 +160,7 @@ export function createSchemaState(getProps: () => RecipeSchema) {
 		set editSource(value: string) {
 			editSource = value;
 		},
+		setZoom,
 		get currentZoom() {
 			return currentZoom;
 		},

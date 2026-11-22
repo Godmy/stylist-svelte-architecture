@@ -8,6 +8,7 @@ export interface RecipeErdSchemaView extends ComputeIntersectAll<
 		{
 			document: SchemaDocument;
 			activeTableId?: string;
+			onZoomChange?: (zoom: number) => void;
 		}
 	]
 > {}

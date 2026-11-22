@@ -93,6 +93,115 @@ test('leading reference cluster has its own left column, including after changin
 	expect(view.container.querySelectorAll('[data-table-id]').length).toBe(document.tables.length);
 });
 
+test('empty canvas pans the native viewport and does not reposition tables', async () => {
+	const view = render(View, props),
+		viewport = view.container.querySelector<HTMLElement>('.schema-view')!,
+		canvas = view.container.querySelector('.schema-view__canvas')!;
+	const table = view.container.querySelector<HTMLElement>('[data-table-id="a"]')!,
+		position = table.getAttribute('style');
+	viewport.scrollLeft = 400;
+	viewport.scrollTop = 300;
+	await fireEvent.pointerDown(canvas, {
+		button: 0,
+		buttons: 1,
+		clientX: 300,
+		clientY: 250,
+		pointerId: 1
+	});
+	await fireEvent.pointerMove(viewport, { buttons: 1, clientX: 220, clientY: 210, pointerId: 1 });
+	expect(viewport.scrollLeft).toBe(480);
+	expect(viewport.scrollTop).toBe(340);
+	expect(table.getAttribute('style')).toBe(position);
+	await fireEvent.pointerUp(viewport, { button: 0, buttons: 0, pointerId: 1 });
+	expect(viewport.classList.contains('schema-view--panning')).toBe(false);
+	await fireEvent.pointerMove(viewport, { buttons: 0, clientX: 100, clientY: 100, pointerId: 1 });
+	expect(viewport.scrollLeft).toBe(480);
+});
+test('ordinary wheel scrolls natively; held-button wheel changes zoom around the cursor and reports it', async () => {
+	const onZoomChange = vi.fn(),
+		view = render(View, { ...props, onZoomChange }),
+		viewport = view.container.querySelector<HTMLElement>('.schema-view')!;
+	viewport.scrollLeft = 400;
+	viewport.scrollTop = 300;
+	const ordinary = new WheelEvent('wheel', { deltaY: 100, cancelable: true, bubbles: true });
+	viewport.dispatchEvent(ordinary);
+	expect(ordinary.defaultPrevented).toBe(false);
+	expect(onZoomChange).not.toHaveBeenCalled();
+	const event = new WheelEvent('wheel', {
+		buttons: 1,
+		deltaY: -100,
+		clientX: 200,
+		clientY: 100,
+		cancelable: true,
+		bubbles: true
+	});
+	await fireEvent(viewport, event);
+	expect(event.defaultPrevented).toBe(true);
+	expect(onZoomChange).toHaveBeenCalledWith(1.22);
+	expect(viewport.scrollLeft).toBeCloseTo(532);
+	expect(viewport.scrollTop).toBeCloseTo(388);
+	await fireEvent(
+		viewport,
+		new WheelEvent('wheel', { buttons: 1, deltaY: -10000, cancelable: true, bubbles: true })
+	);
+	expect(onZoomChange).toHaveBeenLastCalledWith(1.8);
+	await fireEvent(
+		viewport,
+		new WheelEvent('wheel', { buttons: 1, deltaY: 10000, cancelable: true, bubbles: true })
+	);
+	expect(onZoomChange).toHaveBeenLastCalledWith(0.08);
+});
+test('cluster hover includes internal and external edges, table hover narrows them, leaving restores cluster', async () => {
+	const view = render(View, props),
+		viewport = view.container.querySelector<HTMLElement>('.schema-view')!,
+		panel = view.container.querySelector<HTMLElement>('.schema-view__cluster-panel')!;
+	const left = Number.parseFloat(panel.style.left),
+		top = Number.parseFloat(panel.style.top);
+	await fireEvent.pointerMove(viewport, { clientX: left + 2, clientY: top + 2 });
+	expect(view.container.querySelectorAll('.schema-dependency--active')).toHaveLength(2);
+	expect(view.container.querySelectorAll('.schema-dependency--dimmed')).toHaveLength(1);
+	const table = view.container.querySelector<HTMLElement>('[data-table-id="a"]')!;
+	await fireEvent.pointerEnter(table);
+	expect(view.container.querySelectorAll('.schema-dependency--active')).toHaveLength(1);
+	await fireEvent.pointerLeave(table);
+	expect(view.container.querySelectorAll('.schema-dependency--active')).toHaveLength(2);
+	await fireEvent.pointerLeave(viewport);
+	expect(view.container.querySelectorAll('.schema-dependency--active')).toHaveLength(0);
+	expect(view.container.querySelectorAll('.schema-dependency--dimmed')).toHaveLength(0);
+});
+test('table and cluster drag remain separate from viewport panning', async () => {
+	const view = render(View, props),
+		viewport = view.container.querySelector<HTMLElement>('.schema-view')!,
+		table = view.container.querySelector<HTMLElement>('[data-table-id="a"]')!;
+	const x = Number.parseFloat(table.style.left);
+	viewport.scrollLeft = 100;
+	await fireEvent.pointerDown(table, {
+		button: 0,
+		buttons: 1,
+		clientX: 100,
+		clientY: 100,
+		pointerId: 1
+	});
+	await fireEvent.pointerMove(table, { buttons: 1, clientX: 130, clientY: 100, pointerId: 1 });
+	await fireEvent.pointerUp(table, { buttons: 0, pointerId: 1 });
+	expect(Number.parseFloat(table.style.left)).toBe(x + 30);
+	expect(viewport.scrollLeft).toBe(100);
+	expect(viewport.classList.contains('schema-view--panning')).toBe(false);
+	const label = view.getByRole('button', { name: 'Drag the alpha · 2 domain' }),
+		before = Number.parseFloat(table.style.left);
+	await fireEvent.pointerDown(label, {
+		button: 0,
+		buttons: 1,
+		clientX: 100,
+		clientY: 100,
+		pointerId: 1
+	});
+	await fireEvent.pointerMove(label, { buttons: 1, clientX: 150, clientY: 120, pointerId: 1 });
+	await fireEvent.pointerUp(label, { buttons: 0, pointerId: 1 });
+	expect(Number.parseFloat(table.style.left)).toBe(before + 50);
+	expect(viewport.scrollLeft).toBe(100);
+});
+
 test('hovering one relation isolates it and its endpoints, then restores a pinned table', async () => {
 	const view=render(View,props);
 	const table=view.container.querySelector<HTMLElement>('[data-table-id="a"]')!;
@@ -108,4 +217,67 @@ test('hovering one relation isolates it and its endpoints, then restores a pinne
 	expect(view.container.querySelectorAll('.schema-table--active')).toHaveLength(2);
 	await fireEvent.pointerLeave(edge);
 	expect(active()).toEqual(['ab']);
+});
+test('blur and pointer cancellation release a background drag', async () => {
+	const view = render(View, props),
+		viewport = view.container.querySelector<HTMLElement>('.schema-view')!,
+		canvas = view.container.querySelector('.schema-view__canvas')!;
+	await fireEvent.pointerDown(canvas, { button: 0, buttons: 1, pointerId: 1 });
+	await fireEvent(window, new Event('blur'));
+	expect(viewport.classList.contains('schema-view--panning')).toBe(false);
+	await fireEvent.pointerDown(canvas, { button: 0, buttons: 1, pointerId: 1 });
+	await fireEvent.pointerCancel(viewport, { pointerId: 1 });
+	expect(viewport.classList.contains('schema-view--panning')).toBe(false);
+});
+
+test('wheel uses the captured mouse button when a browser omits wheel.buttons, and stops after release', async () => {
+	const onZoomChange = vi.fn(),
+		view = render(View, { ...props, onZoomChange }),
+		viewport = view.container.querySelector<HTMLElement>('.schema-view')!,
+		canvas = view.container.querySelector('.schema-view__canvas')!;
+	await fireEvent.pointerDown(canvas, { button: 0, buttons: 1, pointerId: 1 });
+	await fireEvent(
+		viewport,
+		new WheelEvent('wheel', { buttons: 0, deltaY: -100, cancelable: true, bubbles: true })
+	);
+	expect(onZoomChange).toHaveBeenCalledWith(1.22);
+	await fireEvent.pointerUp(window, { button: 0, buttons: 0, pointerId: 1 });
+	onZoomChange.mockClear();
+	const event = new WheelEvent('wheel', {
+		buttons: 0,
+		deltaY: -100,
+		cancelable: true,
+		bubbles: true
+	});
+	await fireEvent(viewport, event);
+	expect(event.defaultPrevented).toBe(false);
+	expect(onZoomChange).not.toHaveBeenCalled();
+});
+
+test('zoom during a table drag rebases its origin instead of jumping on the next move', async () => {
+	const view = render(View, props),
+		table = view.container.querySelector<HTMLElement>('[data-table-id="a"]')!,
+		x = Number.parseFloat(table.style.left);
+	await fireEvent.pointerDown(table, {
+		button: 0,
+		buttons: 1,
+		clientX: 100,
+		clientY: 100,
+		pointerId: 1
+	});
+	await fireEvent.pointerMove(table, { buttons: 1, clientX: 130, clientY: 100, pointerId: 1 });
+	await fireEvent(
+		table,
+		new WheelEvent('wheel', {
+			buttons: 1,
+			deltaY: -100,
+			clientX: 130,
+			clientY: 100,
+			cancelable: true,
+			bubbles: true
+		})
+	);
+	await fireEvent.pointerMove(table, { buttons: 1, clientX: 152, clientY: 100, pointerId: 1 });
+	expect(Number.parseFloat(table.style.left)).toBeCloseTo(x + 30 + 22 / 1.22);
+	await fireEvent.pointerUp(table, { button: 0, buttons: 0, pointerId: 1 });
 });

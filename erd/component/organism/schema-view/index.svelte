@@ -1,7 +1,7 @@
 <script lang="ts">
 	import SchemaDependency from '$stylist/erd/component/atom/schema-dependency/index.svelte';
-	import SchemaGravity from '$stylist/erd/component/molecule/schema-gravity/index.svelte';
 	import SchemaTable from '$stylist/erd/component/molecule/schema-table/index.svelte';
+	import SchemaGravity from '$stylist/erd/component/molecule/schema-gravity/index.svelte';
 	import type { RecipeErdSchemaView } from '$stylist/erd/interface/recipe/erd-schema-view';
 	import createSchemaViewState from '$stylist/erd/component/organism/schema-view/state.svelte';
 
@@ -21,25 +21,14 @@
 	export function resetLayout(): void {
 		state.resetLayout();
 	}
-
-	let canvasElement: HTMLDivElement | undefined;
 </script>
 
-<svelte:window
-	onclick={(event) => {
-		// Clicking empty canvas space clears a pinned focus -- kept as a
-		// window-level listener (rather than an onclick + role="button" on
-		// the canvas div) because the canvas isn't semantically a control:
-		// it's the whole diagram surface, and giving a giant background
-		// element a button role/tabindex would be worse for a11y than
-		// better, not just a lint workaround.
-		if (canvasElement && event.target === canvasElement) {
-			state.clearFocus();
-		}
-	}}
-/>
-
-<section bind:this={state.viewport} class={`schema-view ${state.compact ? 'schema-view--compact' : ''}`}>
+<section
+	bind:this={state.viewport}
+	class={`schema-view ${state.compact ? 'schema-view--compact' : ''}`}
+	class:schema-view--panning={state.panning}
+	{@attach state.attachNavigation}
+>
 	<div class="schema-view__gravity-dock">
 		<SchemaGravity radius={state.gravityRadius} strength={state.gravityStrength} zones={state.gravityZones}
 			selectedId={state.selectedGravityZoneId} onRadiusChange={state.setGravityRadius}
@@ -51,9 +40,8 @@
 		style={`width:${state.scaledCanvasSize.width}px; height:${state.scaledCanvasSize.height}px;`}
 	>
 		<div
-			bind:this={canvasElement}
 			class="schema-view__canvas"
-			style={`width:${state.canvasSize.width}px; height:${state.canvasSize.height}px; transform: scale(${state.zoom});`}
+			style={`left:${state.focusPadding.x}px; top:${state.focusPadding.y}px; width:${state.canvasSize.width}px; height:${state.canvasSize.height}px; transform: scale(${state.zoom});`}
 		>
 			{#if state.gravityEditing}
 				<div class="schema-view__gravity-layer">
@@ -73,12 +61,15 @@
 					{#each state.clusterPanels as panel (panel.domain)}
 						<div
 							class="schema-view__cluster-panel"
+							class:schema-view__cluster-panel--hovered={state.hoveredClusterDomain ===
+								panel.domain}
 							style={`left:${panel.x}px; top:${panel.y}px; width:${panel.width}px; height:${panel.height}px; --cluster-color:${panel.color};`}
 						>
 							<button
 								type="button"
 								class={`schema-view__cluster-label ${state.draggable ? 'schema-view__cluster-label--draggable' : ''} ${state.draggedClusterDomain === panel.domain ? 'schema-view__cluster-label--dragging' : ''}`}
 								aria-label={`Drag the ${panel.label} domain`}
+								style={`font-size:${Math.min(20, 12 / state.zoom, (panel.width - 36) / (panel.label.length * 0.7))}px`}
 								onpointerdown={(event) => state.startClusterDrag(event, panel.domain)}
 								onpointermove={(event) => state.moveClusterDrag(event, panel.domain)}
 								onpointerup={(event) => state.stopClusterDrag(event, panel.domain)}
@@ -110,8 +101,8 @@
 								x2={points.x2}
 								y2={points.y2}
 								pathData={points.pathData}
-								onHover={(hovered) => state.setHoveredDependency(dependency.id,hovered)}
 								active={!dimmed && (state.highlightRelations || focused)}
+								onHover={(hovered) => state.setHoveredDependency(dependency.id,hovered)}
 								{dimmed}
 							/>
 						{/if}
@@ -124,11 +115,27 @@
 				{#if position}
 					<div
 						class={`schema-view__table ${state.draggable ? 'schema-view__table--draggable' : ''} ${state.draggedTableId === table.id ? 'schema-view__table--dragging' : ''}`}
+						data-table-id={table.id}
 						style={`left:${position.x}px; top:${position.y}px;`}
 						role="group"
 						aria-roledescription={state.draggable ? 'draggable table' : 'table'}
 						aria-label={`Table ${table.name}`}
-						data-table-id={table.id}
+						ondblclick={(event) => {
+							// Dragging captures the pointer on this wrapper, so the
+							// double-click target may be the wrapper rather than its header.
+							const header = event.currentTarget
+								.querySelector('.schema-table-header')
+								?.getBoundingClientRect();
+							if (
+								header &&
+								event.clientX >= header.left &&
+								event.clientX <= header.right &&
+								event.clientY >= header.top &&
+								event.clientY <= header.bottom
+							) {
+								props.onTableOpen?.(table);
+							}
+						}}
 						onpointerdown={(event) => state.startTableDrag(event, table.id)}
 						onpointermove={(event) => state.moveTable(event, table.id)}
 						onpointerup={(event) => state.stopTableDrag(event, table.id)}
@@ -139,8 +146,8 @@
 						<SchemaTable
 							{table}
 							active={state.activeTableId === table.id || state.focusTableIds.has(table.id)}
-							dimmed={state.focusTableId !== null &&
-								state.focusTableId !== table.id &&
+							dimmed={state.hasFocus &&
+								!state.focusTableIds.has(table.id) &&
 								!state.focusNeighborIds.has(table.id)}
 							relatedFieldIds={state.highlightRelations ? state.relatedFieldIds : []}
 						/>
@@ -157,6 +164,18 @@
 	.schema-view__gravity-zone {position:absolute;border:1px dashed #dda45280;border-radius:50%;background:#dda45208;pointer-events:none;}
 	.schema-view__gravity-zone--selected {border-color:#e3ab54;background:#dda45210;}
 	.schema-view__gravity-zone button {position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border:1px solid #e3ab54;border-radius:50%;background:#65431f;color:#fff;pointer-events:auto;cursor:move;touch-action:none;}
+	.schema-view {
+		cursor: grab;
+	}
+	.schema-view--panning,
+	.schema-view--panning :global(*) {
+		cursor: grabbing !important;
+		user-select: none;
+	}
+	.schema-view__cluster-panel--hovered {
+		border-color: var(--cluster-color);
+	}
+
 	.schema-view {
 		height: 100%;
 		min-height: 560px;
@@ -225,7 +244,8 @@
 		font-weight: 700;
 		letter-spacing: 0.03em;
 		text-transform: uppercase;
-		color: color-mix(in srgb, var(--cluster-color) 65%, #172033 35%);
+		white-space: nowrap;
+		color: color-mix(in srgb, var(--cluster-color) 65%, var(--color-text-primary, #e2e8f0) 35%);
 		background: color-mix(in srgb, var(--cluster-color) 16%, transparent);
 		pointer-events: auto;
 		user-select: none;

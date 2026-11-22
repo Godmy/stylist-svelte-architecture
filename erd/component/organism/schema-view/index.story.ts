@@ -7,7 +7,8 @@ import { schemaTextToDocument } from '$stylist/erd/function/transform/schema-tex
 export default {
 	component: SchemaView,
 	title: 'Schema View',
-	description: 'Scrollable ERD canvas with tables and dependency lines.',
+	description:
+		'Drag empty space to pan; hold the left mouse button and turn the wheel to zoom. Hover a cluster or table to highlight its relations.',
 	args: {
 		document: schemaTextToDocument(DEFAULT_SCHEMA_TEXT).document,
 		zoom: 1,
@@ -25,6 +26,7 @@ export default {
 		activeTableId: { type: 'select', options: ['user', 'profile'] }
 	},
 	presets: {
+		'Cluster navigation': { layout: 'clusters', highlightRelations: false, activeTableId: '' },
 		'Profile active': { activeTableId: 'profile' },
 		'Without relations': { showRelations: false }
 	}

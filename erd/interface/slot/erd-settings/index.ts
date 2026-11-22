@@ -1,4 +1,5 @@
 import type { SchemaLayout } from '$stylist/erd/type/alias/schema-layout';
+import type { SchemaTable } from '$stylist/erd/type/object/schema-table';
 import type { SchemaGravitySettings } from '$stylist/erd/type/object/schema-gravity-settings';
 export interface SlotErdSettings {
 	title?: string;
@@ -17,4 +18,8 @@ export interface SlotErdSettings {
 	draggable?: boolean;
 	textPanelVisible?: boolean;
 	persistLayout?: boolean;
+	/** Center and highlight this table when opening a schema or changing the target. */
+	focusTableName?: string;
+	/** Called when a table header is double-clicked. */
+	onTableOpen?: (table: SchemaTable) => void;
 }

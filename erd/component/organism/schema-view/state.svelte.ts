@@ -1,4 +1,4 @@
-import { untrack } from 'svelte';
+import { tick, untrack } from 'svelte';
 import type { SchemaGravityZone } from '$stylist/erd/type/object/schema-gravity-zone';
 import type { SchemaDependency as SchemaDependencyData } from '$stylist/erd/type/object/schema-dependency';
 import type { SchemaTablePosition } from '$stylist/erd/type/object/schema-table-position';
@@ -26,7 +26,8 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	const canvasPadding = $derived(compact ? 120 : 480);
 	const tableHeaderHeight = $derived(compact ? 30 : 48);
 	const tableFieldHeight = $derived(compact ? 21 : 37);
-	const zoom = $derived(props.zoom ?? 1);
+	let zoom = $state(untrack(() => getProps().zoom ?? 1));
+	$effect(() => { zoom = props.zoom ?? 1; });
 	const showRelations = $derived(props.showRelations ?? true);
 	const highlightRelations = $derived(props.highlightRelations ?? true);
 	const layout = $derived(props.layout ?? 'grid');
@@ -126,7 +127,59 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	let hoveredTableId = $state<string | null>(null);
 	let hoveredDependencyId = $state<string | null>(null);
 	let pinnedTableId = $state<string | null>(null);
+	let hoveredClusterDomain = $state<string | null>(null);
+	let panning = $state(false);
+	let panPointerId: number | null = null;
+	let panClientX = 0, panClientY = 0;
+	let panDistance = 0;
+	let suppressCanvasClick = false;
+	let anchoredZoom = false;
+	let zoomRevision = 0;
 	let viewport = $state<HTMLElement>();
+	let viewportSize = $state({ width: 0, height: 0 });
+	const focusTarget = $derived(document.tables.find((table) => table.name === props.focusTableName));
+	// Slack on every side allows even a table at the origin to be centered.
+	const focusPadding = $derived({
+		x: focusTarget ? viewportSize.width / 2 : 0,
+		y: focusTarget ? viewportSize.height / 2 : 0
+	});
+	$effect(() => {
+		const element = viewport;
+		if (!element) return;
+		const measure = () => { viewportSize = { width: element.clientWidth, height: element.clientHeight }; };
+		measure();
+		const observer = new ResizeObserver(measure);
+		observer.observe(element);
+		return () => observer.disconnect();
+	});
+	$effect(() => {
+		const tableId = focusTarget?.id;
+		if (tableId) pinnedTableId = tableId;
+	});
+	$effect(() => {
+		const tableId = focusTarget?.id;
+		const element = viewport;
+		// Recenter after layout, zoom or viewport changes, while allowing free panning and dragging.
+		void documentLayoutKey;
+		void zoom;
+		void viewportSize;
+		if (!tableId || !element || anchoredZoom) return;
+		let cancelled = false;
+		void tick().then(() => {
+			if (cancelled) return;
+			const target = Array.from(element.querySelectorAll<HTMLElement>('[data-table-id]'))
+				.find((node) => node.dataset.tableId === tableId);
+			if (!target || !untrack(() => positionByTable.has(tableId))) return;
+			const card = target.getBoundingClientRect();
+			const frame = element.getBoundingClientRect();
+			element.scrollBy({
+				left: card.left + card.width / 2 - frame.left - element.clientLeft - element.clientWidth / 2,
+				top: card.top + card.height / 2 - frame.top - element.clientTop - element.clientHeight / 2,
+				behavior: 'instant'
+			});
+		});
+		return () => { cancelled = true; };
+	});
 	let draggedClusterDomain = $state<string | null>(null);
 	let clusterDragStartClientX = $state(0);
 	let clusterDragStartClientY = $state(0);
@@ -139,12 +192,12 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	);
 	const relatedFieldIds = $derived(createRelatedFieldIds(document.dependencies));
 	// Hover narrows the cluster highlight to one table; a pinned table returns on leaving.
-	const focusTableId = $derived(pinnedTableId ?? hoveredTableId);
+	const focusTableId = $derived(hoveredTableId ?? (hoveredClusterDomain ? null : pinnedTableId));
 	const focusTableIds = $derived.by(() => {
 		const edge = document.dependencies.find(dependency => dependency.id === hoveredDependencyId);
 		if (edge) return new Set([edge.sourceTable,edge.targetTable]);
 		if (focusTableId) return new Set([focusTableId]);
-		return new Set<string>();
+		return new Set(clusterMembership.find(cluster => cluster.domain === hoveredClusterDomain)?.tableIds ?? []);
 	});
 	const hasFocus = $derived(focusTableIds.size > 0);
 	const focusNeighborIds = $derived.by(() => {
@@ -276,8 +329,8 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	));
 	const canvasSize = $derived(createCanvasSize(positions));
 	const scaledCanvasSize = $derived({
-		width: Math.ceil(canvasSize.width * zoom),
-		height: Math.ceil(canvasSize.height * zoom)
+		width: Math.ceil(canvasSize.width * zoom + focusPadding.x * 2),
+		height: Math.ceil(canvasSize.height * zoom + focusPadding.y * 2)
 	});
 
 	$effect(() => {
@@ -1135,9 +1188,29 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	}
 	function setHoveredDependency(id: string, hovered: boolean): void {
 		if (hovered) {
-			if (draggedTableId || draggedClusterDomain || gravityDrag) return;
-			hoveredDependencyId = id; hoveredTableId = null;
+			if (panning || draggedTableId || draggedClusterDomain || gravityDrag) return;
+			hoveredDependencyId = id; hoveredTableId = null; hoveredClusterDomain = null;
 		} else if (hoveredDependencyId === id) hoveredDependencyId = null;
+	}
+
+	function updateHoveredCluster(event: PointerEvent | WheelEvent): void {
+		if (event.target instanceof Element && event.target.closest('.schema-dependency')) {
+			hoveredClusterDomain = null; hoveredTableId = null; return;
+		}
+		if (event.target instanceof Element && event.target.closest('.schema-view__gravity-dock, .schema-view__gravity-zone')) {
+			hoveredClusterDomain = null; hoveredTableId = null; return;
+		}
+		if (!viewport || panning || draggedTableId || draggedClusterDomain || gravityDrag) return;
+		const box = viewport.getBoundingClientRect();
+		const x =
+			(event.clientX - box.left - viewport.clientLeft + viewport.scrollLeft - focusPadding.x) / zoom;
+		const y =
+			(event.clientY - box.top - viewport.clientTop + viewport.scrollTop - focusPadding.y) / zoom;
+		hoveredClusterDomain =
+			clusterPanels.find(
+				(panel) =>
+					x >= panel.x && x <= panel.x + panel.width && y >= panel.y && y <= panel.y + panel.height
+			)?.domain ?? null;
 	}
 
 	function setGravityRadius(value: number): void {
@@ -1148,7 +1221,7 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	}
 	function setGravityEditing(open: boolean): void {
 		gravityEditing = open;
-		if (open) { hoveredTableId = null; }
+		if (open) { hoveredTableId = null; hoveredClusterDomain = null; }
 	}
 	function selectGravityZone(id: string): void { selectedGravityZoneId = id; }
 	function addGravityZone(): void {
@@ -1175,7 +1248,7 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		if (event.button!==0) return;
 		const zone = gravityZones.find(zone=>zone.id===id); if (!zone) return;
 		event.preventDefault(); event.stopPropagation(); selectedGravityZoneId = id;
-		hoveredTableId = null;
+		hoveredTableId = null; hoveredClusterDomain = null;
 		gravityDrag = {id,clientX:event.clientX,clientY:event.clientY,x:zone.x,y:zone.y};
 		(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
 	}
@@ -1193,9 +1266,172 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId);
 	}
 
+	function attachNavigation(element: HTMLElement): () => void {
+		let leftButtonHeld = false;
+		function stopPan(event?: PointerEvent) {
+			if (event && event.pointerId !== panPointerId) return;
+			const pointerId = panPointerId;
+			panPointerId = null;
+			panning = false;
+			if (pointerId !== null && element.hasPointerCapture(pointerId))
+				element.releasePointerCapture(pointerId);
+		}
+		function startPan(event: PointerEvent) {
+			if (event.button === 0 && (!event.pointerType || event.pointerType === 'mouse'))
+				leftButtonHeld = true;
+			if (
+				event.button !== 0 ||
+				(event.pointerType && event.pointerType !== 'mouse') ||
+				!(event.target instanceof Element) ||
+				event.target.closest('.schema-view__table, .schema-view__cluster-label, .schema-view__gravity-dock, .schema-view__gravity-zone')
+			)
+				return;
+			event.preventDefault();
+			panPointerId = event.pointerId;
+			panClientX = event.clientX;
+			panClientY = event.clientY;
+			panDistance = 0;
+			suppressCanvasClick = false;
+			panning = true;
+			hoveredDependencyId = null;
+			hoveredTableId = null;
+			hoveredClusterDomain = null;
+			element.setPointerCapture(event.pointerId);
+		}
+		function movePan(event: PointerEvent) {
+			if (panPointerId !== event.pointerId) {
+				updateHoveredCluster(event);
+				return;
+			}
+			if (!(event.buttons & 1)) {
+				leftButtonHeld = false;
+				stopPan(event);
+				return;
+			}
+			const dx = panClientX - event.clientX,
+				dy = panClientY - event.clientY;
+			panDistance += Math.abs(dx) + Math.abs(dy);
+			if (panDistance > 3) suppressCanvasClick = true;
+			element.scrollLeft += dx;
+			element.scrollTop += dy;
+			panClientX = event.clientX;
+			panClientY = event.clientY;
+		}
+		function leave() {
+			hoveredDependencyId = null;
+			hoveredClusterDomain = null;
+			hoveredTableId = null;
+		}
+		function click(event: MouseEvent) {
+			if (suppressCanvasClick) {
+				suppressCanvasClick = false;
+				return;
+			}
+			if (
+				event.target instanceof Element &&
+				!event.target.closest('.schema-view__table, .schema-view__cluster-label, .schema-view__gravity-dock, .schema-view__gravity-zone')
+			)
+				clearFocus();
+		}
+		function wheel(event: WheelEvent) {
+			if (event.target instanceof Element && event.target.closest('.schema-view__gravity-dock')) return;
+			if (!(event.buttons & 1) && !leftButtonHeld) return;
+			event.preventDefault();
+			const delta =
+				event.deltaY *
+				(event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? element.clientHeight : 1);
+			const nextZoom = Math.max(
+				0.08,
+				Math.min(1.8, Number((zoom * Math.exp(-delta * 0.002)).toFixed(2)))
+			);
+			if (nextZoom === zoom) return;
+			const bounds = element.getBoundingClientRect();
+			const x = event.clientX - bounds.left - element.clientLeft,
+				y = event.clientY - bounds.top - element.clientTop;
+			const worldX = (element.scrollLeft + x - focusPadding.x) / zoom;
+			const worldY = (element.scrollTop + y - focusPadding.y) / zoom;
+			const revision = ++zoomRevision;
+			anchoredZoom = true;
+			suppressCanvasClick = true;
+			// A wheel gesture during a table/group drag keeps its next move continuous.
+			if (draggedTableId) {
+				const position = positionByTable.get(draggedTableId);
+				if (position) {
+					dragStartX = position.x;
+					dragStartY = position.y;
+				}
+				dragStartClientX = event.clientX;
+				dragStartClientY = event.clientY;
+				pointerMoved = true;
+			}
+			if (draggedClusterDomain && clusterDragOrigin) {
+				clusterDragStartClientX = event.clientX;
+				clusterDragStartClientY = event.clientY;
+				clusterDragOrigin = new Map(
+					positions
+						.filter((position) => clusterDragOrigin?.has(position.tableId))
+						.map((position) => [position.tableId, { x: position.x, y: position.y }])
+				);
+			}
+			if (gravityDrag) {
+				const zone = gravityZones.find(zone=>zone.id===gravityDrag!.id);
+				if (zone) gravityDrag = {...gravityDrag,x:zone.x,y:zone.y,clientX:event.clientX,clientY:event.clientY};
+			}
+			zoom = nextZoom;
+			props.onZoomChange?.(nextZoom);
+			void tick().then(() => {
+				if (revision !== zoomRevision) return;
+				element.scrollLeft = worldX * zoom + focusPadding.x - x;
+				element.scrollTop = worldY * zoom + focusPadding.y - y;
+				anchoredZoom = false;
+				updateHoveredCluster(event);
+			});
+		}
+		element.addEventListener('pointerdown', startPan);
+		element.addEventListener('pointermove', movePan);
+		element.addEventListener('pointerup', stopPan);
+		element.addEventListener('pointercancel', stopPan);
+		element.addEventListener('lostpointercapture', stopPan);
+		element.addEventListener('pointerleave', leave);
+		element.addEventListener('click', click);
+		element.addEventListener('wheel', wheel, { passive: false });
+		window.addEventListener('blur', stopPanOnBlur);
+		window.addEventListener('pointerup', releaseButton);
+		window.addEventListener('pointercancel', releaseButton);
+		function releaseButton(event: PointerEvent) {
+			if (event.button === 0 || event.type === 'pointercancel') {
+				leftButtonHeld = false;
+				stopPan(event);
+			}
+		}
+		function stopPanOnBlur() {
+			leftButtonHeld = false;
+			stopPan();
+			leave();
+		}
+		return () => {
+			stopPan();
+			++zoomRevision;
+			element.removeEventListener('pointerdown', startPan);
+			element.removeEventListener('pointermove', movePan);
+			element.removeEventListener('pointerup', stopPan);
+			element.removeEventListener('pointercancel', stopPan);
+			element.removeEventListener('lostpointercapture', stopPan);
+			element.removeEventListener('pointerleave', leave);
+			element.removeEventListener('click', click);
+			element.removeEventListener('wheel', wheel);
+			window.removeEventListener('blur', stopPanOnBlur);
+			window.removeEventListener('pointerup', releaseButton);
+			window.removeEventListener('pointercancel', releaseButton);
+		};
+	}
+
 	return {
+		attachNavigation,
+		get panning() { return panning; },
 		get hasFocus() { return hasFocus; },
 		get focusTableIds() { return focusTableIds; },
+		get hoveredClusterDomain() { return hoveredClusterDomain; },
 		get gravityRadius() { return gravityRadius; },
 		get gravityStrength() { return gravityStrength; },
 		get gravityZones() { return gravityZones; },
@@ -1205,6 +1441,7 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		updateGravityZone,removeGravityZone,resetGravity,startGravityDrag,moveGravityDrag,stopGravityDrag,
 		get viewport() { return viewport; },
 		set viewport(value: HTMLElement | undefined) { viewport = value; },
+		get focusPadding() { return focusPadding; },
 		get document() {
 			return document;
 		},

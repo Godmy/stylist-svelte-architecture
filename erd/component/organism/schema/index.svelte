@@ -23,7 +23,8 @@
 		onchange={state.handleFileImport}
 	/>
 
-	<SchemaHeader
+	{#snippet headerContent()}
+		<SchemaHeader
 		title={props.title}
 		stats={{
 			tables: state.parseResult.document.tables.length,
@@ -49,7 +50,13 @@
 		on:toggle-text-panel={(event) => state.setTextPanelVisible(event.detail.visible)}
 		on:save-layout={state.saveLayout}
 		on:reset-layout={state.resetLayout}
-	/>
+		/>
+	{/snippet}
+	{#if props.header}
+		{@render props.header(headerContent)}
+	{:else}
+		{@render headerContent()}
+	{/if}
 
 	<div class={`schema__workspace ${state.textPanelVisible ? '' : 'schema__workspace--full'}`}>
 		<div class="schema__view">
@@ -57,6 +64,7 @@
 				bind:this={state.schemaView}
 				document={state.parseResult.document}
 				zoom={state.currentZoom}
+				onZoomChange={state.setZoom}
 				showRelations={state.relationsVisible}
 				highlightRelations={state.relationHighlight}
 				layout={state.currentLayout}
@@ -66,6 +74,8 @@
 				gravity={props.gravity}
 				draggable={props.draggable ?? true}
 				persistLayout={props.persistLayout ?? false}
+				onTableOpen={props.onTableOpen}
+				focusTableName={props.focusTableName}
 			/>
 		</div>
 

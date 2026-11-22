@@ -57,7 +57,7 @@ test('moving over the gravity controls does not highlight a cluster underneath t
 	const viewport=view.container.querySelector('.schema-view')!;
 	await open(view);
 	await fireEvent.pointerMove(viewport,{clientX:100,clientY:100,buttons:0});
-	// Cluster hover is provided separately; the controls must never activate it.
+	expect(view.container.querySelector('.schema-view__cluster-panel--hovered')).not.toBeNull();
 	await fireEvent.pointerMove(view.getByRole('spinbutton'),{clientX:100,clientY:100,buttons:0});
 	expect(view.container.querySelector('.schema-view__cluster-panel--hovered')).toBeNull();
 });
