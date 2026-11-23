@@ -1,18 +1,12 @@
 import type { HTMLAttributes } from 'svelte/elements';
-export interface RecipeCollaborativeEditor extends HTMLAttributes<HTMLDivElement> {
+import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-all';
+import type { CanvasUser } from '$stylist/canvas/type/object/canvas-user';
+export interface RecipeCollaborativeEditor extends ComputeIntersectAll<
+	[HTMLAttributes<HTMLDivElement>]
+> {
 	content?: string;
-	users?: {
-		id: string;
-		name: string;
-		color: string;
-		avatar?: string;
-	}[];
-	currentUser?: {
-		id: string;
-		name: string;
-		color: string;
-		avatar?: string;
-	};
+	users?: CanvasUser[];
+	currentUser?: CanvasUser;
 	onContentChange?: (content: string) => void;
 	showToolbar?: boolean;
 	showUserList?: boolean;

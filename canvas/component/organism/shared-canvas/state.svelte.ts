@@ -1,7 +1,7 @@
 import { untrack } from 'svelte';
 import { CanvasManager } from '$stylist/canvas/class/manager/canvas';
 import { ObjectManagerSharedCanvas } from '$stylist/canvas/class/manager/shared-canvas';
-import type { SlotCanvasObject } from '$stylist/canvas/interface/slot/canvas-object';
+import type { CanvasObject } from '$stylist/canvas/type/alias/canvas-object';
 import type { Point2D } from '$stylist/canvas/interface/slot/point-2d';
 import type { SharedCanvasTool } from '$stylist/canvas/type/alias/shared-canvas-tool';
 import type { RecipeSharedCanvas } from '$stylist/canvas/interface/recipe/shared-canvas';
@@ -19,13 +19,13 @@ export function createSharedCanvasState(getContract: () => RecipeSharedCanvas) {
 	let isDrawing = $state(false);
 	let startPoint = $state<Point2D>({ x: 0, y: 0 });
 	let currentPoint = $state<Point2D>({ x: 0, y: 0 });
-	let currentObject = $state<SlotCanvasObject | null>(null);
+	let currentObject = $state<CanvasObject | null>(null);
 	let selectedObjectId = $state<string | null>(null);
-	let localObjects = $state<SlotCanvasObject[]>(
+	let localObjects = $state<CanvasObject[]>(
 		untrack(() => CanvasManager.cloneCanvasObjects(contract.objects ?? []))
 	);
-	let undoStack = $state<SlotCanvasObject[][]>([]);
-	let redoStack = $state<SlotCanvasObject[][]>([]);
+	let undoStack = $state<CanvasObject[][]>([]);
+	let redoStack = $state<CanvasObject[][]>([]);
 
 	const width = $derived(contract.width ?? 800);
 	const height = $derived(contract.height ?? 600);
@@ -76,7 +76,7 @@ export function createSharedCanvasState(getContract: () => RecipeSharedCanvas) {
 	const actionButtonClass = $derived('c-shared-canvas__action-btn');
 	const actionIcons = $derived(ObjectManagerSharedCanvas.actionIcons);
 
-	function syncFromProps(nextObjects: readonly SlotCanvasObject[] = []): void {
+	function syncFromProps(nextObjects: readonly CanvasObject[] = []): void {
 		localObjects = CanvasManager.cloneCanvasObjects(nextObjects);
 		undoStack = [];
 		redoStack = [];
@@ -153,9 +153,9 @@ export function createSharedCanvasState(getContract: () => RecipeSharedCanvas) {
 	}
 
 	function commitObjects(
-		nextObjects: SlotCanvasObject[],
+		nextObjects: CanvasObject[],
 		change: 'add' | 'update' | 'delete',
-		payload?: SlotCanvasObject | string
+		payload?: CanvasObject | string
 	): void {
 		undoStack = [...undoStack, CanvasManager.cloneCanvasObjects(localObjects)];
 		redoStack = [];

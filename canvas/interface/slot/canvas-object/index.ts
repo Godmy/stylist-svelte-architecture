@@ -1,8 +1,7 @@
-import type { Point2D } from '$stylist/canvas/interface/slot/point-2d';
-
+/** Fields every object on a shared canvas carries; the full shape is `CanvasObject`. */
 export interface SlotCanvasObject {
-	[key: string]: any;
 	id: string;
-	type?: string;
-	points?: Point2D[];
+	color?: string;
+	/** Author of the object on a shared canvas. */
+	userId?: string;
 }

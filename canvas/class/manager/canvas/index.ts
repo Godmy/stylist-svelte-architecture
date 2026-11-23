@@ -1,5 +1,5 @@
 import type { Point2D } from '$stylist/canvas/interface/slot/point-2d';
-import type { SlotCanvasObject } from '$stylist/canvas/interface/slot/canvas-object';
+import type { CanvasObject } from '$stylist/canvas/type/alias/canvas-object';
 import type { SlotSharedCanvasObjectBounds } from '$stylist/canvas/interface/slot/shared-canvas-object-bounds';
 import type { SharedCanvasTool } from '$stylist/canvas/type/alias/shared-canvas-tool';
 
@@ -8,11 +8,12 @@ export class CanvasManager {
 		return `obj_${Date.now()}`;
 	}
 
-	static cloneCanvasObjects(value: readonly SlotCanvasObject[] = []): SlotCanvasObject[] {
-		return value.map((object) => ({
-			...object,
-			points: object.points?.map((point) => ({ ...point }))
-		}));
+	static cloneCanvasObjects(value: readonly CanvasObject[] = []): CanvasObject[] {
+		return value.map((object) =>
+			object.type === 'path'
+				? { ...object, points: object.points.map((point) => ({ ...point })) }
+				: { ...object }
+		);
 	}
 
 	static createDraftCanvasObject(
@@ -20,26 +21,29 @@ export class CanvasManager {
 		point: Point2D,
 		color: string,
 		currentUserId?: string
-	): SlotCanvasObject | null {
+	): CanvasObject | null {
 		if (tool === 'select') return null;
 
-		return {
+		const base = {
 			id: CanvasManager.createCanvasObjectId(),
-			type: tool === 'rectangle' ? 'rectangle' : tool === 'circle' ? 'circle' : 'text',
 			x: point.x,
 			y: point.y,
 			color,
 			userId: currentUserId
 		};
+
+		if (tool === 'rectangle') return { ...base, type: 'rectangle' };
+		if (tool === 'circle') return { ...base, type: 'circle' };
+		return { ...base, type: 'text' };
 	}
 
 	static updateDraftCanvasObject(
-		object: SlotCanvasObject,
+		object: CanvasObject,
 		tool: SharedCanvasTool,
 		startPoint: Point2D,
 		currentPoint: Point2D
-	): SlotCanvasObject {
-		if (tool === 'rectangle') {
+	): CanvasObject {
+		if (tool === 'rectangle' && object.type === 'rectangle') {
 			return {
 				...object,
 				x: Math.min(startPoint.x, currentPoint.x),
@@ -49,7 +53,7 @@ export class CanvasManager {
 			};
 		}
 
-		if (tool === 'circle') {
+		if (tool === 'circle' && object.type === 'circle') {
 			return {
 				...object,
 				radius: Math.hypot(currentPoint.x - object.x, currentPoint.y - object.y)
@@ -60,23 +64,23 @@ export class CanvasManager {
 	}
 
 	static finalizeDraftCanvasObject(
-		object: SlotCanvasObject,
+		object: CanvasObject,
 		tool: SharedCanvasTool,
 		startPoint: Point2D,
 		endPoint: Point2D
-	): SlotCanvasObject {
+	): CanvasObject {
 		if (tool === 'rectangle') {
 			return CanvasManager.updateDraftCanvasObject(object, tool, startPoint, endPoint);
 		}
 
-		if (tool === 'text') {
+		if (tool === 'text' && object.type === 'text') {
 			return {
 				...object,
 				text: object.text || 'Text'
 			};
 		}
 
-		if (tool === 'circle') {
+		if (tool === 'circle' && object.type === 'circle') {
 			return {
 				...object,
 				radius: object.radius ?? Math.hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y)
@@ -102,7 +106,7 @@ export class CanvasManager {
 		};
 	}
 
-	static getCanvasObjectBounds(object: SlotCanvasObject): SlotSharedCanvasObjectBounds | null {
+	static getCanvasObjectBounds(object: CanvasObject): SlotSharedCanvasObjectBounds | null {
 		switch (object.type) {
 			case 'rectangle':
 				if (object.width == null || object.height == null) return null;
@@ -120,7 +124,7 @@ export class CanvasManager {
 				return { x: object.x, y: object.y - 18, width, height: 24 };
 			}
 			case 'path':
-				if (!object.points?.length) return null;
+				if (!object.points.length) return null;
 				return CanvasManager.getPathBounds(object.points);
 			default:
 				return null;
@@ -129,7 +133,7 @@ export class CanvasManager {
 
 	static drawCanvasObject(
 		ctx: CanvasRenderingContext2D,
-		object: SlotCanvasObject,
+		object: CanvasObject,
 		isSelected: boolean
 	): void {
 		ctx.strokeStyle = object.color || '#000000';
@@ -154,7 +158,7 @@ export class CanvasManager {
 				ctx.fillText(object.text || '', object.x, object.y);
 				break;
 			case 'path':
-				if (object.points?.length) {
+				if (object.points.length) {
 					ctx.beginPath();
 					ctx.moveTo(object.points[0].x, object.points[0].y);
 					for (let index = 1; index < object.points.length; index += 1) {
@@ -181,7 +185,7 @@ export class CanvasManager {
 	static drawCanvasObjects(
 		ctx: CanvasRenderingContext2D,
 		canvas: HTMLCanvasElement,
-		objects: readonly SlotCanvasObject[],
+		objects: readonly CanvasObject[],
 		selectedObjectId: string | null
 	): void {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -192,9 +196,9 @@ export class CanvasManager {
 	}
 
 	static hitTestCanvasObject(
-		objects: readonly SlotCanvasObject[],
+		objects: readonly CanvasObject[],
 		point: Point2D
-	): SlotCanvasObject | null {
+	): CanvasObject | null {
 		for (let index = objects.length - 1; index >= 0; index -= 1) {
 			const object = objects[index];
 			const bounds = CanvasManager.getCanvasObjectBounds(object);
