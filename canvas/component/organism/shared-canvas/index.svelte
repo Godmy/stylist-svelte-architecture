@@ -142,7 +142,7 @@
 			></canvas>
 
 			{#if state.showUsers && contract.users && contract.users.length > 0}
-				{#each contract.users as user}
+				{#each contract.users as user, userIndex (userIndex)}
 					{#if user.cursorPosition && user.id !== contract.currentUserId}
 						<div
 							class={state.remoteCursorClass}
@@ -159,7 +159,7 @@
 			<div class={state.userPanelClass}>
 				<h4 class={state.userPanelTitleClass}>{t('collaborators')}</h4>
 				<div class={state.userListClass}>
-					{#each contract.users ?? [] as user}
+					{#each contract.users ?? [] as user, userIndex2 (userIndex2)}
 						<div class={state.userItemClass}>
 							<div
 								class={state.userSwatchClass}

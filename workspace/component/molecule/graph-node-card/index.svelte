@@ -43,7 +43,7 @@
 
 			{#if props.node.fields && props.node.fields.length > 0}
 				<div class={state.fieldsListClass}>
-					{#each props.node.fields as field}
+					{#each props.node.fields as field, fieldIndex (fieldIndex)}
 						<div
 							class={state.fieldItemClass}
 							onclick={() => state.handleFieldClick(field)}

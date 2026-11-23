@@ -97,7 +97,7 @@
 					onblur={state.handleBlur}
 					onchange={(event) => state.emitChange((event.target as HTMLSelectElement).value)}
 				>
-					{#each props.options ?? [] as option}
+					{#each props.options ?? [] as option, optionIndex (optionIndex)}
 						<option value={option}>{option}</option>
 					{/each}
 				</select>
@@ -117,7 +117,7 @@
 				</div>
 			{:else if state.isVector}
 				<div class="node-property__vector">
-					{#each Array(state.vectorDimensions) as _, index}
+					{#each Array(state.vectorDimensions) as _, index (index)}
 						<div class="node-property__vector-input">
 							<span class="node-property__vector-label">{state.vectorLabels[index]}</span>
 							<input

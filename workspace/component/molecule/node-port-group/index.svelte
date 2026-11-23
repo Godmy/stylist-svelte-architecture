@@ -19,7 +19,7 @@
 	{/if}
 
 	<div class="node-port-group__list">
-		{#each state.ports as port, index}
+		{#each state.ports as port, index (index)}
 			{#if state.divider && index > 0}
 				<Divider orientation="horizontal" class="node-port-group__divider" />
 			{/if}

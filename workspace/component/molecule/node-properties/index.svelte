@@ -38,7 +38,7 @@
 	<div class="node-properties__content">
 		{#if state.hasProperties}
 			{#if state.groupByType}
-				{#each state.propertyGroups as [groupName, groupProperties]}
+				{#each state.propertyGroups as [groupName, groupProperties], entryIndex (entryIndex)}
 					<section class="node-properties__group">
 						<h4 class="node-properties__group-title">{groupName}</h4>
 						<div class="node-properties__list">

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { HTMLAttributes } from 'svelte/elements';
 	import type { RecipeGraphEdge } from '$stylist/graph/interface/recipe/graph-edge';
 	import createGraphEdgeState from '$stylist/graph/component/atom/graph-edge/state.svelte';
 
@@ -48,7 +49,7 @@
 	data-edge-type={state.type}
 	data-edge-active={state.active}
 	aria-label={edgeLabel}
-	{...restProps as any}
+	{...restProps as HTMLAttributes<HTMLDivElement>}
 >
 	<svg class="graph-edge__svg" viewBox="0 0 124 56" preserveAspectRatio="none" aria-hidden="true">
 		<defs>

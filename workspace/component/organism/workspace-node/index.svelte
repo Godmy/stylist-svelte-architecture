@@ -5,6 +5,8 @@
 	import NodePortGroup from '$stylist/workspace/component/molecule/node-port-group/index.svelte';
 	import type { SlotWorkspaceNode } from '$stylist/workspace/interface/slot/workspace-node';
 	import createWorkspaceNodeState from '$stylist/workspace/component/organism/workspace-node/state.svelte';
+	import { TOKEN_PROPERTY_TYPE } from '$stylist/workspace/const/array/property-type';
+	import type { TokenPropertyType } from '$stylist/workspace/type/alias/property-type';
 
 	let props: RecipeWorkspaceNode = $props();
 	const state = createWorkspaceNodeState(() => props);
@@ -14,6 +16,10 @@
 	const indexedOutputs = $derived(
 		state.outputs.map((port: SlotWorkspaceNode, idx: number) => ({ ...port, index: idx }))
 	);
+
+	function toPropertyType(type: string | undefined): TokenPropertyType | undefined {
+		return TOKEN_PROPERTY_TYPE.find((known) => known === type);
+	}
 </script>
 
 <svelte:window onmousemove={state.handleMouseMove} onmouseup={state.handleMouseUp} />
@@ -105,11 +111,11 @@
 						<NodeProperty
 							id={property.id}
 							name={property.name ?? property.id ?? ''}
-							type={property.type as any}
+							type={toPropertyType(property.type)}
 							value={property.value}
 							label={property.label}
 							description={property.description}
-							options={property.options as any}
+							options={property.options}
 							size="sm"
 							onchange={state.handlePropertyChange}
 						/>

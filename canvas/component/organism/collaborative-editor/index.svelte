@@ -128,7 +128,7 @@
 					{t('collaborators', { count: state.users.length })}
 				</div>
 				<div class="c-collaborative-editor__user-entries">
-					{#each state.users as user}
+					{#each state.users as user (user.id)}
 						<div class={state.userListEntryClasses}>
 							{#if user.avatar}
 								<img
