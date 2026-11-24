@@ -1,90 +1,67 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	import type { SlotCanvasToolbarDrawingOptions } from '$stylist/canvas/interface/slot/canvas-toolbar-drawing-options';
-	import type { CanvasToolbarDrawingTool } from '$stylist/canvas/type/alias/canvas-toolbar-drawing-tool';
 	import type { RecipeCanvasToolbar } from '$stylist/canvas/interface/recipe/canvas-toolbar';
 	import createCanvasToolbarState from '$stylist/canvas/component/molecule/canvas-toolbar/state.svelte';
-
-	let dispatch = createEventDispatcher<{
-		'tool-change': { tool: CanvasToolbarDrawingTool; options: SlotCanvasToolbarDrawingOptions };
-		'clear-canvas': undefined;
-		undo: undefined;
-		redo: undefined;
-		save: undefined;
-	}>();
-
+	import { CANVAS_TOOLBAR_DRAWING_TOOL } from '$stylist/canvas/const/array/canvas-toolbar-drawing-tool';
 	import { CANVAS_CANVAS_TOOLBAR_MESSAGE } from '$stylist/canvas/const/record/canvas-toolbar-message';
 	import { useMessage } from '$stylist/localization/function/hook/use-message';
 
-	let props: RecipeCanvasToolbar = $props();
+	const props: RecipeCanvasToolbar = $props();
 	const t = useMessage('canvas-toolbar', CANVAS_CANVAS_TOOLBAR_MESSAGE);
-	const state = createCanvasToolbarState(
-		() => props,
-		(type, detail) => dispatch(type as never, detail as never)
-	);
-
-	export const clearCanvas = () => state.clearCanvas();
-	export const undo = () => state.undo();
-	export const redo = () => state.redo();
-	export const save = () => state.save();
+	const state = createCanvasToolbarState(() => props);
+	const lineWidthId = $props.id();
 </script>
 
-<div class="canvas-toolbar">
-	<div class="tool-selector">
-		<button
-			class="tool-btn {state.currentTool === 'pen' ? 'active' : ''}"
-			onclick={() => state.selectTool('pen')}
-			type="button"
-		>
-			{t('pen')}
-		</button>
-		<button
-			class="tool-btn {state.currentTool === 'eraser' ? 'active' : ''}"
-			onclick={() => state.selectTool('eraser')}
-			type="button"
-		>
-			{t('eraser')}
-		</button>
+<div class={['canvas-toolbar', props.class]} role="toolbar" aria-label={t('label')}>
+	<div class="tool-selector" role="group">
+		{#each CANVAS_TOOLBAR_DRAWING_TOOL as tool (tool)}
+			<button
+				class={['tool-btn', state.currentTool === tool && 'active']}
+				aria-pressed={state.currentTool === tool}
+				onclick={() => state.selectTool(tool)}
+				type="button"
+			>
+				{t(tool)}
+			</button>
+		{/each}
 	</div>
 
 	<div class="tool-specific-options">
 		<div class="option-group">
-			<label for="line-width" class="option-label">{t('lineWidth')}</label>
+			<label for="{lineWidthId}-width" class="option-label">{t('lineWidth')}</label>
 			<input
-				id="line-width"
+				id="{lineWidthId}-width"
 				type="range"
 				min="1"
-				max="20"
-				bind:value={state.currentOptions.lineWidth}
-				oninput={() => state.handleOptionsUpdate(state.currentOptions)}
+				max="40"
+				value={state.currentOptions.lineWidth}
+				oninput={(event) => state.setLineWidth(Number(event.currentTarget.value))}
 				class="option-input"
 			/>
 			<span class="option-value">{state.currentOptions.lineWidth}px</span>
 		</div>
 
 		<div class="option-group">
-			<label for="color-picker" class="option-label">{t('color')}</label>
+			<label for="{lineWidthId}-color" class="option-label">{t('color')}</label>
 			<input
-				id="color-picker"
+				id="{lineWidthId}-color"
 				type="color"
-				bind:value={state.currentOptions.strokeColor}
-				oninput={() => state.handleOptionsUpdate(state.currentOptions)}
+				value={state.currentOptions.strokeColor}
+				oninput={(event) => state.setStrokeColor(event.currentTarget.value)}
 				class="option-input"
+				disabled={state.currentTool === 'eraser'}
 			/>
 		</div>
 	</div>
 
 	<div class="action-buttons">
-		<button class="action-btn" onclick={() => state.clearCanvas()} type="button"
-			>{t('clear')}</button
-		>
-		<button class="action-btn" onclick={() => state.save()} type="button">{t('save')}</button>
-		<button class="action-btn" onclick={() => state.undo()} type="button" disabled
-			>{t('undo')}</button
-		>
-		<button class="action-btn" onclick={() => state.redo()} type="button" disabled
-			>{t('redo')}</button
-		>
+		<button class="action-btn" onclick={state.clearCanvas} type="button">{t('clear')}</button>
+		<button class="action-btn" onclick={state.save} type="button">{t('save')}</button>
+		<button class="action-btn" onclick={state.undo} type="button" disabled={!state.canUndo}>
+			{t('undo')}
+		</button>
+		<button class="action-btn" onclick={state.redo} type="button" disabled={!state.canRedo}>
+			{t('redo')}
+		</button>
 	</div>
 </div>
 
@@ -144,8 +121,13 @@
 		font-size: var(--font-size-3);
 	}
 
-	.action-btn:hover {
+	.action-btn:hover:not(:disabled) {
 		background-color: var(--color-background-tertiary);
+	}
+
+	.action-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.tool-specific-options {

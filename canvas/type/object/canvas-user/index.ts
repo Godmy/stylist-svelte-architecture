@@ -7,6 +7,6 @@ export type CanvasUser = {
 	/** CSS color of the user's cursor and swatch. */
 	color: string;
 	avatar?: string;
-	/** Last known cursor position on the canvas, in canvas pixels. */
+	/** Last known cursor position on a shared canvas, in world coordinates. */
 	cursorPosition?: Point2D;
 };

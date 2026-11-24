@@ -1,7 +1,9 @@
+/** Shared icon-set names of the SharedCanvas text formatting controls. */
 export const SHARED_CANVAS_ACTION_ICONS = {
-	color: 'color',
-	undo: 'undo',
-	redo: 'redo',
-	delete: 'trash-2',
-	export: 'download'
+	bold: 'bold',
+	italic: 'italic',
+	underline: 'underline',
+	alignLeft: 'align-left',
+	alignCenter: 'align-center',
+	alignRight: 'align-right'
 } as const;

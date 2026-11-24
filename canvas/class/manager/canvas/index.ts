@@ -1,239 +1,175 @@
-import type { Point2D } from '$stylist/canvas/interface/slot/point-2d';
+import { CANVAS_SHAPE_KIND } from '$stylist/canvas/const/array/canvas-shape-kind';
 import type { CanvasObject } from '$stylist/canvas/type/alias/canvas-object';
-import type { SlotSharedCanvasObjectBounds } from '$stylist/canvas/interface/slot/shared-canvas-object-bounds';
-import type { SharedCanvasTool } from '$stylist/canvas/type/alias/shared-canvas-tool';
 
+/** Identity, copying, ordering, diffing and serialization of shared canvas objects. */
 export class CanvasManager {
+	static #sequence = 0;
+
 	static createCanvasObjectId(): string {
-		return `obj_${Date.now()}`;
+		const uuid = globalThis.crypto?.randomUUID?.();
+		if (uuid) return `obj_${uuid}`;
+
+		CanvasManager.#sequence += 1;
+		return `obj_${Date.now().toString(36)}_${CanvasManager.#sequence}`;
 	}
 
+	/** Deep copy; also unwraps reactive proxies. */
 	static cloneCanvasObjects(value: readonly CanvasObject[] = []): CanvasObject[] {
-		return value.map((object) =>
-			object.type === 'path'
-				? { ...object, points: object.points.map((point) => ({ ...point })) }
-				: { ...object }
+		return JSON.parse(JSON.stringify(value)) as CanvasObject[];
+	}
+
+	static areCanvasObjectsEqual(
+		left: readonly CanvasObject[],
+		right: readonly CanvasObject[]
+	): boolean {
+		return left === right || JSON.stringify(left) === JSON.stringify(right);
+	}
+
+	/** Objects added, changed and removed between two snapshots, matched by `id`. */
+	static diffCanvasObjects(
+		before: readonly CanvasObject[],
+		after: readonly CanvasObject[]
+	): { added: CanvasObject[]; updated: CanvasObject[]; removed: string[] } {
+		const previous = new Map(before.map((object) => [object.id, JSON.stringify(object)]));
+		const nextIds = new Set(after.map((object) => object.id));
+		const added: CanvasObject[] = [];
+		const updated: CanvasObject[] = [];
+
+		for (const object of after) {
+			const old = previous.get(object.id);
+			if (old === undefined) added.push(object);
+			else if (old !== JSON.stringify(object)) updated.push(object);
+		}
+
+		return {
+			added,
+			updated,
+			removed: before.map((object) => object.id).filter((id) => !nextIds.has(id))
+		};
+	}
+
+	static moveCanvasObject(object: CanvasObject, dx: number, dy: number): CanvasObject {
+		switch (object.type) {
+			case 'line':
+				return {
+					...object,
+					points: [
+						{ x: object.points[0].x + dx, y: object.points[0].y + dy },
+						{ x: object.points[1].x + dx, y: object.points[1].y + dy }
+					]
+				};
+			case 'path':
+				return {
+					...object,
+					points: object.points.map((point) => ({ x: point.x + dx, y: point.y + dy }))
+				};
+			default:
+				return { ...object, x: object.x + dx, y: object.y + dy };
+		}
+	}
+
+	static moveCanvasObjects(
+		objects: readonly CanvasObject[],
+		ids: ReadonlySet<string>,
+		dx: number,
+		dy: number
+	): CanvasObject[] {
+		return objects.map((object) =>
+			ids.has(object.id) ? CanvasManager.moveCanvasObject(object, dx, dy) : object
 		);
 	}
 
-	static createDraftCanvasObject(
-		tool: SharedCanvasTool,
-		point: Point2D,
-		color: string,
-		currentUserId?: string
-	): CanvasObject | null {
-		if (tool === 'select') return null;
-
-		const base = {
-			id: CanvasManager.createCanvasObjectId(),
-			x: point.x,
-			y: point.y,
-			color,
-			userId: currentUserId
-		};
-
-		if (tool === 'rectangle') return { ...base, type: 'rectangle' };
-		if (tool === 'circle') return { ...base, type: 'circle' };
-		return { ...base, type: 'text' };
+	static updateCanvasObjects(
+		objects: readonly CanvasObject[],
+		ids: ReadonlySet<string>,
+		update: (object: CanvasObject) => CanvasObject
+	): CanvasObject[] {
+		return objects.map((object) => (ids.has(object.id) ? update(object) : object));
 	}
 
-	static updateDraftCanvasObject(
-		object: CanvasObject,
-		tool: SharedCanvasTool,
-		startPoint: Point2D,
-		currentPoint: Point2D
-	): CanvasObject {
-		if (tool === 'rectangle' && object.type === 'rectangle') {
-			return {
-				...object,
-				x: Math.min(startPoint.x, currentPoint.x),
-				y: Math.min(startPoint.y, currentPoint.y),
-				width: Math.abs(currentPoint.x - startPoint.x),
-				height: Math.abs(currentPoint.y - startPoint.y)
-			};
-		}
+	/** Copies of the selected objects shifted by `offset`, appended on top. */
+	static duplicateCanvasObjects(
+		objects: readonly CanvasObject[],
+		ids: ReadonlySet<string>,
+		offset = 24
+	): { objects: CanvasObject[]; ids: string[] } {
+		const copies = CanvasManager.cloneCanvasObjects(
+			objects.filter((object) => ids.has(object.id))
+		).map((object) => ({
+			...CanvasManager.moveCanvasObject(object, offset, offset),
+			id: CanvasManager.createCanvasObjectId()
+		}));
 
-		if (tool === 'circle' && object.type === 'circle') {
-			return {
-				...object,
-				radius: Math.hypot(currentPoint.x - object.x, currentPoint.y - object.y)
-			};
-		}
-
-		return object;
+		return { objects: [...objects, ...copies], ids: copies.map((object) => object.id) };
 	}
 
-	static finalizeDraftCanvasObject(
-		object: CanvasObject,
-		tool: SharedCanvasTool,
-		startPoint: Point2D,
-		endPoint: Point2D
-	): CanvasObject {
-		if (tool === 'rectangle') {
-			return CanvasManager.updateDraftCanvasObject(object, tool, startPoint, endPoint);
-		}
-
-		if (tool === 'text' && object.type === 'text') {
-			return {
-				...object,
-				text: object.text || 'Text'
-			};
-		}
-
-		if (tool === 'circle' && object.type === 'circle') {
-			return {
-				...object,
-				radius: object.radius ?? Math.hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y)
-			};
-		}
-
-		return object;
+	/** Moves the selected objects to the top or bottom of the stack, keeping their order. */
+	static reorderCanvasObjects(
+		objects: readonly CanvasObject[],
+		ids: ReadonlySet<string>,
+		direction: 'front' | 'back'
+	): CanvasObject[] {
+		const selected = objects.filter((object) => ids.has(object.id));
+		const rest = objects.filter((object) => !ids.has(object.id));
+		return direction === 'front' ? [...rest, ...selected] : [...selected, ...rest];
 	}
 
-	static getPathBounds(points: readonly Point2D[]): SlotSharedCanvasObjectBounds {
-		const xs = points.map((point) => point.x);
-		const ys = points.map((point) => point.y);
-		const minX = Math.min(...xs);
-		const minY = Math.min(...ys);
-		const maxX = Math.max(...xs);
-		const maxY = Math.max(...ys);
+	static isCanvasObject(value: unknown): value is CanvasObject {
+		if (!value || typeof value !== 'object') return false;
 
-		return {
-			x: minX,
-			y: minY,
-			width: Math.max(1, maxX - minX),
-			height: Math.max(1, maxY - minY)
-		};
-	}
+		const object = value as Record<string, unknown>;
+		const isNumber = (field: unknown) => typeof field === 'number' && Number.isFinite(field);
+		const isPoint = (field: unknown) =>
+			Boolean(field) &&
+			typeof field === 'object' &&
+			isNumber((field as Record<string, unknown>).x) &&
+			isNumber((field as Record<string, unknown>).y);
+		const isBox = () =>
+			isNumber(object.x) && isNumber(object.y) && isNumber(object.width) && isNumber(object.height);
+		const isText = (field: unknown) => typeof field === 'string';
 
-	static getCanvasObjectBounds(object: CanvasObject): SlotSharedCanvasObjectBounds | null {
-		switch (object.type) {
-			case 'rectangle':
-				if (object.width == null || object.height == null) return null;
-				return { x: object.x, y: object.y, width: object.width, height: object.height };
-			case 'circle':
-				if (object.radius == null) return null;
-				return {
-					x: object.x - object.radius,
-					y: object.y - object.radius,
-					width: object.radius * 2,
-					height: object.radius * 2
-				};
-			case 'text': {
-				const width = Math.max(64, (object.text?.length ?? 0) * 10);
-				return { x: object.x, y: object.y - 18, width, height: 24 };
-			}
-			case 'path':
-				if (!object.points.length) return null;
-				return CanvasManager.getPathBounds(object.points);
-			default:
-				return null;
-		}
-	}
-
-	static drawCanvasObject(
-		ctx: CanvasRenderingContext2D,
-		object: CanvasObject,
-		isSelected: boolean
-	): void {
-		ctx.strokeStyle = object.color || '#000000';
-		ctx.lineWidth = isSelected ? 3 : 2;
-		ctx.fillStyle = object.color || '#000000';
+		if (typeof object.id !== 'string' || !object.id) return false;
+		if (object.color !== undefined && typeof object.color !== 'string') return false;
+		if (object.userId !== undefined && typeof object.userId !== 'string') return false;
 
 		switch (object.type) {
-			case 'rectangle':
-				if (object.width && object.height) {
-					ctx.strokeRect(object.x, object.y, object.width, object.height);
-				}
-				break;
-			case 'circle':
-				if (object.radius) {
-					ctx.beginPath();
-					ctx.arc(object.x, object.y, object.radius, 0, 2 * Math.PI);
-					ctx.stroke();
-				}
-				break;
+			case 'shape':
+				return (
+					isBox() &&
+					(CANVAS_SHAPE_KIND as readonly unknown[]).includes(object.shape) &&
+					(object.text === undefined || isText(object.text))
+				);
 			case 'text':
-				ctx.font = '16px Arial';
-				ctx.fillText(object.text || '', object.x, object.y);
-				break;
+			case 'sticky':
+				return isBox() && isText(object.text);
+			case 'frame':
+				return isBox() && (object.title === undefined || isText(object.title));
+			case 'icon':
+				return isBox() && isText(object.icon);
+			case 'line':
+				return (
+					Array.isArray(object.points) && object.points.length === 2 && object.points.every(isPoint)
+				);
 			case 'path':
-				if (object.points.length) {
-					ctx.beginPath();
-					ctx.moveTo(object.points[0].x, object.points[0].y);
-					for (let index = 1; index < object.points.length; index += 1) {
-						ctx.lineTo(object.points[index].x, object.points[index].y);
-					}
-					ctx.stroke();
-				}
-				break;
-		}
-
-		if (!isSelected) return;
-
-		const bounds = CanvasManager.getCanvasObjectBounds(object);
-		if (!bounds) return;
-
-		ctx.save();
-		ctx.setLineDash([6, 4]);
-		ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-		ctx.lineWidth = 1;
-		ctx.strokeRect(bounds.x - 4, bounds.y - 4, bounds.width + 8, bounds.height + 8);
-		ctx.restore();
-	}
-
-	static drawCanvasObjects(
-		ctx: CanvasRenderingContext2D,
-		canvas: HTMLCanvasElement,
-		objects: readonly CanvasObject[],
-		selectedObjectId: string | null
-	): void {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-		for (const object of objects) {
-			CanvasManager.drawCanvasObject(ctx, object, object.id === selectedObjectId);
+				return (
+					Array.isArray(object.points) && object.points.length > 0 && object.points.every(isPoint)
+				);
+			default:
+				return false;
 		}
 	}
 
-	static hitTestCanvasObject(
-		objects: readonly CanvasObject[],
-		point: Point2D
-	): CanvasObject | null {
-		for (let index = objects.length - 1; index >= 0; index -= 1) {
-			const object = objects[index];
-			const bounds = CanvasManager.getCanvasObjectBounds(object);
+	static serializeCanvasObjects(objects: readonly CanvasObject[]): string {
+		return JSON.stringify(objects, null, 2);
+	}
 
-			if (!bounds) continue;
-
-			const withinBounds =
-				point.x >= bounds.x &&
-				point.x <= bounds.x + bounds.width &&
-				point.y >= bounds.y &&
-				point.y <= bounds.y + bounds.height;
-
-			if (withinBounds) {
-				return object;
-			}
+	/** Reads objects saved by `serializeCanvasObjects`; invalid entries are skipped. */
+	static parseCanvasObjects(json: string): CanvasObject[] {
+		try {
+			const value: unknown = JSON.parse(json);
+			return Array.isArray(value) ? value.filter(CanvasManager.isCanvasObject) : [];
+		} catch {
+			return [];
 		}
-
-		return null;
-	}
-
-	static getCanvasPointerPosition(event: MouseEvent, canvas: HTMLCanvasElement): Point2D {
-		const rect = canvas.getBoundingClientRect();
-
-		return {
-			x: event.clientX - rect.left,
-			y: event.clientY - rect.top
-		};
-	}
-
-	static exportCanvasImage(canvas: HTMLCanvasElement | null | undefined, filename: string): void {
-		if (!canvas) return;
-
-		const link = document.createElement('a');
-		link.download = filename;
-		link.href = canvas.toDataURL();
-		link.click();
 	}
 }

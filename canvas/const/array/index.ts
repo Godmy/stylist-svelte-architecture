@@ -1,4 +1,7 @@
 /** AREA: STYLIST CODER MODEL -> AUTO-GENERATED */
+export { CANVAS_BOARD_ICON } from './canvas-board-icon';
+export { CANVAS_COLOR_SWATCH } from './canvas-color-swatch';
+export { CANVAS_SHAPE_KIND } from './canvas-shape-kind';
 export { CANVAS_TOOLBAR_DRAWING_TOOL } from './canvas-toolbar-drawing-tool';
 export { TOKEN_FOUNDATION_AXES } from './foundation-axes';
 export { TOKEN_FOUNDATION_AXIS_DIRECTIONS } from './foundation-axis-directions';

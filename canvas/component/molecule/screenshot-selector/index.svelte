@@ -1,43 +1,37 @@
 <script lang="ts">
-	import type { HTMLAttributes } from 'svelte/elements';
 	import type { RecipeScreenshotSelector } from '$stylist/canvas/interface/recipe/screenshot-selector';
-	import { createScreenshotSelectorState } from '$stylist/canvas/component/molecule/screenshot-selector/state.svelte';
+	import createScreenshotSelectorState from '$stylist/canvas/component/molecule/screenshot-selector/state.svelte';
 	import { CANVAS_SCREENSHOT_SELECTOR_MESSAGE } from '$stylist/canvas/const/record/screenshot-selector-message';
 	import { useMessage } from '$stylist/localization/function/hook/use-message';
 
-	let props: RecipeScreenshotSelector & HTMLAttributes<HTMLDivElement> = $props();
+	const props: RecipeScreenshotSelector = $props();
 	const state = createScreenshotSelectorState(() => props);
 	const t = useMessage('screenshot-selector', CANVAS_SCREENSHOT_SELECTOR_MESSAGE);
 
 	$effect(() => {
-		if (state.canvasElement && typeof window !== 'undefined') {
-			state.canvasElement.width = window.innerWidth;
-			state.canvasElement.height = window.innerHeight;
-		}
-	});
-
-	// Redraw when drawing mode changes or color changes
-	$effect(() => {
-		if (state.drawingMode || state.drawColor) {
-			state.drawOnCanvas();
-		}
+		void state.paths;
+		void state.currentPath;
+		void state.viewport;
+		state.render(state.canvasElement);
 	});
 </script>
+
+<svelte:window
+	bind:innerWidth={state.viewportWidth}
+	bind:innerHeight={state.viewportHeight}
+	onkeydown={state.keyDown}
+/>
 
 <div
 	role="application"
 	aria-label={t('label')}
-	bind:this={state.overlayElement}
-	class="screenshot-overlay {state.drawingMode && state.selectionFixed ? 'drawing-mode' : ''}"
-	onpointerdown={state.handlePointerDown}
-	onpointermove={state.handlePointerMove}
-	onpointerup={state.handlePointerUp}
-	style="background: {state.selectionFixed
-		? 'color-mix(in srgb, var(--color-text-primary) 30%, transparent)'
-		: 'color-mix(in srgb, var(--color-text-primary) 50%, transparent)'};"
+	class={['screenshot-overlay', state.selectionFixed && 'screenshot-overlay--fixed', props.class]}
+	onpointerdown={state.pointerDown}
+	onpointermove={state.pointerMove}
+	onpointerup={state.pointerUp}
+	onpointercancel={state.pointerUp}
 >
-	<!-- Selection rectangle -->
-	{#if (state.isSelecting || state.selectionFixed) && state.rect.width > 5 && state.rect.height > 5}
+	{#if state.hasSelection}
 		<div
 			class="selection-rect"
 			style="left: {state.rect.x}px; top: {state.rect.y}px; width: {state.rect
@@ -45,12 +39,13 @@
 		></div>
 	{/if}
 
-	<!-- Drawing canvas -->
-	{#if state.selectionFixed && state.drawingMode}
+	{#if state.selectionFixed}
 		<canvas
 			bind:this={state.canvasElement}
 			class="drawing-canvas"
-			style="pointer-events: {state.drawingMode ? 'auto' : 'none'};"
+			style:width="{state.viewportWidth}px"
+			style:height="{state.viewportHeight}px"
+			aria-hidden="true"
 		></canvas>
 	{/if}
 </div>
@@ -61,6 +56,12 @@
 		inset: 0;
 		z-index: var(--z-index-layer9999);
 		cursor: crosshair;
+		touch-action: none;
+		background: color-mix(in srgb, var(--color-text-primary) 50%, transparent);
+	}
+
+	.screenshot-overlay--fixed {
+		background: color-mix(in srgb, var(--color-text-primary) 30%, transparent);
 	}
 
 	.selection-rect {
@@ -74,9 +75,5 @@
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
-	}
-
-	.drawing-mode {
-		cursor: crosshair;
 	}
 </style>

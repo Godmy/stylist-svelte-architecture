@@ -1,6 +1,7 @@
 /** Messages of CanvasToolbar. */
 export const CANVAS_CANVAS_TOOLBAR_MESSAGE = {
 	en: {
+		label: 'Drawing tools',
 		pen: 'Pen',
 		eraser: 'Eraser',
 		lineWidth: 'Line width:',
@@ -11,6 +12,7 @@ export const CANVAS_CANVAS_TOOLBAR_MESSAGE = {
 		redo: 'Redo'
 	},
 	ru: {
+		label: 'Инструменты рисования',
 		pen: 'Перо',
 		eraser: 'Ластик',
 		lineWidth: 'Толщина линии:',

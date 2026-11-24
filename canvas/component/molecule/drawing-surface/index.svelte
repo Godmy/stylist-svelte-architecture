@@ -1,44 +1,65 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { untrack } from 'svelte';
 	import createDrawingSurfaceState from '$stylist/canvas/component/molecule/drawing-surface/state.svelte';
 	import type { RecipeDrawingSurface } from '$stylist/canvas/interface/recipe/drawing-surface';
-	import type { SlotDrawingSurfaceCanvasClearedEvent } from '$stylist/canvas/interface/slot/drawing-surface-canvas-cleared-event';
-	import type { SlotDrawingSurfaceExposeMethodsEvent } from '$stylist/canvas/interface/slot/drawing-surface-expose-methods-event';
-
-	let dispatch = createEventDispatcher<{
-		'canvas-cleared': SlotDrawingSurfaceCanvasClearedEvent;
-		'expose-methods': SlotDrawingSurfaceExposeMethodsEvent;
-	}>();
 
 	const contract: RecipeDrawingSurface = $props();
-	let canvasRef: HTMLCanvasElement | null = null;
-	const state = createDrawingSurfaceState(
-		() => contract,
-		(type, detail) => dispatch(type as 'canvas-cleared' | 'expose-methods', detail as never)
-	);
+	const state = createDrawingSurfaceState(() => contract);
 
 	$effect(() => {
-		state.fillBackground(canvasRef);
-		state.exposeMethods(canvasRef);
+		const incoming = contract.strokes;
+		untrack(() => state.syncFromProps(incoming));
 	});
+
+	$effect(() => {
+		void state.strokes;
+		void state.current;
+		void state.width;
+		void state.height;
+		state.render(state.canvasElement);
+	});
+
+	/** Removes all strokes (undoable). */
+	export function clear(): void {
+		state.clear();
+	}
+
+	export function undo(): void {
+		state.undo();
+	}
+
+	export function redo(): void {
+		state.redo();
+	}
+
+	/** PNG data URL of the drawing over its background. */
+	export function toDataUrl(): string {
+		return state.toDataUrl(state.canvasElement);
+	}
 </script>
 
 <canvas
-	bind:this={canvasRef}
-	width={state.width}
-	height={state.height}
+	bind:this={state.canvasElement}
 	class={state.canvasClass}
-	onmousedown={(event) => state.startDrawing(event, canvasRef)}
-	onmousemove={(event) => state.draw(event, canvasRef)}
-	onmouseup={() => state.stopDrawing(canvasRef)}
-	onmouseleave={() => state.stopDrawing(canvasRef)}
+	style:width="{state.width}px"
+	style:aspect-ratio="{state.width} / {state.height}"
+	style:background={state.backgroundColor}
+	onpointerdown={(event) => state.pointerDown(event, state.canvasElement)}
+	onpointermove={(event) => state.pointerMove(event, state.canvasElement)}
+	onpointerup={(event) => state.pointerUp(event, state.canvasElement)}
+	onpointercancel={(event) => state.pointerUp(event, state.canvasElement)}
 	{...state.restProps}
 ></canvas>
 
 <style>
 	.drawing-surface__canvas {
 		display: block;
+		max-width: 100%;
 		cursor: crosshair;
 		touch-action: none;
+	}
+
+	.drawing-surface__canvas--disabled {
+		cursor: default;
 	}
 </style>

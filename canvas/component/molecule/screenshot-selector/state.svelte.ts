@@ -1,97 +1,103 @@
-import type { HTMLAttributes } from 'svelte/elements';
+import { CanvasSurfaceManager } from '$stylist/canvas/class/manager/canvas-surface';
+import { CanvasGeometryManager } from '$stylist/canvas/class/manager/canvas-geometry';
+import { canvasColor } from '$stylist/canvas/function/resolve/canvas-color';
+import type { Point2D } from '$stylist/canvas/interface/slot/point-2d';
 import type { RecipeScreenshotSelector } from '$stylist/canvas/interface/recipe/screenshot-selector';
-export function createScreenshotSelectorState(
-	getProps: () => RecipeScreenshotSelector & HTMLAttributes<HTMLDivElement>
-) {
+
+/** Region selection and freehand annotation over the viewport. */
+export function createScreenshotSelectorState(getProps: () => RecipeScreenshotSelector) {
 	const props = $derived(getProps());
 	const drawingMode = $derived(props.drawingMode ?? false);
-	const drawColor = $derived(props.drawColor ?? 'var(--color-error-500)');
+	const drawColor = $derived(props.drawColor ?? 'var(--color-error-500, #ef4444)');
+	const strokeWidth = $derived(props.strokeWidth ?? 3);
 
+	let start = $state<Point2D>({ x: 0, y: 0 });
+	let end = $state<Point2D>({ x: 0, y: 0 });
 	let isSelecting = $state(false);
-	let startX = $state(0);
-	let startY = $state(0);
-	let currentX = $state(0);
-	let currentY = $state(0);
 	let selectionFixed = $state(false);
-	let isDrawing = $state(false);
-	const paths: Array<{ points: Array<{ x: number; y: number }>; color: string }> = $state([]);
-	let currentPath: Array<{ x: number; y: number }> = $state([]);
-	let overlayElement: HTMLDivElement | undefined = $state();
-	let canvasElement: HTMLCanvasElement | undefined = $state();
+	let paths = $state<{ points: Point2D[]; color: string; width: number }[]>([]);
+	let currentPath = $state<Point2D[] | null>(null);
+	let viewport = $state({ width: 0, height: 0 });
+	let canvasElement = $state<HTMLCanvasElement | null>(null);
 
-	const rect = $derived({
-		x: Math.min(startX, currentX),
-		y: Math.min(startY, currentY),
-		width: Math.abs(currentX - startX),
-		height: Math.abs(currentY - startY)
-	});
+	const rect = $derived(CanvasGeometryManager.normalizeRect(start, end));
+	const hasSelection = $derived(
+		(isSelecting || selectionFixed) && rect.width > 5 && rect.height > 5
+	);
 
-	function handlePointerDown(e: PointerEvent) {
-		if (!drawingMode) {
-			isSelecting = true;
-			selectionFixed = false;
-			startX = e.clientX;
-			startY = e.clientY;
-			currentX = e.clientX;
-			currentY = e.clientY;
-		} else if (selectionFixed) {
-			isDrawing = true;
-			currentPath = [{ x: e.clientX, y: e.clientY }];
+	function pointerDown(event: PointerEvent): void {
+		if (event.button !== 0) return;
+		const point = { x: event.clientX, y: event.clientY };
+		(event.currentTarget as Element | null)?.setPointerCapture?.(event.pointerId);
+
+		if (drawingMode && selectionFixed) {
+			currentPath = [point];
+			return;
 		}
+
+		isSelecting = true;
+		selectionFixed = false;
+		paths = [];
+		start = point;
+		end = point;
 	}
 
-	function handlePointerMove(e: PointerEvent) {
-		if (isSelecting && !selectionFixed) {
-			currentX = e.clientX;
-			currentY = e.clientY;
-		} else if (isDrawing && drawingMode) {
-			currentPath.push({ x: e.clientX, y: e.clientY });
-			drawOnCanvas();
-		}
+	function pointerMove(event: PointerEvent): void {
+		const point = { x: event.clientX, y: event.clientY };
+		if (isSelecting) end = point;
+		else if (currentPath) currentPath = [...currentPath, point];
 	}
 
-	function handlePointerUp(e: PointerEvent) {
-		if (isSelecting && !selectionFixed) {
-			currentX = e.clientX;
-			currentY = e.clientY;
+	function pointerUp(event: PointerEvent): void {
+		const target = event.currentTarget as Element | null;
+		if (target?.hasPointerCapture?.(event.pointerId)) target.releasePointerCapture(event.pointerId);
+
+		if (isSelecting) {
+			end = { x: event.clientX, y: event.clientY };
 			isSelecting = false;
-			selectionFixed = true;
-		} else if (isDrawing) {
-			paths.push({ points: [...currentPath], color: drawColor });
-			currentPath = [];
-			isDrawing = false;
+			selectionFixed = rect.width > 5 && rect.height > 5;
+			if (selectionFixed) props.onSelect?.({ ...rect });
+			return;
+		}
+
+		if (currentPath) {
+			if (currentPath.length > 1) {
+				paths = [...paths, { points: currentPath, color: drawColor, width: strokeWidth }];
+			}
+			currentPath = null;
 		}
 	}
 
-	function drawOnCanvas() {
-		if (!canvasElement) return;
-		const ctx = canvasElement.getContext('2d');
-		if (!ctx) return;
-		ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-		paths.forEach((path) => {
-			if (path.points.length < 2) return;
-			ctx.strokeStyle = path.color;
-			ctx.lineWidth = 3;
-			ctx.lineCap = 'round';
-			ctx.lineJoin = 'round';
-			ctx.beginPath();
-			ctx.moveTo(path.points[0].x, path.points[0].y);
-			for (let i = 1; i < path.points.length; i++) {
-				ctx.lineTo(path.points[i].x, path.points[i].y);
-			}
-			ctx.stroke();
-		});
-		if (currentPath.length > 1) {
-			ctx.strokeStyle = drawColor;
-			ctx.lineWidth = 3;
-			ctx.lineCap = 'round';
-			ctx.lineJoin = 'round';
-			ctx.beginPath();
-			ctx.moveTo(currentPath[0].x, currentPath[0].y);
-			for (let i = 1; i < currentPath.length; i++) {
-				ctx.lineTo(currentPath[i].x, currentPath[i].y);
-			}
-			ctx.stroke();
+	function keyDown(event: KeyboardEvent): void {
+		if (event.key !== 'Escape') return;
+		event.preventDefault();
+		isSelecting = false;
+		selectionFixed = false;
+		paths = [];
+		currentPath = null;
+		props.onCancel?.();
+	}
+
+	function render(canvas: HTMLCanvasElement | null | undefined): void {
+		if (!canvas || !viewport.width || !viewport.height) return;
+		const context = CanvasSurfaceManager.prepare(canvas, viewport.width, viewport.height);
+		if (!context) return;
+
+		CanvasSurfaceManager.clear(context, canvas);
+		const all = currentPath
+			? [...paths, { points: currentPath, color: drawColor, width: strokeWidth }]
+			: paths;
+
+		for (const path of all) {
+			if (path.points.length < 2) continue;
+			context.strokeStyle = canvasColor(path.color, canvas);
+			context.lineWidth = path.width;
+			context.lineCap = 'round';
+			context.lineJoin = 'round';
+			context.beginPath();
+			context.moveTo(path.points[0].x, path.points[0].y);
+			for (const point of path.points.slice(1)) context.lineTo(point.x, point.y);
+			context.stroke();
 		}
 	}
 
@@ -99,48 +105,48 @@ export function createScreenshotSelectorState(
 		get drawingMode() {
 			return drawingMode;
 		},
-		get drawColor() {
-			return drawColor;
-		},
-		get isSelecting() {
-			return isSelecting;
-		},
-		get startX() {
-			return startX;
-		},
-		get startY() {
-			return startY;
-		},
-		get currentX() {
-			return currentX;
-		},
-		get currentY() {
-			return currentY;
-		},
 		get selectionFixed() {
 			return selectionFixed;
 		},
-		get isDrawing() {
-			return isDrawing;
+		get hasSelection() {
+			return hasSelection;
 		},
 		get rect() {
 			return rect;
 		},
+		get paths() {
+			return paths;
+		},
+		get currentPath() {
+			return currentPath;
+		},
 		get canvasElement() {
 			return canvasElement;
 		},
-		get overlayElement() {
-			return overlayElement;
-		},
-		set canvasElement(value: HTMLCanvasElement | undefined) {
+		set canvasElement(value: HTMLCanvasElement | null) {
 			canvasElement = value;
 		},
-		set overlayElement(value: HTMLDivElement | undefined) {
-			overlayElement = value;
+		get viewportWidth() {
+			return viewport.width;
 		},
-		handlePointerDown,
-		handlePointerMove,
-		handlePointerUp,
-		drawOnCanvas
+		set viewportWidth(value: number) {
+			viewport = { ...viewport, width: value };
+		},
+		get viewportHeight() {
+			return viewport.height;
+		},
+		set viewportHeight(value: number) {
+			viewport = { ...viewport, height: value };
+		},
+		get viewport() {
+			return viewport;
+		},
+		pointerDown,
+		pointerMove,
+		pointerUp,
+		keyDown,
+		render
 	};
 }
+
+export default createScreenshotSelectorState;

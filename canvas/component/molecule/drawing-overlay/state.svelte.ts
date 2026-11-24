@@ -1,74 +1,54 @@
-import type { HTMLAttributes } from 'svelte/elements';
 import type { RecipeDrawingOverlay } from '$stylist/canvas/interface/recipe/drawing-overlay';
-export function createDrawingOverlayState(
-	getProps: () => RecipeDrawingOverlay & HTMLAttributes<HTMLDivElement>
-) {
+
+/** Settings of the annotation layer and its Escape handling. */
+export function createDrawingOverlayState(getProps: () => RecipeDrawingOverlay) {
 	const props = $derived(getProps());
-	const drawColor = $derived(props.drawColor ?? 'var(--color-error-500)');
-	const onClose = $derived(props.onClose);
+	const drawColor = $derived(props.drawColor ?? 'var(--color-error-500, #ef4444)');
+	const strokeWidth = $derived(props.strokeWidth ?? 3);
+	const offsetTop = $derived(props.offsetTop ?? 0);
+	let width = $state(0);
+	let height = $state(0);
+	let surface = $state<{ clear(): void; undo(): void; redo(): void } | undefined>();
 
-	let isDrawing = $state(false);
-	let lastPoint: { x: number; y: number } | null = null;
-	let canvasElement: HTMLCanvasElement | undefined = $state();
-	let ctx: CanvasRenderingContext2D | null = null;
-
-	function handlePointerDown(e: PointerEvent) {
-		if (!ctx) return;
-		isDrawing = true;
-		const x = e.clientX;
-		const y = e.clientY - 56;
-		lastPoint = { x, y };
-		ctx.strokeStyle = drawColor;
-		ctx.lineWidth = 3;
-		ctx.lineCap = 'round';
-		ctx.lineJoin = 'round';
-		ctx.beginPath();
-		ctx.moveTo(x, y);
-	}
-
-	function handlePointerMove(e: PointerEvent) {
-		if (!isDrawing || !ctx || !lastPoint) return;
-		const x = e.clientX;
-		const y = e.clientY - 56;
-		ctx.lineTo(x, y);
-		ctx.stroke();
-		lastPoint = { x, y };
-	}
-
-	function handlePointerUp() {
-		if (isDrawing && ctx) {
-			isDrawing = false;
-			lastPoint = null;
-		}
-	}
-
-	function clearCanvas() {
-		if (!canvasElement || !ctx) return;
-		ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+	function keyDown(event: KeyboardEvent): void {
+		if (event.key !== 'Escape' || !props.onClose) return;
+		event.preventDefault();
+		props.onClose();
 	}
 
 	return {
+		get width() {
+			return width;
+		},
+		set width(value: number) {
+			width = value;
+		},
+		get height() {
+			return height;
+		},
+		set height(value: number) {
+			height = value;
+		},
+		get surface() {
+			return surface;
+		},
+		set surface(value: { clear(): void; undo(): void; redo(): void } | undefined) {
+			surface = value;
+		},
 		get drawColor() {
 			return drawColor;
 		},
-		get isDrawing() {
-			return isDrawing;
+		get strokeWidth() {
+			return strokeWidth;
 		},
-		get canvasElement() {
-			return canvasElement;
+		get offsetTop() {
+			return offsetTop;
 		},
-		set canvasElement(value: HTMLCanvasElement | undefined) {
-			canvasElement = value;
+		get onChange() {
+			return props.onChange;
 		},
-		set ctx(value: CanvasRenderingContext2D | null) {
-			ctx = value;
-		},
-		handlePointerDown,
-		handlePointerMove,
-		handlePointerUp,
-		clearCanvas,
-		get onClose() {
-			return onClose;
-		}
+		keyDown
 	};
 }
+
+export default createDrawingOverlayState;

@@ -1,15 +1,21 @@
-import type { SlotDrawingSurfaceExposeMethodsEvent } from '$stylist/canvas/interface/slot/drawing-surface-expose-methods-event';
+import { untrack } from 'svelte';
+import { CanvasHistoryManager } from '$stylist/canvas/class/manager/canvas-history';
+import { CanvasManager } from '$stylist/canvas/class/manager/canvas';
+import { CanvasSurfaceManager } from '$stylist/canvas/class/manager/canvas-surface';
+import { canvasColor } from '$stylist/canvas/function/resolve/canvas-color';
 import type { RecipeDrawingSurface } from '$stylist/canvas/interface/recipe/drawing-surface';
+import type { CanvasStroke } from '$stylist/canvas/type/object/canvas-stroke';
 
-export function createDrawingSurfaceState(
-	getProps: () => RecipeDrawingSurface,
-	dispatch: (
-		type: 'canvas-cleared' | 'expose-methods',
-		detail: {} | SlotDrawingSurfaceExposeMethodsEvent
-	) => void
-) {
+/** Vector sketch state: strokes with undo/redo, pointer drawing and rendering to a canvas. */
+export function createDrawingSurfaceState(getProps: () => RecipeDrawingSurface) {
 	const props = $derived(getProps());
-	let isDrawing = $state(false);
+	const copy = (value: readonly CanvasStroke[]): CanvasStroke[] =>
+		JSON.parse(JSON.stringify(value)) as CanvasStroke[];
+
+	let history = $state(CanvasHistoryManager.create(untrack(() => copy(props.strokes ?? []))));
+	let current = $state<CanvasStroke | null>(null);
+	let pointerId: number | null = null;
+	let canvasElement = $state<HTMLCanvasElement | null>(null);
 
 	const width = $derived(props.width ?? 800);
 	const height = $derived(props.height ?? 600);
@@ -18,8 +24,13 @@ export function createDrawingSurfaceState(
 	const strokeColor = $derived(props.strokeColor ?? 'var(--color-text-primary)');
 	const strokeWidth = $derived(props.strokeWidth ?? 2);
 	const backgroundColor = $derived(props.backgroundColor ?? 'var(--color-background-primary)');
+	const strokes = $derived(history.present);
+	const canUndo = $derived(CanvasHistoryManager.canUndo(history));
+	const canRedo = $derived(CanvasHistoryManager.canRedo(history));
 	const canvasClass = $derived(
-		['drawing-surface__canvas', props.class?.toString() ?? ''].filter(Boolean).join(' ')
+		['drawing-surface__canvas', !drawingEnabled && 'drawing-surface__canvas--disabled', props.class]
+			.filter(Boolean)
+			.join(' ')
 	);
 	const restProps = $derived.by(() => {
 		const {
@@ -30,6 +41,11 @@ export function createDrawingSurfaceState(
 			strokeColor: _strokeColor,
 			strokeWidth: _strokeWidth,
 			backgroundColor: _backgroundColor,
+			strokes: _strokes,
+			onChange: _onChange,
+			onStrokeEnd: _onStrokeEnd,
+			onClear: _onClear,
+			onHistoryChange: _onHistoryChange,
 			class: _class,
 			...rest
 		} = props;
@@ -37,75 +53,145 @@ export function createDrawingSurfaceState(
 		return rest;
 	});
 
-	function fillBackground(canvas: HTMLCanvasElement | null): void {
+	function emit(): void {
+		props.onChange?.(copy(history.present));
+		props.onHistoryChange?.({ canUndo, canRedo });
+	}
+
+	function syncFromProps(incoming: readonly CanvasStroke[] | undefined): void {
+		const next = copy(incoming ?? []);
+		if (JSON.stringify(next) === JSON.stringify(history.present)) return;
+		history = CanvasHistoryManager.create(next);
+		current = null;
+	}
+
+	function drawStroke(context: CanvasRenderingContext2D, stroke: CanvasStroke, element: Element) {
+		if (!stroke.points.length) return;
+
+		context.globalCompositeOperation = stroke.tool === 'eraser' ? 'destination-out' : 'source-over';
+		context.strokeStyle = canvasColor(stroke.color, element);
+		context.lineWidth = stroke.width;
+		context.lineCap = 'round';
+		context.lineJoin = 'round';
+		context.beginPath();
+		context.moveTo(stroke.points[0].x, stroke.points[0].y);
+		for (const point of stroke.points.slice(1)) context.lineTo(point.x, point.y);
+		if (stroke.points.length === 1) context.lineTo(stroke.points[0].x + 0.01, stroke.points[0].y);
+		context.stroke();
+		context.globalCompositeOperation = 'source-over';
+	}
+
+	/** Redraws all strokes; the background is painted by CSS so the eraser reveals it. */
+	function render(canvas: HTMLCanvasElement | null): void {
 		if (!canvas) return;
-		const ctx = canvas.getContext('2d');
-		if (!ctx) return;
+		const context = CanvasSurfaceManager.prepare(canvas, width, height);
+		if (!context) return;
 
-		ctx.fillStyle = backgroundColor;
-		ctx.fillRect(0, 0, canvas.width, canvas.height);
-	}
-
-	function startDrawing(event: MouseEvent, canvas: HTMLCanvasElement | null): void {
-		if (!drawingEnabled || !canvas) return;
-		const ctx = canvas.getContext('2d');
-		if (!ctx) return;
-
-		isDrawing = true;
-		ctx.beginPath();
-		const rect = canvas.getBoundingClientRect();
-		ctx.moveTo(event.clientX - rect.left, event.clientY - rect.top);
-	}
-
-	function draw(event: MouseEvent, canvas: HTMLCanvasElement | null): void {
-		if (!isDrawing || !canvas) return;
-		const ctx = canvas.getContext('2d');
-		if (!ctx) return;
-
-		const rect = canvas.getBoundingClientRect();
-		const x = event.clientX - rect.left;
-		const y = event.clientY - rect.top;
-
-		ctx.lineWidth = strokeWidth;
-		ctx.lineCap = 'round';
-		ctx.lineJoin = 'round';
-		if (tool === 'eraser') {
-			ctx.globalCompositeOperation = 'destination-out';
-			ctx.strokeStyle = 'var(--color-text-primary)';
-		} else {
-			ctx.globalCompositeOperation = 'source-over';
-			ctx.strokeStyle = strokeColor;
+		CanvasSurfaceManager.clear(context, canvas);
+		for (const stroke of current ? [...strokes, current] : strokes) {
+			drawStroke(context, stroke, canvas);
 		}
-
-		ctx.lineTo(x, y);
-		ctx.stroke();
-		ctx.beginPath();
-		ctx.moveTo(x, y);
 	}
 
-	function stopDrawing(canvas: HTMLCanvasElement | null): void {
-		if (!canvas) return;
-		canvas.getContext('2d')?.closePath();
-		isDrawing = false;
+	function pointerDown(event: PointerEvent, canvas: HTMLCanvasElement | null): void {
+		if (!drawingEnabled || !canvas || event.button !== 0) return;
+		event.preventDefault();
+		canvas.setPointerCapture?.(event.pointerId);
+		pointerId = event.pointerId;
+		current = {
+			id: CanvasManager.createCanvasObjectId(),
+			tool,
+			color: strokeColor,
+			width: tool === 'eraser' ? Math.max(strokeWidth, 8) : strokeWidth,
+			points: [CanvasSurfaceManager.getPointerPosition(event, canvas, width, height)]
+		};
 	}
 
-	function clearCanvas(canvas: HTMLCanvasElement | null): void {
-		fillBackground(canvas);
-		dispatch('canvas-cleared', {});
+	function pointerMove(event: PointerEvent, canvas: HTMLCanvasElement | null): void {
+		if (!current || !canvas || event.pointerId !== pointerId) return;
+		const events = event.getCoalescedEvents?.() ?? [];
+		const points = (events.length ? events : [event]).map((entry) =>
+			CanvasSurfaceManager.getPointerPosition(entry, canvas, width, height)
+		);
+		current = { ...current, points: [...current.points, ...points] };
 	}
 
-	function exposeMethods(canvas: HTMLCanvasElement | null): void {
-		dispatch('expose-methods', {
-			clear: () => clearCanvas(canvas)
-		});
+	function pointerUp(event: PointerEvent, canvas: HTMLCanvasElement | null): void {
+		if (!current || event.pointerId !== pointerId) return;
+		if (canvas?.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+
+		const finished = current;
+		current = null;
+		pointerId = null;
+		history = CanvasHistoryManager.push(history, [...copy(history.present), finished]);
+		props.onStrokeEnd?.(copy([finished])[0]);
+		emit();
+	}
+
+	function clear(): void {
+		if (!history.present.length) return;
+		history = CanvasHistoryManager.push(history, []);
+		props.onClear?.();
+		emit();
+	}
+
+	function undo(): void {
+		if (!canUndo) return;
+		history = CanvasHistoryManager.undo(history);
+		emit();
+	}
+
+	function redo(): void {
+		if (!canRedo) return;
+		history = CanvasHistoryManager.redo(history);
+		emit();
+	}
+
+	/** PNG of the drawing over its background color. */
+	function toDataUrl(canvas: HTMLCanvasElement | null): string {
+		if (!canvas || typeof document === 'undefined') return '';
+		const output = document.createElement('canvas');
+		output.width = canvas.width;
+		output.height = canvas.height;
+		const context = output.getContext('2d');
+		if (!context) return '';
+
+		const background = canvasColor(backgroundColor, canvas, 'transparent');
+		if (background !== 'transparent') {
+			context.fillStyle = background;
+			context.fillRect(0, 0, output.width, output.height);
+		}
+		context.drawImage(canvas, 0, 0);
+		return output.toDataURL('image/png');
 	}
 
 	return {
+		get canvasElement() {
+			return canvasElement;
+		},
+		set canvasElement(value: HTMLCanvasElement | null) {
+			canvasElement = value;
+		},
 		get width() {
 			return width;
 		},
 		get height() {
 			return height;
+		},
+		get strokes() {
+			return strokes;
+		},
+		get current() {
+			return current;
+		},
+		get canUndo() {
+			return canUndo;
+		},
+		get canRedo() {
+			return canRedo;
+		},
+		get backgroundColor() {
+			return backgroundColor;
 		},
 		get canvasClass() {
 			return canvasClass;
@@ -113,11 +199,15 @@ export function createDrawingSurfaceState(
 		get restProps() {
 			return restProps;
 		},
-		fillBackground,
-		startDrawing,
-		draw,
-		stopDrawing,
-		exposeMethods
+		syncFromProps,
+		render,
+		pointerDown,
+		pointerMove,
+		pointerUp,
+		clear,
+		undo,
+		redo,
+		toDataUrl
 	};
 }
 

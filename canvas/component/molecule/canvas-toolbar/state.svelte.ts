@@ -2,63 +2,56 @@ import type { SlotCanvasToolbarDrawingOptions } from '$stylist/canvas/interface/
 import type { CanvasToolbarDrawingTool } from '$stylist/canvas/type/alias/canvas-toolbar-drawing-tool';
 import type { RecipeCanvasToolbar } from '$stylist/canvas/interface/recipe/canvas-toolbar';
 
-export function createCanvasToolbarState(
-	getProps: () => RecipeCanvasToolbar,
-	dispatch: (
-		type: 'tool-change' | 'clear-canvas' | 'undo' | 'redo' | 'save',
-		detail?: unknown
-	) => void
-) {
+/** Tool, line width and color of a sketch toolbar; props reset the local choice when they change. */
+export function createCanvasToolbarState(getProps: () => RecipeCanvasToolbar) {
 	const props = $derived(getProps());
-	let currentTool = $derived<CanvasToolbarDrawingTool>(props.selectedTool ?? 'pen');
-	let currentOptions = $derived<SlotCanvasToolbarDrawingOptions>({
+	let options = $derived<SlotCanvasToolbarDrawingOptions>({
 		lineWidth: props.drawingOptions?.lineWidth ?? 2,
-		strokeColor: props.drawingOptions?.strokeColor ?? 'black',
-		tool: props.drawingOptions?.tool ?? props.selectedTool ?? 'pen',
-		mode:
-			props.drawingOptions?.mode ?? ((props.selectedTool ?? 'pen') === 'eraser' ? 'erase' : 'draw')
+		strokeColor: props.drawingOptions?.strokeColor ?? '#111827',
+		tool: props.selectedTool ?? props.drawingOptions?.tool ?? 'pen',
+		mode: (props.selectedTool ?? props.drawingOptions?.tool) === 'eraser' ? 'erase' : 'draw'
 	});
+	const canUndo = $derived(props.canUndo ?? false);
+	const canRedo = $derived(props.canRedo ?? false);
+
+	function update(patch: Partial<SlotCanvasToolbarDrawingOptions>): void {
+		const tool = patch.tool ?? options.tool;
+		options = { ...options, ...patch, tool, mode: tool === 'eraser' ? 'erase' : 'draw' };
+		props.onToolChange?.(options.tool, { ...options });
+	}
 
 	function selectTool(tool: CanvasToolbarDrawingTool): void {
-		currentTool = tool;
-		currentOptions = { ...currentOptions, tool, mode: tool === 'eraser' ? 'erase' : 'draw' };
-		dispatch('tool-change', { tool: currentTool, options: currentOptions });
+		update({ tool });
 	}
 
-	function handleOptionsUpdate(options: SlotCanvasToolbarDrawingOptions): void {
-		currentOptions = { ...options };
-		dispatch('tool-change', { tool: currentTool, options: currentOptions });
+	function setLineWidth(lineWidth: number): void {
+		if (Number.isFinite(lineWidth)) update({ lineWidth });
 	}
 
-	function clearCanvas(): void {
-		dispatch('clear-canvas');
-	}
-
-	function undo(): void {
-		dispatch('undo');
-	}
-
-	function redo(): void {
-		dispatch('redo');
-	}
-
-	function save(): void {
-		dispatch('save');
+	function setStrokeColor(strokeColor: string): void {
+		update({ strokeColor });
 	}
 
 	return {
 		get currentTool() {
-			return currentTool;
+			return options.tool;
 		},
 		get currentOptions() {
-			return currentOptions;
+			return options;
+		},
+		get canUndo() {
+			return canUndo;
+		},
+		get canRedo() {
+			return canRedo;
 		},
 		selectTool,
-		handleOptionsUpdate,
-		clearCanvas,
-		undo,
-		redo,
-		save
+		setLineWidth,
+		setStrokeColor,
+		clearCanvas: () => props.onClear?.(),
+		undo: () => props.onUndo?.(),
+		redo: () => props.onRedo?.(),
+		save: () => props.onSave?.()
 	};
 }
 

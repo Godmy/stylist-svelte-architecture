@@ -1,4 +1,8 @@
 /** AREA: STYLIST CODER MODEL -> AUTO-GENERATED */
+export type { CanvasFontFamily } from './canvas-font-family';
+export type { CanvasObject } from './canvas-object';
+export type { CanvasResizeHandle } from './canvas-resize-handle';
+export type { CanvasShapeKind } from './canvas-shape-kind';
 export type { CanvasToolbarDrawingTool } from './canvas-toolbar-drawing-tool';
 export type { FoundationAxis } from './foundation-axis';
 export type { FoundationSemanticZoomStage } from './foundation-semantic-zoom-stage';

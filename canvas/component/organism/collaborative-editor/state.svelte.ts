@@ -20,6 +20,22 @@ export const createCollaborativeEditorState = (getProps: () => RecipeCollaborati
 	let editorContent = $derived(props.content ?? '');
 	let editorRef: HTMLDivElement | undefined;
 
+	const restProps = $derived.by(() => {
+		const {
+			content: _content,
+			users: _users,
+			currentUser: _currentUser,
+			onContentChange: _onContentChange,
+			showToolbar: _showToolbar,
+			showUserList: _showUserList,
+			class: _class,
+			toolbarClass: _toolbarClass,
+			editorClass: _editorClass,
+			userListClass: _userListClass,
+			...rest
+		} = props;
+		return rest;
+	});
 	const showToolbar = $derived(props.showToolbar ?? true);
 	const showUserList = $derived(props.showUserList ?? true);
 	const users = $derived(props.users ?? []);
@@ -96,6 +112,9 @@ export const createCollaborativeEditorState = (getProps: () => RecipeCollaborati
 	}
 
 	return {
+		get restProps() {
+			return restProps;
+		},
 		get editorContent() {
 			return editorContent;
 		},

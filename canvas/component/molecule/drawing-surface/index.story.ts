@@ -20,7 +20,7 @@ export default {
 		width: { type: 'number', min: 300, max: 1000, step: 20 },
 		height: { type: 'number', min: 200, max: 700, step: 20 },
 		drawingEnabled: { type: 'boolean' },
-		tool: { type: 'select', options: ['pen', 'eraser', 'select'] },
+		tool: { type: 'select', options: ['pen', 'eraser'] },
 		strokeWidth: { type: 'number', min: 1, max: 24, step: 1 },
 		strokeColor: { type: 'color' },
 		backgroundColor: { type: 'color' }

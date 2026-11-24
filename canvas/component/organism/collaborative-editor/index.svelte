@@ -18,7 +18,7 @@
 	});
 </script>
 
-<div class={state.containerClasses} {...props}>
+<div class={state.containerClasses} {...state.restProps}>
 	{#if state.showToolbar}
 		<div class={state.toolbarClasses}>
 			<button

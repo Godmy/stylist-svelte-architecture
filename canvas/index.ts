@@ -1,6 +1,12 @@
 /** AREA: STYLIST CODER MODEL -> AUTO-GENERATED */
 export {
+	CanvasBoardManager,
+	CanvasGeometryManager,
+	CanvasHistoryManager,
 	CanvasManager,
+	CanvasShapeManager,
+	CanvasSurfaceManager,
+	CanvasViewportManager,
 	FoundationManager,
 	ObjectManagerColorPalette,
 	ObjectManagerSharedCanvas,
@@ -16,12 +22,18 @@ export {
 	SharedCanvas
 } from './component';
 export {
+	CANVAS_BOARD_GLYPH,
+	CANVAS_BOARD_ICON,
 	CANVAS_CANVAS_TOOLBAR_MESSAGE,
 	CANVAS_COLLABORATIVE_EDITOR_MESSAGE,
 	CANVAS_COLOR_PALETTE_MESSAGE,
+	CANVAS_COLOR_SWATCH,
+	CANVAS_FONT_FAMILY,
 	CANVAS_SCREENSHOT_SELECTOR_MESSAGE,
+	CANVAS_SHAPE_KIND,
 	CANVAS_SHARED_CANVAS_MESSAGE,
 	CANVAS_TOOLBAR_DRAWING_TOOL,
+	CANVAS_ZOOM_LIMITS,
 	DEFAULT_FOUNDATION_CAMERA,
 	FOUNDATION_DEPTH_RANGE,
 	FOUNDATION_DEPTH_THRESHOLDS,
@@ -37,8 +49,19 @@ export {
 	TOKEN_FOUNDATION_AXES,
 	TOKEN_FOUNDATION_AXIS_DIRECTIONS
 } from './const';
+export { canvasColor } from './function';
 export type {
+	CanvasBoardStyle,
+	CanvasFont,
+	CanvasFontFamily,
+	CanvasHistory,
+	CanvasObject,
+	CanvasResizeHandle,
+	CanvasShapeKind,
+	CanvasStroke,
 	CanvasToolbarDrawingTool,
+	CanvasUser,
+	CanvasViewport,
 	FoundationAxis,
 	FoundationDepthThreshold,
 	FoundationSemanticZoomStage,
