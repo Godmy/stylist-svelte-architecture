@@ -4,6 +4,12 @@ import type { SchemaDependency as SchemaDependencyData } from '$stylist/erd/type
 import type { SchemaTablePosition } from '$stylist/erd/type/object/schema-table-position';
 import type { RecipeErdSchemaView } from '$stylist/erd/interface/recipe/erd-schema-view';
 import { createSchemaDependencyRoutes } from '$stylist/erd/function/create/schema-dependency-routes';
+import { orderDomainsByConnectionStrength } from '$stylist/erd/function/transform/order-domains-by-connection';
+import { groupBy } from '$stylist/theme/function/script/collection/group-by';
+import { indexBy } from '$stylist/theme/function/script/collection/index-by';
+import { toMap } from '$stylist/theme/function/script/collection/to-map';
+import { toSet } from '$stylist/theme/function/script/collection/to-set';
+import { unique } from '$stylist/theme/function/script/collection/unique';
 
 export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	const props = $derived(getProps());
@@ -26,8 +32,7 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	const canvasPadding = $derived(compact ? 120 : 480);
 	const tableHeaderHeight = $derived(compact ? 30 : 48);
 	const tableFieldHeight = $derived(compact ? 21 : 37);
-	let zoom = $state(untrack(() => getProps().zoom ?? 1));
-	$effect(() => { zoom = props.zoom ?? 1; });
+	let zoom = $derived(props.zoom ?? 1);
 	const showRelations = $derived(props.showRelations ?? true);
 	const highlightRelations = $derived(props.highlightRelations ?? true);
 	const layout = $derived(props.layout ?? 'grid');
@@ -41,31 +46,55 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	const persistLayout = $derived(props.persistLayout ?? false);
 	let gravityRadius = $state(untrack(() => props.gravity?.radius ?? 112));
 	let gravityStrength = $state(untrack(() => props.gravity?.strength ?? 1));
-	let gravityZones = $state<SchemaGravityZone[]>(untrack(() => (props.gravity?.zones ?? []).map(zone=>({...zone}))));
+	let gravityZones = $state<SchemaGravityZone[]>(
+		untrack(() => (props.gravity?.zones ?? []).map((zone) => ({ ...zone })))
+	);
 	let selectedGravityZoneId = $state<string | null>(null);
 	let gravityEditing = $state(false);
 	let gravityLoadedKey = $state('');
-	let gravityDrag: {id:string;clientX:number;clientY:number;x:number;y:number} | null = null;
+	let gravityDrag: { id: string; clientX: number; clientY: number; x: number; y: number } | null =
+		null;
 	const gravityStorageKey = $derived(`erd-gravity:${currentStorageKey()}`);
 	$effect(() => {
 		const key = gravityStorageKey;
 		if (gravityLoadedKey === key) return;
-		let saved: {radius?:number;strength?:number;zones?:SchemaGravityZone[]} | null = null;
-		try { saved = JSON.parse(localStorage.getItem(key) ?? 'null'); } catch { /* Storage is optional. */ }
+		let saved: { radius?: number; strength?: number; zones?: SchemaGravityZone[] } | null = null;
+		try {
+			saved = JSON.parse(localStorage.getItem(key) ?? 'null');
+		} catch {
+			/* Storage is optional. */
+		}
 		untrack(() => {
-			gravityRadius = Number.isFinite(saved?.radius) ? Math.max(0,saved!.radius!) : props.gravity?.radius ?? 112;
-			gravityStrength = Number.isFinite(saved?.strength) ? Math.max(0,saved!.strength!) : props.gravity?.strength ?? 1;
-			gravityZones = Array.isArray(saved?.zones) ? saved.zones.filter(zone=>zone && typeof zone.id==='string' &&
-				[zone.x,zone.y,zone.radius,zone.strength].every(Number.isFinite) && zone.radius>0 && zone.strength>=0)
-				: (props.gravity?.zones ?? []).map(zone=>({...zone}));
+			gravityRadius = Number.isFinite(saved?.radius)
+				? Math.max(0, saved!.radius!)
+				: (props.gravity?.radius ?? 112);
+			gravityStrength = Number.isFinite(saved?.strength)
+				? Math.max(0, saved!.strength!)
+				: (props.gravity?.strength ?? 1);
+			gravityZones = Array.isArray(saved?.zones)
+				? saved.zones.filter(
+						(zone) =>
+							zone &&
+							typeof zone.id === 'string' &&
+							[zone.x, zone.y, zone.radius, zone.strength].every(Number.isFinite) &&
+							zone.radius > 0 &&
+							zone.strength >= 0
+					)
+				: (props.gravity?.zones ?? []).map((zone) => ({ ...zone }));
 			selectedGravityZoneId = gravityZones[0]?.id ?? null;
 			gravityLoadedKey = key;
 		});
 	});
 	$effect(() => {
 		if (gravityLoadedKey !== gravityStorageKey) return;
-		try { localStorage.setItem(gravityStorageKey,JSON.stringify({radius:gravityRadius,strength:gravityStrength,zones:gravityZones})); }
-		catch { /* In-memory controls remain usable in private mode. */ }
+		try {
+			localStorage.setItem(
+				gravityStorageKey,
+				JSON.stringify({ radius: gravityRadius, strength: gravityStrength, zones: gravityZones })
+			);
+		} catch {
+			/* In-memory controls remain usable in private mode. */
+		}
 	});
 
 	// Tiebreak only, not a placement rule: the "clusters" layout orders
@@ -130,14 +159,17 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	let hoveredClusterDomain = $state<string | null>(null);
 	let panning = $state(false);
 	let panPointerId: number | null = null;
-	let panClientX = 0, panClientY = 0;
+	let panClientX = 0,
+		panClientY = 0;
 	let panDistance = 0;
 	let suppressCanvasClick = false;
 	let anchoredZoom = false;
 	let zoomRevision = 0;
 	let viewport = $state<HTMLElement>();
 	let viewportSize = $state({ width: 0, height: 0 });
-	const focusTarget = $derived(document.tables.find((table) => table.name === props.focusTableName));
+	const focusTarget = $derived(
+		document.tables.find((table) => table.name === props.focusTableName)
+	);
 	// Slack on every side allows even a table at the origin to be centered.
 	const focusPadding = $derived({
 		x: focusTarget ? viewportSize.width / 2 : 0,
@@ -146,7 +178,9 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	$effect(() => {
 		const element = viewport;
 		if (!element) return;
-		const measure = () => { viewportSize = { width: element.clientWidth, height: element.clientHeight }; };
+		const measure = () => {
+			viewportSize = { width: element.clientWidth, height: element.clientHeight };
+		};
 		measure();
 		const observer = new ResizeObserver(measure);
 		observer.observe(element);
@@ -167,18 +201,22 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		let cancelled = false;
 		void tick().then(() => {
 			if (cancelled) return;
-			const target = Array.from(element.querySelectorAll<HTMLElement>('[data-table-id]'))
-				.find((node) => node.dataset.tableId === tableId);
+			const target = Array.from(element.querySelectorAll<HTMLElement>('[data-table-id]')).find(
+				(node) => node.dataset.tableId === tableId
+			);
 			if (!target || !untrack(() => positionByTable.has(tableId))) return;
 			const card = target.getBoundingClientRect();
 			const frame = element.getBoundingClientRect();
 			element.scrollBy({
-				left: card.left + card.width / 2 - frame.left - element.clientLeft - element.clientWidth / 2,
+				left:
+					card.left + card.width / 2 - frame.left - element.clientLeft - element.clientWidth / 2,
 				top: card.top + card.height / 2 - frame.top - element.clientTop - element.clientHeight / 2,
 				behavior: 'instant'
 			});
 		});
-		return () => { cancelled = true; };
+		return () => {
+			cancelled = true;
+		};
 	});
 	let draggedClusterDomain = $state<string | null>(null);
 	let clusterDragStartClientX = $state(0);
@@ -187,27 +225,27 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	// just a snapshot read/written only by the three cluster-drag functions.
 	let clusterDragOrigin: Map<string, { x: number; y: number }> | null = null;
 
-	const positionByTable = $derived(
-		new Map(positions.map((position) => [position.tableId, position]))
-	);
+	const positionByTable = $derived(indexBy(positions, (position) => position.tableId));
 	const relatedFieldIds = $derived(createRelatedFieldIds(document.dependencies));
 	// Hover narrows the cluster highlight to one table; a pinned table returns on leaving.
 	const focusTableId = $derived(hoveredTableId ?? (hoveredClusterDomain ? null : pinnedTableId));
 	const focusTableIds = $derived.by(() => {
-		const edge = document.dependencies.find(dependency => dependency.id === hoveredDependencyId);
-		if (edge) return new Set([edge.sourceTable,edge.targetTable]);
-		if (focusTableId) return new Set([focusTableId]);
-		return new Set(clusterMembership.find(cluster => cluster.domain === hoveredClusterDomain)?.tableIds ?? []);
+		const edge = document.dependencies.find((dependency) => dependency.id === hoveredDependencyId);
+		if (edge) return toSet([edge.sourceTable, edge.targetTable]);
+		if (focusTableId) return toSet([focusTableId]);
+		return toSet(
+			clusterMembership.find((cluster) => cluster.domain === hoveredClusterDomain)?.tableIds ?? []
+		);
 	});
 	const hasFocus = $derived(focusTableIds.size > 0);
 	const focusNeighborIds = $derived.by(() => {
-		const neighbors = new Set<string>();
-		if (hoveredDependencyId) return neighbors;
-		for (const dependency of document.dependencies) {
-			if (focusTableIds.has(dependency.sourceTable)) neighbors.add(dependency.targetTable);
-			if (focusTableIds.has(dependency.targetTable)) neighbors.add(dependency.sourceTable);
-		}
-		return neighbors;
+		if (hoveredDependencyId) return toSet<string>();
+		return toSet(
+			document.dependencies.flatMap((dependency) => [
+				...(focusTableIds.has(dependency.sourceTable) ? [dependency.targetTable] : []),
+				...(focusTableIds.has(dependency.targetTable) ? [dependency.sourceTable] : [])
+			])
+		);
 	});
 
 	// Domain grouping + connection-strength ordering, kept as its own
@@ -221,32 +259,41 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 			return [] as { domain: string; indices: number[] }[];
 		}
 
-		const groups = new Map<string, number[]>();
-		document.tables.forEach((table, index) => {
-			const domain = getDomain(table.name);
-			const indices = groups.get(domain);
-
-			if (indices) {
-				indices.push(index);
-			} else {
-				groups.set(domain, [index]);
-			}
-		});
+		const groups = groupBy(document.tables.keys(), (index) =>
+			getDomain(document.tables[index].name)
+		);
 
 		for (const [domain, indices] of groups) {
-			const degree = (index: number) => document.dependencies.filter(edge => edge.sourceTable === document.tables[index].id || edge.targetTable === document.tables[index].id).length;
-			const remaining = [...indices].sort((a,b) => degree(b)-degree(a) || a-b);
+			const degree = (index: number) =>
+				document.dependencies.filter(
+					(edge) =>
+						edge.sourceTable === document.tables[index].id ||
+						edge.targetTable === document.tables[index].id
+				).length;
+			const remaining = [...indices].sort((a, b) => degree(b) - degree(a) || a - b);
 			const ordered: number[] = [];
 			while (remaining.length) {
-				const neighbors = (index: number) => document.dependencies.filter(edge => ordered.some(placed =>
-					(edge.sourceTable === document.tables[index].id && edge.targetTable === document.tables[placed].id) ||
-					(edge.targetTable === document.tables[index].id && edge.sourceTable === document.tables[placed].id))).length;
-				remaining.sort((a,b) => neighbors(b)-neighbors(a) || degree(b)-degree(a) || a-b);
+				const neighbors = (index: number) =>
+					document.dependencies.filter((edge) =>
+						ordered.some(
+							(placed) =>
+								(edge.sourceTable === document.tables[index].id &&
+									edge.targetTable === document.tables[placed].id) ||
+								(edge.targetTable === document.tables[index].id &&
+									edge.sourceTable === document.tables[placed].id)
+						)
+					).length;
+				remaining.sort((a, b) => neighbors(b) - neighbors(a) || degree(b) - degree(a) || a - b);
 				ordered.push(remaining.shift()!);
 			}
 			groups.set(domain, ordered);
 		}
-		const orderedDomains = orderDomainsByConnectionStrength(groups);
+		const orderedDomains = orderDomainsByConnectionStrength(
+			groups,
+			document.tables,
+			document.dependencies,
+			DOMAIN_ORDER
+		);
 		return orderedDomains.map((domain) => ({ domain, indices: groups.get(domain) as number[] }));
 	});
 
@@ -321,12 +368,23 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		return panels;
 	});
 
-	const dependencyRoutes = $derived(createSchemaDependencyRoutes(
-		document, positions, tableHeaderHeight, tableFieldHeight, compact ? 12 : 18,
-		clusterPanels.map(panel => ({ tableId: `group:${panel.domain}`, x: panel.x, y: panel.y,
-			width: panel.width, height: compact ? 30 : 44 })),
-		{radius:gravityRadius,strength:gravityStrength,zones:gravityZones}
-	));
+	const dependencyRoutes = $derived(
+		createSchemaDependencyRoutes(
+			document,
+			positions,
+			tableHeaderHeight,
+			tableFieldHeight,
+			compact ? 12 : 18,
+			clusterPanels.map((panel) => ({
+				tableId: `group:${panel.domain}`,
+				x: panel.x,
+				y: panel.y,
+				width: panel.width,
+				height: compact ? 30 : 44
+			})),
+			{ radius: gravityRadius, strength: gravityStrength, zones: gravityZones }
+		)
+	);
 	const canvasSize = $derived(createCanvasSize(positions));
 	const scaledCanvasSize = $derived({
 		width: Math.ceil(canvasSize.width * zoom + focusPadding.x * 2),
@@ -352,7 +410,9 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 
 		positions =
 			persisted ??
-			(layout === activeLayout && !clusterAspectRatio && (props.leadingCluster ?? '') === activeLeadingCluster
+			(layout === activeLayout &&
+			!clusterAspectRatio &&
+			(props.leadingCluster ?? '') === activeLeadingCluster
 				? mergePositions()
 				: createPositions(document.tables.length));
 		documentLayoutKey = nextLayoutKey;
@@ -395,7 +455,7 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 			}
 
 			const stored = JSON.parse(raw) as SchemaTablePosition[];
-			const storedIds = new Set(stored.map((position) => position.tableId));
+			const storedIds = toSet(stored.map((position) => position.tableId));
 
 			if (storedIds.size !== document.tables.length) {
 				return null;
@@ -548,12 +608,17 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		// Right-to-left and self links may loop above a cluster header. Reserve
 		// enough canvas there so their legal detours are not clipped by the SVG.
 		const grouped = layout === 'clusters' || layout === 'star';
-		const paddingX = grouped ? 60 : 40, paddingY = grouped ? 100 : 40;
+		const paddingX = grouped ? 60 : 40,
+			paddingY = grouped ? 100 : 40;
 		const minX = Math.min(paddingX, ...result.map((item) => item.x));
 		const minY = Math.min(paddingY, ...result.map((item) => item.y));
 
 		if (minX < paddingX || minY < paddingY) {
-			return result.map((item) => ({ ...item, x: item.x - minX + paddingX, y: item.y - minY + paddingY }));
+			return result.map((item) => ({
+				...item,
+				x: item.x - minX + paddingX,
+				y: item.y - minY + paddingY
+			}));
 		}
 
 		return result;
@@ -673,129 +738,6 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		return separatorIndex === -1 ? tableName : tableName.slice(0, separatorIndex);
 	}
 
-	// A fixed narrative order (platform, identity, geo, ...) looks tidy but
-	// is blind to the actual graph: a domain like `finance` can end up
-	// wedged between two clusters it barely talks to (e.g. `content`),
-	// forcing its relation lines to sweep clear across the canvas past
-	// unrelated blocks -- which is exactly the "noise" grouping-by-name-only
-	// was supposed to fix. This builds a weighted adjacency graph from the
-	// real cross-domain FK counts, then greedily walks a nearest-neighbor
-	// chain through it (the classic weighted-TSP heuristic) so consecutive
-	// domains in the result are the ones actually referencing each other
-	// most. `DOMAIN_ORDER` only breaks ties (equal/zero weight).
-	function orderDomainsByConnectionStrength(groups: Map<string, number[]>): string[] {
-		const domains = Array.from(groups.keys());
-		const domainByTableId = new Map<string, string>();
-
-		for (const [domain, indices] of groups) {
-			for (const index of indices) {
-				domainByTableId.set(document.tables[index].id, domain);
-			}
-		}
-
-		const weights = new Map<string, Map<string, number>>();
-		for (const domain of domains) {
-			weights.set(domain, new Map());
-		}
-
-		for (const dependency of document.dependencies) {
-			const sourceDomain = domainByTableId.get(dependency.sourceTable);
-			const targetDomain = domainByTableId.get(dependency.targetTable);
-
-			if (!sourceDomain || !targetDomain || sourceDomain === targetDomain) {
-				continue;
-			}
-
-			const sourceRow = weights.get(sourceDomain)!;
-			const targetRow = weights.get(targetDomain)!;
-			sourceRow.set(targetDomain, (sourceRow.get(targetDomain) ?? 0) + 1);
-			targetRow.set(sourceDomain, (targetRow.get(sourceDomain) ?? 0) + 1);
-		}
-
-		const fallbackRank = new Map(
-			domains.map((domain, index) => {
-				const narrativeIndex = DOMAIN_ORDER.indexOf(domain);
-				return [
-					domain,
-					narrativeIndex === -1 ? DOMAIN_ORDER.length + index : narrativeIndex
-				] as const;
-			})
-		);
-
-		const totalWeight = (domain: string): number => {
-			let sum = 0;
-			for (const value of weights.get(domain)!.values()) {
-				sum += value;
-			}
-			return sum;
-		};
-
-		// Prefer higher `score`; break exact ties with the deterministic
-		// fallback rank so the result never depends on Map/Set iteration order.
-		const isBetter = (
-			candidate: string,
-			current: string | null,
-			score: (domain: string) => number
-		): boolean => {
-			if (current === null) {
-				return true;
-			}
-
-			const candidateScore = score(candidate);
-			const currentScore = score(current);
-
-			if (candidateScore !== currentScore) {
-				return candidateScore > currentScore;
-			}
-
-			return fallbackRank.get(candidate)! < fallbackRank.get(current)!;
-		};
-
-		const remaining = new Set(domains);
-		let start: string | null = null;
-		for (const domain of domains) {
-			if (isBetter(domain, start, totalWeight)) {
-				start = domain;
-			}
-		}
-
-		const chain: string[] = [start as string];
-		remaining.delete(start as string);
-
-		while (remaining.size > 0) {
-			const last = chain[chain.length - 1];
-			const lastWeights = weights.get(last)!;
-			const scoreAgainstLast = (domain: string) => lastWeights.get(domain) ?? 0;
-
-			let next: string | null = null;
-			for (const candidate of remaining) {
-				if (isBetter(candidate, next, scoreAgainstLast)) {
-					next = candidate;
-				}
-			}
-
-			// Nothing left is connected to the current chain end at all --
-			// jump to the still-unplaced domain with the strongest overall
-			// connections instead of landing wherever Set iteration happens to
-			// visit next, so disconnected pockets still group near whichever
-			// part of the diagram they actually relate to.
-			if (scoreAgainstLast(next as string) === 0) {
-				let bestOverall: string | null = null;
-				for (const candidate of remaining) {
-					if (isBetter(candidate, bestOverall, totalWeight)) {
-						bestOverall = candidate;
-					}
-				}
-				next = bestOverall;
-			}
-
-			chain.push(next as string);
-			remaining.delete(next as string);
-		}
-
-		return chain;
-	}
-
 	// Lays one domain's own tables out as a squarish sub-grid (bounded 2-4
 	// columns so a cluster reads as a compact block rather than one long
 	// row or column), local to a 0,0 origin -- both the "clusters" grid and
@@ -808,7 +750,11 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	): { width: number; height: number; positions: SchemaTablePosition[] } {
 		const innerGapX = compact ? 46 : 100;
 		const innerGapY = compact ? 42 : 76;
-		const columns = Math.min(indices.length, maxColumns, Math.max(1, Math.ceil(Math.sqrt(indices.length))));
+		const columns = Math.min(
+			indices.length,
+			maxColumns,
+			Math.max(1, Math.ceil(Math.sqrt(indices.length)))
+		);
 		const rows = Math.max(1, Math.ceil(indices.length / columns));
 		const rowHeights = new Array(rows).fill(0);
 
@@ -855,8 +801,8 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 			domain,
 			...buildDomainGrid(indices, heights, domain === props.leadingCluster ? 2 : compact ? 4 : 3)
 		}));
-		const leading = allClusters.find(cluster => cluster.domain === props.leadingCluster);
-		const clusters = allClusters.filter(cluster => cluster !== leading);
+		const leading = allClusters.find((cluster) => cluster.domain === props.leadingCluster);
+		const clusters = allClusters.filter((cluster) => cluster !== leading);
 		const leadingWidth = leading ? leading.width + clusterGapX : 0;
 
 		// Compare actual domain sizes: table counts alone miss tall field lists.
@@ -875,7 +821,11 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 					height += Math.max(...row.map((cluster) => cluster.height));
 					if (start > 0) height += clusterGapY;
 				}
-				const score = Math.abs(Math.log((width + leadingWidth) / Math.max(height, leading?.height ?? 0) / clusterAspectRatio));
+				const score = Math.abs(
+					Math.log(
+						(width + leadingWidth) / Math.max(height, leading?.height ?? 0) / clusterAspectRatio
+					)
+				);
 				if (score < bestScore) {
 					bestScore = score;
 					clustersPerRow = columns;
@@ -980,7 +930,7 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 
 	function mergePositions(): SchemaTablePosition[] {
 		const generatedPositions = createPositions(document.tables.length);
-		const previousPositions = new Map(positions.map((position) => [position.tableId, position]));
+		const previousPositions = indexBy(positions, (position) => position.tableId);
 
 		return generatedPositions.map((position) => {
 			const previousPosition = previousPositions.get(position.tableId);
@@ -1021,13 +971,11 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	}
 
 	function createRelatedFieldIds(dependencies: readonly SchemaDependencyData[]): string[] {
-		return Array.from(
-			new Set(
-				dependencies.flatMap((dependency) => [
-					`${dependency.sourceTable}.${dependency.sourceField}`,
-					`${dependency.targetTable}.${dependency.targetField}`
-				])
-			)
+		return unique(
+			dependencies.flatMap((dependency) => [
+				`${dependency.sourceTable}.${dependency.sourceField}`,
+				`${dependency.targetTable}.${dependency.targetField}`
+			])
 		);
 	}
 
@@ -1118,7 +1066,7 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 		draggedClusterDomain = domain;
 		clusterDragStartClientX = event.clientX;
 		clusterDragStartClientY = event.clientY;
-		clusterDragOrigin = new Map(
+		clusterDragOrigin = toMap(
 			panel.tableIds.map((tableId) => {
 				const position = positionByTable.get(tableId);
 				return [tableId, { x: position?.x ?? 0, y: position?.y ?? 0 }];
@@ -1189,21 +1137,31 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	function setHoveredDependency(id: string, hovered: boolean): void {
 		if (hovered) {
 			if (panning || draggedTableId || draggedClusterDomain || gravityDrag) return;
-			hoveredDependencyId = id; hoveredTableId = null; hoveredClusterDomain = null;
+			hoveredDependencyId = id;
+			hoveredTableId = null;
+			hoveredClusterDomain = null;
 		} else if (hoveredDependencyId === id) hoveredDependencyId = null;
 	}
 
 	function updateHoveredCluster(event: PointerEvent | WheelEvent): void {
 		if (event.target instanceof Element && event.target.closest('.schema-dependency')) {
-			hoveredClusterDomain = null; hoveredTableId = null; return;
+			hoveredClusterDomain = null;
+			hoveredTableId = null;
+			return;
 		}
-		if (event.target instanceof Element && event.target.closest('.schema-view__gravity-dock, .schema-view__gravity-zone')) {
-			hoveredClusterDomain = null; hoveredTableId = null; return;
+		if (
+			event.target instanceof Element &&
+			event.target.closest('.schema-view__gravity-dock, .schema-view__gravity-zone')
+		) {
+			hoveredClusterDomain = null;
+			hoveredTableId = null;
+			return;
 		}
 		if (!viewport || panning || draggedTableId || draggedClusterDomain || gravityDrag) return;
 		const box = viewport.getBoundingClientRect();
 		const x =
-			(event.clientX - box.left - viewport.clientLeft + viewport.scrollLeft - focusPadding.x) / zoom;
+			(event.clientX - box.left - viewport.clientLeft + viewport.scrollLeft - focusPadding.x) /
+			zoom;
 		const y =
 			(event.clientY - box.top - viewport.clientTop + viewport.scrollTop - focusPadding.y) / zoom;
 		hoveredClusterDomain =
@@ -1214,54 +1172,87 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 	}
 
 	function setGravityRadius(value: number): void {
-		if (Number.isFinite(value)) gravityRadius = Math.max(0,Math.round(value));
+		if (Number.isFinite(value)) gravityRadius = Math.max(0, Math.round(value));
 	}
 	function setGravityStrength(value: number): void {
-		if (Number.isFinite(value)) gravityStrength = Math.max(0,value);
+		if (Number.isFinite(value)) gravityStrength = Math.max(0, value);
 	}
 	function setGravityEditing(open: boolean): void {
 		gravityEditing = open;
-		if (open) { hoveredTableId = null; hoveredClusterDomain = null; }
+		if (open) {
+			hoveredTableId = null;
+			hoveredClusterDomain = null;
+		}
 	}
-	function selectGravityZone(id: string): void { selectedGravityZoneId = id; }
+	function selectGravityZone(id: string): void {
+		selectedGravityZoneId = id;
+	}
 	function addGravityZone(): void {
 		const canvas = viewport?.querySelector('.schema-view__canvas')?.getBoundingClientRect();
 		const frame = viewport?.getBoundingClientRect();
-		const zone = {id:crypto.randomUUID(),x:canvas && frame ? (frame.left+viewport!.clientWidth/2-canvas.left)/zoom : 300,
-			y:canvas && frame ? (frame.top+viewport!.clientHeight/2-canvas.top)/zoom : 300,radius:180,strength:2};
-		gravityZones = [...gravityZones,zone]; selectedGravityZoneId = zone.id;
+		const zone = {
+			id: crypto.randomUUID(),
+			x: canvas && frame ? (frame.left + viewport!.clientWidth / 2 - canvas.left) / zoom : 300,
+			y: canvas && frame ? (frame.top + viewport!.clientHeight / 2 - canvas.top) / zoom : 300,
+			radius: 180,
+			strength: 2
+		};
+		gravityZones = [...gravityZones, zone];
+		selectedGravityZoneId = zone.id;
 	}
-	function updateGravityZone(id: string, patch: Partial<Pick<SchemaGravityZone,'radius'|'strength'>>): void {
-		gravityZones = gravityZones.map(zone=>zone.id===id ? {...zone,
-			radius:Number.isFinite(patch.radius) ? Math.max(8,patch.radius!) : zone.radius,
-			strength:Number.isFinite(patch.strength) ? Math.max(0,patch.strength!) : zone.strength} : zone);
+	function updateGravityZone(
+		id: string,
+		patch: Partial<Pick<SchemaGravityZone, 'radius' | 'strength'>>
+	): void {
+		gravityZones = gravityZones.map((zone) =>
+			zone.id === id
+				? {
+						...zone,
+						radius: Number.isFinite(patch.radius) ? Math.max(8, patch.radius!) : zone.radius,
+						strength: Number.isFinite(patch.strength) ? Math.max(0, patch.strength!) : zone.strength
+					}
+				: zone
+		);
 	}
 	function removeGravityZone(id: string): void {
-		gravityZones = gravityZones.filter(zone=>zone.id!==id);
-		if (selectedGravityZoneId===id) selectedGravityZoneId = gravityZones[0]?.id ?? null;
+		gravityZones = gravityZones.filter((zone) => zone.id !== id);
+		if (selectedGravityZoneId === id) selectedGravityZoneId = gravityZones[0]?.id ?? null;
 	}
 	function resetGravity(): void {
-		gravityRadius = props.gravity?.radius ?? 112; gravityStrength = props.gravity?.strength ?? 1;
-		gravityZones = (props.gravity?.zones ?? []).map(zone=>({...zone})); selectedGravityZoneId = null;
+		gravityRadius = props.gravity?.radius ?? 112;
+		gravityStrength = props.gravity?.strength ?? 1;
+		gravityZones = (props.gravity?.zones ?? []).map((zone) => ({ ...zone }));
+		selectedGravityZoneId = null;
 	}
-	function startGravityDrag(event: PointerEvent,id: string): void {
-		if (event.button!==0) return;
-		const zone = gravityZones.find(zone=>zone.id===id); if (!zone) return;
-		event.preventDefault(); event.stopPropagation(); selectedGravityZoneId = id;
-		hoveredTableId = null; hoveredClusterDomain = null;
-		gravityDrag = {id,clientX:event.clientX,clientY:event.clientY,x:zone.x,y:zone.y};
+	function startGravityDrag(event: PointerEvent, id: string): void {
+		if (event.button !== 0) return;
+		const zone = gravityZones.find((zone) => zone.id === id);
+		if (!zone) return;
+		event.preventDefault();
+		event.stopPropagation();
+		selectedGravityZoneId = id;
+		hoveredTableId = null;
+		hoveredClusterDomain = null;
+		gravityDrag = { id, clientX: event.clientX, clientY: event.clientY, x: zone.x, y: zone.y };
 		(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
 	}
-	function moveGravityDrag(event: PointerEvent,id: string): void {
-		if (!gravityDrag || gravityDrag.id!==id) return;
+	function moveGravityDrag(event: PointerEvent, id: string): void {
+		if (!gravityDrag || gravityDrag.id !== id) return;
 		event.stopPropagation();
-		const x = Math.max(0,Math.min(canvasSize.width,gravityDrag.x+(event.clientX-gravityDrag.clientX)/zoom));
-		const y = Math.max(0,Math.min(canvasSize.height,gravityDrag.y+(event.clientY-gravityDrag.clientY)/zoom));
-		gravityZones = gravityZones.map(zone=>zone.id===id?{...zone,x,y}:zone);
+		const x = Math.max(
+			0,
+			Math.min(canvasSize.width, gravityDrag.x + (event.clientX - gravityDrag.clientX) / zoom)
+		);
+		const y = Math.max(
+			0,
+			Math.min(canvasSize.height, gravityDrag.y + (event.clientY - gravityDrag.clientY) / zoom)
+		);
+		gravityZones = gravityZones.map((zone) => (zone.id === id ? { ...zone, x, y } : zone));
 	}
-	function stopGravityDrag(event: PointerEvent,id: string): void {
-		if (gravityDrag?.id!==id) return;
-		event.stopPropagation(); gravityDrag = null;
+	function stopGravityDrag(event: PointerEvent, id: string): void {
+		if (gravityDrag?.id !== id) return;
+		event.stopPropagation();
+		gravityDrag = null;
 		const element = event.currentTarget as HTMLElement;
 		if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId);
 	}
@@ -1283,7 +1274,9 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 				event.button !== 0 ||
 				(event.pointerType && event.pointerType !== 'mouse') ||
 				!(event.target instanceof Element) ||
-				event.target.closest('.schema-view__table, .schema-view__cluster-label, .schema-view__gravity-dock, .schema-view__gravity-zone')
+				event.target.closest(
+					'.schema-view__table, .schema-view__cluster-label, .schema-view__gravity-dock, .schema-view__gravity-zone'
+				)
 			)
 				return;
 			event.preventDefault();
@@ -1329,12 +1322,15 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 			}
 			if (
 				event.target instanceof Element &&
-				!event.target.closest('.schema-view__table, .schema-view__cluster-label, .schema-view__gravity-dock, .schema-view__gravity-zone')
+				!event.target.closest(
+					'.schema-view__table, .schema-view__cluster-label, .schema-view__gravity-dock, .schema-view__gravity-zone'
+				)
 			)
 				clearFocus();
 		}
 		function wheel(event: WheelEvent) {
-			if (event.target instanceof Element && event.target.closest('.schema-view__gravity-dock')) return;
+			if (event.target instanceof Element && event.target.closest('.schema-view__gravity-dock'))
+				return;
 			if (!(event.buttons & 1) && !leftButtonHeld) return;
 			event.preventDefault();
 			const delta =
@@ -1367,15 +1363,22 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 			if (draggedClusterDomain && clusterDragOrigin) {
 				clusterDragStartClientX = event.clientX;
 				clusterDragStartClientY = event.clientY;
-				clusterDragOrigin = new Map(
+				clusterDragOrigin = toMap(
 					positions
 						.filter((position) => clusterDragOrigin?.has(position.tableId))
 						.map((position) => [position.tableId, { x: position.x, y: position.y }])
 				);
 			}
 			if (gravityDrag) {
-				const zone = gravityZones.find(zone=>zone.id===gravityDrag!.id);
-				if (zone) gravityDrag = {...gravityDrag,x:zone.x,y:zone.y,clientX:event.clientX,clientY:event.clientY};
+				const zone = gravityZones.find((zone) => zone.id === gravityDrag!.id);
+				if (zone)
+					gravityDrag = {
+						...gravityDrag,
+						x: zone.x,
+						y: zone.y,
+						clientX: event.clientX,
+						clientY: event.clientY
+					};
 			}
 			zoom = nextZoom;
 			props.onZoomChange?.(nextZoom);
@@ -1428,20 +1431,53 @@ export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
 
 	return {
 		attachNavigation,
-		get panning() { return panning; },
-		get hasFocus() { return hasFocus; },
-		get focusTableIds() { return focusTableIds; },
-		get hoveredClusterDomain() { return hoveredClusterDomain; },
-		get gravityRadius() { return gravityRadius; },
-		get gravityStrength() { return gravityStrength; },
-		get gravityZones() { return gravityZones; },
-		get gravityEditing() { return gravityEditing; },
-		get selectedGravityZoneId() { return selectedGravityZoneId; },
-		setGravityRadius,setGravityStrength,setGravityEditing,selectGravityZone,addGravityZone,
-		updateGravityZone,removeGravityZone,resetGravity,startGravityDrag,moveGravityDrag,stopGravityDrag,
-		get viewport() { return viewport; },
-		set viewport(value: HTMLElement | undefined) { viewport = value; },
-		get focusPadding() { return focusPadding; },
+		get panning() {
+			return panning;
+		},
+		get hasFocus() {
+			return hasFocus;
+		},
+		get focusTableIds() {
+			return focusTableIds;
+		},
+		get hoveredClusterDomain() {
+			return hoveredClusterDomain;
+		},
+		get gravityRadius() {
+			return gravityRadius;
+		},
+		get gravityStrength() {
+			return gravityStrength;
+		},
+		get gravityZones() {
+			return gravityZones;
+		},
+		get gravityEditing() {
+			return gravityEditing;
+		},
+		get selectedGravityZoneId() {
+			return selectedGravityZoneId;
+		},
+		setGravityRadius,
+		setGravityStrength,
+		setGravityEditing,
+		selectGravityZone,
+		addGravityZone,
+		updateGravityZone,
+		removeGravityZone,
+		resetGravity,
+		startGravityDrag,
+		moveGravityDrag,
+		stopGravityDrag,
+		get viewport() {
+			return viewport;
+		},
+		set viewport(value: HTMLElement | undefined) {
+			viewport = value;
+		},
+		get focusPadding() {
+			return focusPadding;
+		},
 		get document() {
 			return document;
 		},

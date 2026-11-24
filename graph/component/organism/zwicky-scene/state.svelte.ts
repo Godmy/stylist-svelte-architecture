@@ -5,6 +5,10 @@ import type { RecipeZwickyScene } from '$stylist/graph/interface/recipe/zwicky-s
 import { GRAPH_ZWICKY_SCENE_MESSAGE } from '$stylist/graph/const/record/zwicky-scene-message';
 import { useMessage } from '$stylist/localization/function/hook/use-message';
 import type { ZwickyNode } from '$stylist/graph/interface/slot/zwicky-node';
+import { toMap } from '$stylist/theme/function/script/collection/to-map';
+import { toSet } from '$stylist/theme/function/script/collection/to-set';
+import { toggleInSet } from '$stylist/theme/function/script/collection/toggle-in-set';
+import { withMapEntry } from '$stylist/theme/function/script/collection/with-map-entry';
 
 export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	const props = $derived(getProps());
@@ -16,15 +20,15 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	let nodeCount = $state(0);
 	let edgeCount = $state(0);
 	let isLoaded = $state(false);
-	let domainFilter = $state(new Set<string>());
-	let clusterFilter = $state(new Set<string>());
+	let domainFilter = $state(toSet<string>());
+	let clusterFilter = $state(toSet<string>());
 	let containerWidth = $state(800);
 	let containerHeight = $state(600);
-	let facetFilter = $state(new Map<string, Set<string>>());
+	let facetFilter = $state(toMap<string, Set<string>>());
 	let filterQuery = $state('');
 	let includeRelated = $state(true);
 	let showLinks = $state(true);
-	let hiddenEdgeToggles = $state<ReadonlySet<string>>(new Set());
+	let hiddenEdgeToggles = $state<ReadonlySet<string>>(toSet());
 	let panelOpen = $state(true);
 	let viewCounts = $state({ nodes: 0, edges: 0, matched: 0, related: 0 });
 	let allNodeIds: string[] = [];
@@ -145,13 +149,8 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	}
 
 	function toggleFacet(group: string, id: string): void {
-		const next = new Map(facetFilter);
-		const selected = new Set(next.get(group) ?? []);
-		if (selected.has(id)) selected.delete(id);
-		else selected.add(id);
-		if (selected.size) next.set(group, selected);
-		else next.delete(group);
-		facetFilter = next;
+		const selected = toggleInSet(facetFilter.get(group) ?? [], id);
+		facetFilter = withMapEntry(facetFilter, group, selected.size ? selected : undefined);
 		applyFacets();
 	}
 
@@ -166,11 +165,10 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	}
 
 	function toggleEdgeKind(id: string): void {
-		const next = new Set(hiddenEdgeToggles);
-		if (!next.delete(id)) next.add(id);
+		const next = toggleInSet(hiddenEdgeToggles, id);
 		hiddenEdgeToggles = next;
 		manager.setHiddenEdgeKinds(
-			new Set(
+			toSet(
 				(props.scheme?.edgeToggles ?? [])
 					.filter((toggle) => next.has(toggle.id))
 					.map((toggle) => `${toggle.from}>${toggle.to}`)
@@ -238,31 +236,24 @@ export function createZwickySceneState(getProps: () => RecipeZwickyScene) {
 	}
 
 	function toggleDomain(domain: string): void {
-		const next = new Set(domainFilter);
-		if (next.has(domain)) {
-			next.delete(domain);
-		} else {
-			next.add(domain);
-		}
+		const next = toggleInSet(domainFilter, domain);
 		domainFilter = next;
 		manager.setDomainFilter(next);
 	}
 
 	function clearFilter(): void {
-		facetFilter = new Map();
+		facetFilter = toMap();
 		filterQuery = '';
-		domainFilter = new Set();
-		clusterFilter = new Set();
-		manager.setDomainFilter(new Set());
-		manager.setClusterFilter(new Set());
+		domainFilter = toSet();
+		clusterFilter = toSet();
+		manager.setDomainFilter(toSet());
+		manager.setClusterFilter(toSet());
 		if (props.scheme?.filterGroups) applyFacets();
 		else clearSelection();
 	}
 
 	function toggleCluster(cluster: string): void {
-		const next = new Set(clusterFilter);
-		if (next.has(cluster)) next.delete(cluster);
-		else next.add(cluster);
+		const next = toggleInSet(clusterFilter, cluster);
 		clusterFilter = next;
 		manager.setClusterFilter(next);
 	}

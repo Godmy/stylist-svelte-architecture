@@ -2,6 +2,8 @@ import type {
 	Idef0Activity,
 	RecipeIdef0Decomposition
 } from '$stylist/idef-zero/interface/recipe/idef0-decomposition';
+import { toMap } from '$stylist/theme/function/script/collection/to-map';
+import { toSet } from '$stylist/theme/function/script/collection/to-set';
 
 type Point = [number, number];
 type Side = 'left' | 'top' | 'right' | 'bottom';
@@ -74,16 +76,19 @@ export function layoutIdef0Decomposition(props: RecipeIdef0Decomposition) {
 	const labelChars = 26;
 	const label = (id: string) => props.arrows.find((arrow) => arrow.id === id);
 	const activities = props.activities;
-	const index = new Map(activities.map((activity, i) => [activity.id, i]));
-	const producer = new Map<string, number>();
-	activities.forEach((activity, i) =>
-		(activity.outputs ?? []).forEach((id) => producer.has(id) || producer.set(id, i))
+	const index = toMap(activities.map((activity, i) => [activity.id, i] as const));
+	// The first activity producing an arrow owns it: reversed, earlier entries win.
+	const producer = toMap(
+		activities
+			.flatMap((activity, i) => (activity.outputs ?? []).map((id) => [id, i] as const))
+			.reverse()
 	);
-	const consumed = new Set<string>();
-	activities.forEach((activity, i) =>
-		[...(activity.inputs ?? []), ...(activity.controls ?? [])].forEach((id) => {
-			if ((producer.get(id) ?? Infinity) < i) consumed.add(id);
-		})
+	const consumed = toSet(
+		activities.flatMap((activity, i) =>
+			[...(activity.inputs ?? []), ...(activity.controls ?? [])].filter(
+				(id) => (producer.get(id) ?? Infinity) < i
+			)
+		)
 	);
 	const internal = (id: string, i: number) => (producer.get(id) ?? Infinity) < i;
 	// Internal controls first (leftmost): boundary control labels then extend away from them.
@@ -134,32 +139,42 @@ export function layoutIdef0Decomposition(props: RecipeIdef0Decomposition) {
 		(last ? last.y + H : top) + (mechanismStacks[boxes.length - 1]?.band ?? 0) + MARGIN * 2;
 
 	// Port positions on every side of every box.
-	const port = new Map<string, Point>();
 	const key = (i: number, side: Side, id: string) => `${i}:${side}:${id}`;
-	activities.forEach((a, i) => {
-		const b = boxes[i];
-		(a.inputs ?? []).forEach((id, k, all) =>
-			port.set(key(i, 'left', id), [b.x, spread(b.y, H, all.length, k)])
-		);
-		controlsOf(a, i).forEach((id, k, all) =>
-			port.set(key(i, 'top', id), [spread(b.x, W, all.length, k), b.y])
-		);
-		outputsOf(a).forEach((id, k, all) =>
-			port.set(key(i, 'right', id), [b.x + W, spread(b.y, H, all.length, k)])
-		);
-		(a.mechanisms ?? []).forEach((id, k, all) =>
-			port.set(key(i, 'bottom', id), [spread(b.x, W, all.length, k), b.y + H])
-		);
-	});
+	const port = toMap(
+		activities.flatMap((a, i) => {
+			const b = boxes[i];
+			return [
+				...(a.inputs ?? []).map(
+					(id, k, all) =>
+						[key(i, 'left', id), [b.x, spread(b.y, H, all.length, k)] as Point] as const
+				),
+				...controlsOf(a, i).map(
+					(id, k, all) =>
+						[key(i, 'top', id), [spread(b.x, W, all.length, k), b.y] as Point] as const
+				),
+				...outputsOf(a).map(
+					(id, k, all) =>
+						[key(i, 'right', id), [b.x + W, spread(b.y, H, all.length, k)] as Point] as const
+				),
+				...(a.mechanisms ?? []).map(
+					(id, k, all) =>
+						[key(i, 'bottom', id), [spread(b.x, W, all.length, k), b.y + H] as Point] as const
+				)
+			];
+		})
+	);
 
 	// Lanes: per producer, outputs that feed later inputs, higher port → outer lane.
-	const lane = new Map<string, number>();
-	activities.forEach((a, i) => {
-		const fed = outputsOf(a).filter((id) =>
-			activities.some((t, j) => j > i && (t.inputs ?? []).includes(id))
-		);
-		fed.forEach((id, order) => lane.set(id, boxes[i].x + W + 18 + LANE * (fed.length - 1 - order)));
-	});
+	const lane = toMap(
+		activities.flatMap((a, i) => {
+			const fed = outputsOf(a).filter((id) =>
+				activities.some((t, j) => j > i && (t.inputs ?? []).includes(id))
+			);
+			return fed.map(
+				(id, order) => [id, boxes[i].x + W + 18 + LANE * (fed.length - 1 - order)] as const
+			);
+		})
+	);
 
 	const arrows: Idef0LaidArrow[] = [];
 	const text = (id: string) => wrapIdef0Text(label(id)?.label ?? id, labelChars);
