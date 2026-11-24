@@ -4,6 +4,7 @@ export { mergeSchemaDocuments } from './merge';
 export { serializeSchemaRoutePath } from './serialize';
 export {
 	bundleSchemaDependencyRoutes,
+	orderDomainsByConnectionStrength,
 	schemaDocumentToText,
 	schemaTextToDocument
 } from './transform';

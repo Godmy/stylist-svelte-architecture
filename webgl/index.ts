@@ -26,6 +26,5 @@ export type {
 	RecipeInterferenceFieldScene,
 	RecipeSceneLauncher,
 	RecipeShaderField,
-	RecipeTurtleDissolveScene,
-	SlotShaderField
+	RecipeTurtleDissolveScene
 } from './interface';

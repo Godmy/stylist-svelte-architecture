@@ -24,6 +24,20 @@
 		untrack(() => state.syncFromProps(incoming));
 	});
 
+	// Follow a shared view (the teacher's) whenever it or the board size changes.
+	$effect(() => {
+		const view = contract.view;
+		void state.viewportWidth;
+		void state.viewportHeight;
+		untrack(() => state.applyView(view));
+	});
+
+	$effect(() => {
+		const view = state.view;
+		if (!state.viewportWidth || !state.viewportHeight) return;
+		untrack(() => contract.onViewChange?.(view));
+	});
+
 	$effect(() => {
 		const element = state.viewportElement;
 		if (!element) return;
@@ -61,6 +75,7 @@
 <svelte:window
 	onkeydown={(event) => state.hasFocus() && state.keyDown(event)}
 	onkeyup={(event) => state.keyUp(event)}
+	onpaste={(event) => state.hasFocus() && state.paste(event)}
 />
 
 <div
@@ -97,6 +112,8 @@
 		onpointercancel={(event) =>
 			state.viewportElement && state.pointerUp(event, state.viewportElement)}
 		ondblclick={(event) => state.viewportElement && state.doubleClick(event, state.viewportElement)}
+		ondragover={(event) => state.dragOver(event)}
+		ondrop={(event) => state.viewportElement && state.drop(event, state.viewportElement)}
 	>
 		<div
 			class="c-shared-canvas__world"
@@ -146,7 +163,8 @@
 										object.shape,
 										object.width,
 										object.height,
-										(object.strokeWidth ?? 2) / 2
+										(object.strokeWidth ?? 2) / 2,
+										object.vertices
 									)}
 									fill={object.fill ?? 'transparent'}
 									stroke={object.color ?? 'currentColor'}
@@ -159,6 +177,13 @@
 							<div class="c-shared-canvas__frame-title">
 								{state.editingId === object.id ? '' : object.title || t('frameTitle')}
 							</div>
+						{:else if object.type === 'image'}
+							<img
+								class="c-shared-canvas__image"
+								src={object.src}
+								alt={object.alt ?? ''}
+								draggable="false"
+							/>
 						{:else if object.type === 'icon'}
 							<BaseIcon
 								name={object.icon}
@@ -221,7 +246,16 @@
 					style={ObjectManagerSharedCanvas.getBoxStyle(bounds)}
 					aria-hidden="true"
 				></div>
-				{#if single && !state.readonly}
+				{#if state.selectionLocked}
+					<div
+						class="c-shared-canvas__lock-badge"
+						style="left: {bounds.x + bounds.width}px; top: {bounds.y}px;"
+						title={t('locked')}
+					>
+						{@render glyph('lock', 12)}
+					</div>
+				{/if}
+				{#if single && !single.locked && !state.readonly}
 					{#if single.type === 'line'}
 						{#each [['start', single.points[0]], ['end', single.points[1]]] as const as [handle, point] (handle)}
 							<div
@@ -281,8 +315,8 @@
 			aria-label={t('tools')}
 			aria-orientation="vertical"
 		>
-			{#each ObjectManagerSharedCanvas.toolDefinitions as definition (definition.id)}
-				{#if !state.readonly || definition.id === 'select' || definition.id === 'hand'}
+			{#each state.availableTools as definition (definition.id)}
+				{#if definition.id !== 'image' || !state.readonly}
 					<button
 						type="button"
 						class={['c-shared-canvas__tool', state.tool === definition.id && 'is-active']}
@@ -338,7 +372,7 @@
 
 		{#if state.openMenu === 'shape'}
 			<div class="c-shared-canvas__flyout" role="menu" aria-label={t('shape')}>
-				{#each CANVAS_SHAPE_KIND as shape (shape)}
+				{#each CANVAS_SHAPE_KIND.filter((kind) => kind !== 'polygon') as shape (shape)}
 					<button
 						type="button"
 						role="menuitemradio"
@@ -513,6 +547,29 @@
 								{@render glyph(direction, 16)}
 							</button>
 						{/each}
+						{#if state.isTeacher}
+							<button
+								type="button"
+								class={['c-shared-canvas__chip', state.selectionLocked && 'is-active']}
+								aria-pressed={state.selectionLocked}
+								aria-label={t(state.selectionLocked ? 'unlock' : 'lock')}
+								title={t(state.selectionLocked ? 'unlock' : 'lock')}
+								onclick={() => state.toggleLockSelected()}
+							>
+								{@render glyph(state.selectionLocked ? 'unlock' : 'lock', 16)}
+							</button>
+						{/if}
+						{#if state.canRecognize}
+							<button
+								type="button"
+								class="c-shared-canvas__chip"
+								aria-label={t('recognize')}
+								title={t('recognize')}
+								onclick={() => state.recognizeSelected()}
+							>
+								{@render glyph('magic', 16)}
+							</button>
+						{/if}
 						<button
 							type="button"
 							class="c-shared-canvas__chip"
@@ -584,10 +641,18 @@
 				hidden
 				onchange={(event) => state.importFile(event.currentTarget)}
 			/>
+			<input
+				bind:this={state.imageInput}
+				type="file"
+				accept="image/*"
+				multiple
+				hidden
+				onchange={(event) => state.pickImages(event.currentTarget)}
+			/>
 		{/if}
 	</div>
 
-	{#if contract.showZoomControls ?? true}
+	{#if (contract.showZoomControls ?? true) && !state.lockView}
 		<div class="c-shared-canvas__zoom" role="group" aria-label={t('zoomReset')}>
 			<button
 				type="button"
@@ -676,6 +741,28 @@
 		box-sizing: border-box;
 		pointer-events: none;
 		overflow: visible;
+	}
+
+	.c-shared-canvas__image {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: fill;
+		user-select: none;
+	}
+
+	.c-shared-canvas__lock-badge {
+		position: absolute;
+		display: grid;
+		place-items: center;
+		width: 20px;
+		height: 20px;
+		/* Keeps a constant on-screen size at any zoom. */
+		transform: translate(-50%, -50%) scale(calc(1 / var(--zoom, 1)));
+		border-radius: 999px;
+		background: #2563eb;
+		color: #ffffff;
+		pointer-events: none;
 	}
 
 	.c-shared-canvas__item--icon {
@@ -882,7 +969,7 @@
 		left: 64px;
 		top: 12px;
 		display: grid;
-		grid-template-columns: repeat(4, 36px);
+		grid-template-columns: repeat(5, 36px);
 		gap: 2px;
 		padding: 6px;
 		border-radius: 10px;

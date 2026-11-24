@@ -8,4 +8,3 @@ export type {
 	RecipeShaderField,
 	RecipeTurtleDissolveScene
 } from './recipe';
-export type { SlotShaderField } from './slot';

@@ -21,7 +21,9 @@ export default {
 				width: 360,
 				height: 220,
 				fill: '#ffffff',
-				color: '#9ca3af'
+				color: '#9ca3af',
+				// Pinned by the teacher: students draw on it but cannot move it.
+				locked: true
 			},
 			{
 				id: 'square1',
@@ -128,7 +130,9 @@ export default {
 		showToolbar: true,
 		showZoomControls: true,
 		showGrid: true,
-		readonly: false
+		readonly: false,
+		role: 'teacher',
+		lockView: false
 	},
 	controls: {
 		height: { type: 'select', options: [400, 500, 600, 700] },
@@ -140,11 +144,23 @@ export default {
 		showToolbar: { type: 'boolean' },
 		showZoomControls: { type: 'boolean' },
 		showGrid: { type: 'boolean' },
-		readonly: { type: 'boolean' }
+		readonly: { type: 'boolean' },
+		role: { type: 'select', options: ['teacher', 'student'] },
+		lockView: { type: 'boolean' }
 	},
 	presets: {
 		'Read only': { readonly: true },
 		'Empty board': { objects: [] },
-		Pen: { selectedTool: 'pen' }
+		Pen: { selectedTool: 'pen' },
+		'Smart pen': { selectedTool: 'magic', objects: [] },
+		'Student (simple tools)': {
+			role: 'student',
+			allowedTools: ['select', 'pen', 'sticky', 'eraser', 'image']
+		},
+		'Student following the teacher': {
+			role: 'student',
+			lockView: true,
+			view: { center: { x: 400, y: 250 }, zoom: 1.5 }
+		}
 	}
 } satisfies ContractStory<RecipeSharedCanvas>;

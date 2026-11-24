@@ -3,6 +3,8 @@ export { CanvasManager } from './canvas';
 export { CanvasBoardManager } from './canvas-board';
 export { CanvasGeometryManager } from './canvas-geometry';
 export { CanvasHistoryManager } from './canvas-history';
+export { CanvasImageManager } from './canvas-image';
+export { CanvasRecognitionManager } from './canvas-recognition';
 export { CanvasShapeManager } from './canvas-shape';
 export { CanvasSurfaceManager } from './canvas-surface';
 export { CanvasViewportManager } from './canvas-viewport';

@@ -1,7 +1,6 @@
 /** AREA: STYLIST CODER MODEL -> AUTO-GENERATED */
 export type {
 	RecipeErdDependency,
-	RecipeErdSchemaView,
 	RecipeErdTable,
 	RecipeErdTableField,
 	RecipeErdTableHeader,
@@ -9,11 +8,7 @@ export type {
 	RecipeSchemaGravity,
 	RecipeSchemaHeader,
 	RecipeSchemaText,
-	RecipeSchemaTool
+	RecipeSchemaTool,
+	RecipeSchemaView
 } from './recipe';
-export type {
-	SlotErdHeader,
-	SlotErdSettings,
-	SlotErdText,
-	SlotErdTool
-} from './slot';
+export type { SlotErdSettings } from './slot';

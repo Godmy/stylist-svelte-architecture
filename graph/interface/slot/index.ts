@@ -1,5 +1,4 @@
 /** AREA: STYLIST CODER MODEL -> AUTO-GENERATED */
-export type { SlotFieldHighlighter } from './field-highlighter';
 export type { SlotFieldHighlighterSelectedField } from './field-highlighter-selected-field';
 export type { GraphBounds3D } from './graph-bounds-3d';
 export type { GraphConnection } from './graph-connection';

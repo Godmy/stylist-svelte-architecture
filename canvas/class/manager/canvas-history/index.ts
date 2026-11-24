@@ -40,6 +40,18 @@ export class CanvasHistoryManager {
 		};
 	}
 
+	/**
+	 * Applies `update` to every snapshot, so a change made by someone else
+	 * stays in place when this user undoes or redoes their own steps.
+	 */
+	static rebase<T>(history: CanvasHistory<T>, update: (snapshot: T) => T): CanvasHistory<T> {
+		return {
+			past: history.past.map(update),
+			present: update(history.present),
+			future: history.future.map(update)
+		};
+	}
+
 	static canUndo<T>(history: CanvasHistory<T>): boolean {
 		return history.past.length > 0;
 	}

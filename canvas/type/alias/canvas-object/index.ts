@@ -7,6 +7,7 @@ import type { TokenIconName } from '$stylist/svg/type/alias/icon-name';
 
 /**
  * Object on a shared canvas, discriminated by `type`, in world coordinates.
+ * `image` shows a picture stretched to its box.
  * Box objects occupy `x`/`y`/`width`/`height`; `line` and `path` are point lists.
  * `color` is the stroke or text color, `fill` the background.
  */
@@ -15,6 +16,8 @@ export type CanvasObject =
 			SlotSharedCanvasObjectBounds & {
 				type: 'shape';
 				shape: CanvasShapeKind;
+				/** Corners of a `polygon` shape, normalized to the box (`0..1`). */
+				vertices?: Point2D[];
 				fill?: string;
 				strokeWidth?: number;
 				text?: string;
@@ -32,6 +35,13 @@ export type CanvasObject =
 	| (SlotCanvasObject &
 			SlotSharedCanvasObjectBounds & { type: 'frame'; title?: string; fill?: string })
 	| (SlotCanvasObject & SlotSharedCanvasObjectBounds & { type: 'icon'; icon: TokenIconName })
+	| (SlotCanvasObject &
+			SlotSharedCanvasObjectBounds & {
+				type: 'image';
+				/** Image URL (an uploaded file or a `data:` URL). */
+				src: string;
+				alt?: string;
+			})
 	| (SlotCanvasObject & {
 			type: 'line';
 			points: [Point2D, Point2D];

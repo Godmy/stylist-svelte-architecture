@@ -36,7 +36,6 @@ export type {
 	SceneMaterial,
 	SceneMolecule,
 	SceneText,
-	SlotFieldHighlighter,
 	SlotFieldHighlighterSelectedField,
 	SlotGraphEdge,
 	SlotGraphNode,

@@ -24,6 +24,7 @@ export {
 	bundleSchemaDependencyRoutes,
 	createSchemaDependencyRoutes,
 	mergeSchemaDocuments,
+	orderDomainsByConnectionStrength,
 	schemaDocumentToText,
 	schemaTextToDocument,
 	serializeSchemaRoutePath
@@ -41,7 +42,6 @@ export type {
 } from './type';
 export type {
 	RecipeErdDependency,
-	RecipeErdSchemaView,
 	RecipeErdTable,
 	RecipeErdTableField,
 	RecipeErdTableHeader,
@@ -50,8 +50,6 @@ export type {
 	RecipeSchemaHeader,
 	RecipeSchemaText,
 	RecipeSchemaTool,
-	SlotErdHeader,
-	SlotErdSettings,
-	SlotErdText,
-	SlotErdTool
+	RecipeSchemaView,
+	SlotErdSettings
 } from './interface';

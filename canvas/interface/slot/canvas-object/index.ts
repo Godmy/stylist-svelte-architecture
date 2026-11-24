@@ -4,4 +4,9 @@ export interface SlotCanvasObject {
 	color?: string;
 	/** Author of the object on a shared canvas. */
 	userId?: string;
+	/**
+	 * Pinned by the teacher: nobody can move, resize, erase or delete it, and
+	 * students cannot select it (pen strokes go on top of it).
+	 */
+	locked?: boolean;
 }

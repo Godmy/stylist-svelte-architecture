@@ -111,6 +111,12 @@ export class ObjectManagerSharedCanvas {
 			toolbarClass: _toolbarClass,
 			canvasClass: _canvasClass,
 			variant: _variant,
+			role: _role,
+			allowedTools: _allowedTools,
+			view: _view,
+			onViewChange: _onViewChange,
+			lockView: _lockView,
+			onImageUpload: _onImageUpload,
 			class: _class,
 			...rest
 		} = contract;

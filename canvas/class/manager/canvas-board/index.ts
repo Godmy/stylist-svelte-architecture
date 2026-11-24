@@ -1,5 +1,6 @@
 import { CanvasManager } from '$stylist/canvas/class/manager/canvas';
 import { CanvasGeometryManager } from '$stylist/canvas/class/manager/canvas-geometry';
+import { CanvasRecognitionManager } from '$stylist/canvas/class/manager/canvas-recognition';
 import type { Point2D } from '$stylist/canvas/interface/slot/point-2d';
 import type { CanvasObject } from '$stylist/canvas/type/alias/canvas-object';
 import type { SharedCanvasTool } from '$stylist/canvas/type/alias/shared-canvas-tool';
@@ -9,14 +10,15 @@ import type { CanvasBoardStyle } from '$stylist/canvas/type/object/canvas-board-
 export class CanvasBoardManager {
 	/** Size of an object placed by a click without dragging. */
 	static readonly defaultSize: Record<
-		'text' | 'sticky' | 'shape' | 'frame' | 'icon',
+		'text' | 'sticky' | 'shape' | 'frame' | 'icon' | 'image',
 		{ width: number; height: number }
 	> = {
 		text: { width: 220, height: 40 },
 		sticky: { width: 200, height: 200 },
 		shape: { width: 160, height: 120 },
 		frame: { width: 480, height: 320 },
-		icon: { width: 64, height: 64 }
+		icon: { width: 64, height: 64 },
+		image: { width: 320, height: 240 }
 	};
 
 	static readonly dragThreshold = 4;
@@ -32,7 +34,7 @@ export class CanvasBoardManager {
 	};
 
 	static isCreationTool(tool: SharedCanvasTool): boolean {
-		return tool !== 'select' && tool !== 'hand' && tool !== 'eraser';
+		return tool !== 'select' && tool !== 'hand' && tool !== 'eraser' && tool !== 'image';
 	}
 
 	static createDraft(
@@ -47,6 +49,7 @@ export class CanvasBoardManager {
 
 		switch (tool) {
 			case 'pen':
+			case 'magic':
 				return { ...base, type: 'path', points: [{ ...point }], strokeWidth: style.strokeWidth };
 			case 'line':
 			case 'arrow':
@@ -148,6 +151,56 @@ export class CanvasBoardManager {
 		const x = draft.type === 'text' ? start.x : start.x - size.width / 2;
 		const y = start.y - size.height / 2;
 		return { ...draft, x, y, width: size.width, height: size.height };
+	}
+
+	/** Picture of `size` centered on `center`. */
+	static createImage(
+		src: string,
+		center: Point2D,
+		size: { width: number; height: number },
+		userId?: string
+	): CanvasObject {
+		return {
+			id: CanvasManager.createCanvasObjectId(),
+			userId,
+			type: 'image',
+			src,
+			x: Math.round(center.x - size.width / 2),
+			y: Math.round(center.y - size.height / 2),
+			width: size.width,
+			height: size.height
+		};
+	}
+
+	/**
+	 * The shape or straight line a freehand `path` depicts, keeping its id,
+	 * color and line width (fill and font come from `style`); other objects
+	 * and unrecognized strokes are returned unchanged.
+	 */
+	static recognize(object: CanvasObject, style: CanvasBoardStyle): CanvasObject {
+		if (object.type !== 'path') return object;
+		const result = CanvasRecognitionManager.recognize(object.points);
+		if (!result) return object;
+
+		const base = { id: object.id, userId: object.userId, color: object.color };
+		const strokeWidth = object.strokeWidth ?? style.strokeWidth;
+		if (result.kind === 'line') {
+			return { ...base, type: 'line', points: result.points, arrow: false, strokeWidth };
+		}
+		return {
+			...base,
+			type: 'shape',
+			shape: result.shape,
+			...(result.vertices ? { vertices: result.vertices } : {}),
+			x: result.x,
+			y: result.y,
+			width: result.width,
+			height: result.height,
+			fill: style.fill,
+			strokeWidth,
+			text: '',
+			font: { ...style.font, align: 'center' }
+		};
 	}
 
 	/** Whether an object carries editable text (double-click opens the editor). */

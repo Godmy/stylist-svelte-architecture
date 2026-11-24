@@ -2,6 +2,7 @@ import { CANVAS_ZOOM_LIMITS } from '$stylist/canvas/const/map/canvas-zoom-limits
 import type { Point2D } from '$stylist/canvas/interface/slot/point-2d';
 import type { SlotSharedCanvasObjectBounds } from '$stylist/canvas/interface/slot/shared-canvas-object-bounds';
 import type { CanvasViewport } from '$stylist/canvas/type/object/canvas-viewport';
+import type { CanvasView } from '$stylist/canvas/type/object/canvas-view';
 
 /** Pan and zoom of an infinite canvas; screen points are relative to the viewport element. */
 export class CanvasViewportManager {
@@ -67,5 +68,22 @@ export class CanvasViewportManager {
 			x: width / 2 - (bounds.x + bounds.width / 2) * zoom,
 			y: height / 2 - (bounds.y + bounds.height / 2) * zoom
 		};
+	}
+
+	/** What a `width` x `height` board shows: its middle in world coordinates and the zoom. */
+	static getView(viewport: CanvasViewport, width: number, height: number): CanvasView {
+		return {
+			center: {
+				x: Math.round(((width / 2 - viewport.x) / viewport.zoom) * 100) / 100,
+				y: Math.round(((height / 2 - viewport.y) / viewport.zoom) * 100) / 100
+			},
+			zoom: viewport.zoom
+		};
+	}
+
+	/** Viewport of a `width` x `height` board centered on `view`. */
+	static fromView(view: CanvasView, width: number, height: number): CanvasViewport {
+		const zoom = CanvasViewportManager.clampZoom(view.zoom);
+		return { x: width / 2 - view.center.x * zoom, y: height / 2 - view.center.y * zoom, zoom };
 	}
 }

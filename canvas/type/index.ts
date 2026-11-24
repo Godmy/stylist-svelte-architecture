@@ -1,7 +1,9 @@
 /** AREA: STYLIST CODER MODEL -> AUTO-GENERATED */
 export type {
+	CanvasBoardRole,
 	CanvasFontFamily,
 	CanvasObject,
+	CanvasRecognition,
 	CanvasResizeHandle,
 	CanvasShapeKind,
 	CanvasToolbarDrawingTool,
@@ -15,9 +17,11 @@ export type {
 	CanvasFont,
 	CanvasStroke,
 	CanvasUser,
+	CanvasView,
 	CanvasViewport
 } from './object';
 export type {
+	CanvasChange,
 	CanvasHistory,
 	FoundationDepthThreshold
 } from './struct';

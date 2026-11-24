@@ -68,6 +68,60 @@ describe('SharedCanvas whiteboard', () => {
 		expect(world().querySelectorAll('[data-object-id]')).toHaveLength(1);
 	});
 
+	it('turns a hand-drawn square into a square with the smart pen', async () => {
+		const onChange = vi.fn<(objects: CanvasObject[]) => void>();
+		render(SharedCanvas, { onChange });
+
+		await fireEvent.click(screen.getByRole('button', { name: /Smart pen/ }));
+		const corners: [number, number][] = [
+			[100, 100],
+			[202, 104],
+			[198, 200],
+			[102, 198],
+			[104, 102]
+		];
+		await fireEvent.pointerDown(board(), pointer(...corners[0]));
+		for (let side = 0; side < corners.length - 1; side += 1) {
+			const [fromX, fromY] = corners[side];
+			const [toX, toY] = corners[side + 1];
+			for (let step = 1; step <= 10; step += 1) {
+				await fireEvent.pointerMove(
+					board(),
+					pointer(fromX + ((toX - fromX) * step) / 10, fromY + ((toY - fromY) * step) / 10)
+				);
+			}
+		}
+		await fireEvent.pointerUp(board(), pointer(...corners[corners.length - 1]));
+
+		const [shape] = onChange.mock.lastCall?.[0] ?? [];
+		expect(shape).toMatchObject({ type: 'shape', shape: 'rectangle' });
+		if (shape?.type === 'shape') expect(shape.width).toBeCloseTo(shape.height, 5);
+		// The smart pen stays active for the next figure.
+		expect(screen.getByRole('button', { name: /Smart pen/ }).getAttribute('aria-pressed')).toBe(
+			'true'
+		);
+	});
+
+	it('recognizes selected freehand strokes on demand', async () => {
+		const onChange = vi.fn<(objects: CanvasObject[]) => void>();
+		const points = Array.from({ length: 40 }, (_, index) => {
+			const angle = (index / 38) * Math.PI * 2;
+			return { x: 150 + Math.cos(angle) * 60, y: 150 + Math.sin(angle) * 60 };
+		});
+		render(SharedCanvas, {
+			objects: [{ id: 'stroke', type: 'path', points, strokeWidth: 2 }],
+			onChange
+		});
+
+		await fireEvent.pointerDown(board(), pointer(210, 150));
+		await fireEvent.pointerUp(board(), pointer(210, 150));
+		await fireEvent.click(screen.getByRole('button', { name: 'Turn strokes into shapes' }));
+
+		expect(onChange.mock.lastCall?.[0]).toEqual([
+			expect.objectContaining({ id: 'stroke', type: 'shape', shape: 'ellipse' })
+		]);
+	});
+
 	it('pans the board with the hand tool and zooms with the controls', async () => {
 		render(SharedCanvas);
 

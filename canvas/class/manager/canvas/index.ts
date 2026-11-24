@@ -1,4 +1,5 @@
 import { CANVAS_SHAPE_KIND } from '$stylist/canvas/const/array/canvas-shape-kind';
+import type { CanvasChange } from '$stylist/canvas/type/struct/canvas-change';
 import type { CanvasObject } from '$stylist/canvas/type/alias/canvas-object';
 
 /** Identity, copying, ordering, diffing and serialization of shared canvas objects. */
@@ -29,7 +30,7 @@ export class CanvasManager {
 	static diffCanvasObjects(
 		before: readonly CanvasObject[],
 		after: readonly CanvasObject[]
-	): { added: CanvasObject[]; updated: CanvasObject[]; removed: string[] } {
+	): CanvasChange {
 		const previous = new Map(before.map((object) => [object.id, JSON.stringify(object)]));
 		const nextIds = new Set(after.map((object) => object.id));
 		const added: CanvasObject[] = [];
@@ -46,6 +47,30 @@ export class CanvasManager {
 			updated,
 			removed: before.map((object) => object.id).filter((id) => !nextIds.has(id))
 		};
+	}
+
+	/**
+	 * Applies a change made elsewhere: replaces updated objects in place,
+	 * appends added ones (an id that already exists is updated instead) and
+	 * drops removed ids. Unchanged objects keep their identity.
+	 */
+	static applyCanvasChange(objects: readonly CanvasObject[], change: CanvasChange): CanvasObject[] {
+		const removed = new Set(change.removed);
+		const replacements = new Map(
+			[...change.added, ...change.updated].map((object) => [object.id, object])
+		);
+		const result = objects
+			.filter((object) => !removed.has(object.id))
+			.map((object) => {
+				const replacement = replacements.get(object.id);
+				if (!replacement) return object;
+				replacements.delete(object.id);
+				return replacement;
+			});
+		for (const object of change.added) {
+			if (replacements.has(object.id)) result.push(object);
+		}
+		return result;
 	}
 
 	static moveCanvasObject(object: CanvasObject, dx: number, dy: number): CanvasObject {
@@ -131,13 +156,18 @@ export class CanvasManager {
 		if (typeof object.id !== 'string' || !object.id) return false;
 		if (object.color !== undefined && typeof object.color !== 'string') return false;
 		if (object.userId !== undefined && typeof object.userId !== 'string') return false;
+		if (object.locked !== undefined && typeof object.locked !== 'boolean') return false;
 
 		switch (object.type) {
 			case 'shape':
 				return (
 					isBox() &&
 					(CANVAS_SHAPE_KIND as readonly unknown[]).includes(object.shape) &&
-					(object.text === undefined || isText(object.text))
+					(object.text === undefined || isText(object.text)) &&
+					(object.vertices === undefined ||
+						(Array.isArray(object.vertices) && object.vertices.every(isPoint))) &&
+					(object.shape !== 'polygon' ||
+						(Array.isArray(object.vertices) && object.vertices.length >= 3))
 				);
 			case 'text':
 			case 'sticky':
@@ -146,6 +176,13 @@ export class CanvasManager {
 				return isBox() && (object.title === undefined || isText(object.title));
 			case 'icon':
 				return isBox() && isText(object.icon);
+			case 'image':
+				return (
+					isBox() &&
+					typeof object.src === 'string' &&
+					Boolean(object.src) &&
+					(object.alt === undefined || isText(object.alt))
+				);
 			case 'line':
 				return (
 					Array.isArray(object.points) && object.points.length === 2 && object.points.every(isPoint)
