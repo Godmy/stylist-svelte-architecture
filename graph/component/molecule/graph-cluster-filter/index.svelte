@@ -1,37 +1,17 @@
 <script lang="ts">
-	import { ZWICKY_CLUSTER_ORDER } from '$stylist/graph/const/array/zwicky-cluster-order';
-	import { ZWICKY_CLUSTER_COLOR } from '$stylist/graph/const/record/zwicky-cluster-color';
-	import { GRAPH_GRAPH_CLUSTER_FILTER_MESSAGE } from '$stylist/graph/const/record/graph-cluster-filter-message';
-	import { useMessage } from '$stylist/localization/function/hook/use-message';
 	import type { RecipeGraphClusterFilter } from '$stylist/graph/interface/recipe/graph-cluster-filter';
+	import createGraphClusterFilterComponentState from '$stylist/graph/component/molecule/graph-cluster-filter/state.svelte';
 
 	let { activeClusters, onClusterClick, clusters, title }: RecipeGraphClusterFilter = $props();
-	const t = useMessage('graph-cluster-filter', GRAPH_GRAPH_CLUSTER_FILTER_MESSAGE);
 
-	// Own clusters, or the library's assembly layers in their fixed order.
-	const entries = $derived(
-		clusters ??
-			ZWICKY_CLUSTER_ORDER.map((cluster) => ({
-				id: cluster,
-				label: cluster,
-				color: ZWICKY_CLUSTER_COLOR[cluster] ?? ([0.5, 0.5, 0.5] as const)
-			}))
-	);
-
-	const hex = (v: number) =>
-		Math.round(v * 255)
-			.toString(16)
-			.padStart(2, '0');
-	function toHex(c: readonly [number, number, number]) {
-		return `#${hex(c[0])}${hex(c[1])}${hex(c[2])}`;
-	}
+	const state = createGraphClusterFilterComponentState(() => ({ clusters: clusters }));
 </script>
 
-<nav class="graph-cluster-filter" aria-label={t('label')}>
-	<p class="graph-cluster-filter__label">{title ?? t('title')}</p>
+<nav class="graph-cluster-filter" aria-label={state.t('label')}>
+	<p class="graph-cluster-filter__label">{title ?? state.t('title')}</p>
 	<ul class="graph-cluster-filter__list">
-		{#each entries as { id: cluster, label, color } (cluster)}
-			{@const cssColor = toHex(color)}
+		{#each state.entries as { id: cluster, label, color } (cluster)}
+			{@const cssColor = state.toHex(color)}
 			{@const active = activeClusters?.has(cluster) ?? false}
 			<li>
 				<button
@@ -39,7 +19,7 @@
 					class:graph-cluster-filter__pill--active={active}
 					style="--c:{cssColor}"
 					onclick={() => onClusterClick?.(cluster)}
-					title={clusters ? label : t('toggle', { cluster })}
+					title={clusters ? label : state.t('toggle', { cluster })}
 				>
 					<span class="graph-cluster-filter__dot"></span>
 					{label}

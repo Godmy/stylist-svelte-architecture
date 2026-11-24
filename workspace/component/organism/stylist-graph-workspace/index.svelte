@@ -1,71 +1,13 @@
 <script lang="ts">
-	const browser = typeof window !== 'undefined';
-	import { onDestroy, untrack } from 'svelte';
-	import type { SceneCamera } from '$stylist/graph/interface/slot/scene-camera';
 	import NodeConnection from '$stylist/workspace/component/atom/node-connection/index.svelte';
 	import NodeIcon from '$stylist/graph/component/atom/node-icon/index.svelte';
 	import Viewport from '$stylist/workspace/component/atom/viewport/index.svelte';
-
 	import type { TOKEN_THEME_MODE } from '$stylist/theme/const/array/theme-mode';
-	import type { GraphToolMode } from '$stylist/graph/type/alias/graph-tool-mode';
+
 	import type { GraphNodeCategory } from '$stylist/graph/type/alias/graph-node-category';
-	import type { GraphWorkspaceNode } from '$stylist/workspace/interface/slot/graph-workspace-node';
-	import type { GraphWorkspaceConnection } from '$stylist/workspace/interface/slot/graph-workspace-connection';
-	import type { GraphWorkspaceConnectionInput } from '$stylist/workspace/type/alias/graph-workspace-connection-input';
-	import type { GraphNodeDraft } from '$stylist/workspace/interface/slot/graph-node-draft';
-	import { WORKSPACE_STYLIST_GRAPH_WORKSPACE_MESSAGE } from '$stylist/workspace/const/record/stylist-graph-workspace-message';
-	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	import type { RecipeStylistGraphWorkspace } from '$stylist/workspace/interface/recipe/stylist-graph-workspace';
-
-	const THEME_OPTIONS: (typeof TOKEN_THEME_MODE)[number][] = ['default', 'light', 'dark'];
-	const TOOL_OPTIONS: { mode: GraphToolMode; label: string }[] = [
-		{ mode: 'select', label: 'Select' },
-		{ mode: 'pan', label: 'Pan' },
-		{ mode: 'frame', label: 'Frame' },
-		{ mode: 'inspect', label: 'Inspect' }
-	];
-	const ICON_BY_CATEGORY: Record<GraphNodeCategory, string> = {
-		cluster: 'NS',
-		signal: 'SG',
-		insight: 'IN',
-		delivery: 'DL',
-		narrative: 'NV'
-	};
-	const DEFAULT_NODE_DRAFT: GraphNodeDraft = {
-		title: 'New Node',
-		category: 'signal',
-		summary: 'Editable node',
-		color: '#102a43',
-		accent: '#60a5fa',
-		width: 260,
-		height: 160,
-		details: 'First detail\nSecond detail'
-	};
-
-	function isWorkspaceConnection(
-		connection: GraphWorkspaceConnectionInput
-	): connection is GraphWorkspaceConnection {
-		return !Array.isArray(connection);
-	}
-
-	function normalizeConnection(
-		connection: GraphWorkspaceConnectionInput,
-		index: number
-	): GraphWorkspaceConnection {
-		if (!isWorkspaceConnection(connection)) {
-			return {
-				id: `connection-${index + 1}`,
-				startId: connection[0],
-				endId: connection[1]
-			};
-		}
-
-		return {
-			id: connection.id,
-			startId: connection.startId,
-			endId: connection.endId
-		};
-	}
+	import createStylistGraphWorkspaceComponentState from '$stylist/workspace/component/organism/stylist-graph-workspace/state.svelte';
 
 	let {
 		initialNodes = [],
@@ -73,559 +15,36 @@
 		worldBounds = { width: 2200, height: 1400 }
 	}: RecipeStylistGraphWorkspace = $props();
 
-	const t = useMessage('stylist-graph-workspace', WORKSPACE_STYLIST_GRAPH_WORKSPACE_MESSAGE);
-	// Texts of a new node follow the provider locale; the rest of the draft is plain data.
-	const defaultNodeDraft = (): GraphNodeDraft => ({
-		...DEFAULT_NODE_DRAFT,
-		title: t('newNode'),
-		summary: t('newNodeSummary'),
-		details: t('newNodeDetails')
-	});
-
-	let viewportWidth = $state(1180);
-	let viewportHeight = $state(760);
-	let selectedTheme = $state<(typeof TOKEN_THEME_MODE)[number]>('default');
-	let activeTool = $state<GraphToolMode>('select');
-	let showDebug = $state(false);
-	let selectedNodeId = $state<string>(untrack(() => initialNodes[0]?.id ?? ''));
-	let pendingConnectionTargetId = $state<string>('');
-	let nodeDraft = $state<GraphNodeDraft>(defaultNodeDraft());
-	let nodeLayouts = $state<GraphWorkspaceNode[]>(
-		untrack(() => initialNodes.map((node) => ({ ...node })))
-	);
-	let connections = $state<GraphWorkspaceConnection[]>(
-		untrack(() =>
-			initialConnections.map((connection, index) => normalizeConnection(connection, index))
-		)
-	);
-	let camera = $state<SceneCamera>(createOverviewCamera());
-	let animationFrame = 0;
-	let isViewportDragging = $state(false);
-	let viewportDragStartClientX = $state(0);
-	let viewportDragStartClientY = $state(0);
-	let viewportDragStartCameraX = $state(0);
-	let viewportDragStartCameraY = $state(0);
-	let draggedNodeId = $state<string | null>(null);
-	let dragStartClientX = $state(0);
-	let dragStartClientY = $state(0);
-	let dragNodeStartX = $state(0);
-	let dragNodeStartY = $state(0);
-	let dragMoved = $state(false);
-	let suppressClickNodeId = $state<string | null>(null);
-
-	const selectedNode = $derived(
-		nodeLayouts.find((node) => node.id === selectedNodeId) ?? nodeLayouts[0] ?? null
-	);
-	const availableConnectionTargets = $derived(
-		nodeLayouts.filter((node) => node.id !== selectedNodeId)
-	);
-	const nodeCategories = $derived(Array.from(new Set(nodeLayouts.map((node) => node.category))));
-	const selectedNodeConnections = $derived(
-		selectedNodeId
-			? connections.filter(
-					(connection) =>
-						connection.startId === selectedNodeId || connection.endId === selectedNodeId
-				)
-			: []
-	);
-	const cameraSummary = $derived(
-		`${camera.zoom.toFixed(2)}x · x${Math.round(camera.x)} · y${Math.round(camera.y)}`
-	);
-
-	$effect(() => {
-		if (camera.viewportWidth === viewportWidth && camera.viewportHeight === viewportHeight) {
-			return;
-		}
-
-		camera = {
-			...camera,
-			viewportWidth,
-			viewportHeight
-		};
-	});
-
-	onDestroy(() => {
-		if (browser && animationFrame) {
-			cancelAnimationFrame(animationFrame);
-		}
-	});
-
-	function clamp(value: number, min: number, max: number): number {
-		return Math.min(max, Math.max(min, value));
-	}
-
-	function createOverviewCamera(): SceneCamera {
-		return {
-			x: 0,
-			y: 0,
-			zoom: 0.58,
-			depth: 640,
-			viewportWidth,
-			viewportHeight
-		};
-	}
-
-	function depthFromZoom(zoom: number): number {
-		const normalized = clamp((zoom - 0.4) / 1.8, 0, 1);
-		return Math.round(920 - normalized * 760);
-	}
-
-	function makeCamera(centerX: number, centerY: number, zoom: number): SceneCamera {
-		const visibleWidth = viewportWidth / zoom;
-		const visibleHeight = viewportHeight / zoom;
-		const maxX = Math.max(0, worldBounds.width - visibleWidth);
-		const maxY = Math.max(0, worldBounds.height - visibleHeight);
-
-		return {
-			x: clamp(centerX - visibleWidth / 2, 0, maxX),
-			y: clamp(centerY - visibleHeight / 2, 0, maxY),
-			zoom,
-			depth: depthFromZoom(zoom),
-			viewportWidth,
-			viewportHeight
-		};
-	}
-
-	function createClampedCamera(nextX: number, nextY: number, nextZoom: number): SceneCamera {
-		const zoom = clamp(nextZoom, 0.32, 2.4);
-		const visibleWidth = viewportWidth / zoom;
-		const visibleHeight = viewportHeight / zoom;
-		const maxX = Math.max(0, worldBounds.width - visibleWidth);
-		const maxY = Math.max(0, worldBounds.height - visibleHeight);
-
-		return {
-			x: clamp(nextX, 0, maxX),
-			y: clamp(nextY, 0, maxY),
-			zoom,
-			depth: depthFromZoom(zoom),
-			viewportWidth,
-			viewportHeight
-		};
-	}
-
-	function startCameraAnimation(target: SceneCamera) {
-		if (!browser) {
-			camera = target;
-			return;
-		}
-
-		if (animationFrame) {
-			cancelAnimationFrame(animationFrame);
-		}
-
-		const step = () => {
-			const nextX = camera.x + (target.x - camera.x) * 0.16;
-			const nextY = camera.y + (target.y - camera.y) * 0.16;
-			const nextZoom = camera.zoom + (target.zoom - camera.zoom) * 0.16;
-			const nextDepth = camera.depth + (target.depth - camera.depth) * 0.16;
-			const settled =
-				Math.abs(target.x - camera.x) < 0.5 &&
-				Math.abs(target.y - camera.y) < 0.5 &&
-				Math.abs(target.zoom - camera.zoom) < 0.002 &&
-				Math.abs(target.depth - camera.depth) < 0.5;
-
-			if (settled) {
-				camera = target;
-				animationFrame = 0;
-				return;
-			}
-
-			camera = {
-				x: nextX,
-				y: nextY,
-				zoom: nextZoom,
-				depth: nextDepth,
-				viewportWidth,
-				viewportHeight
-			};
-
-			animationFrame = requestAnimationFrame(step);
-		};
-
-		animationFrame = requestAnimationFrame(step);
-	}
-
-	function resetViewport() {
-		startCameraAnimation(createOverviewCamera());
-	}
-
-	function adjustZoom(direction: 1 | -1) {
-		const nextZoom = clamp(camera.zoom + direction * 0.14, 0.32, 2.4);
-		const centerX = camera.x + viewportWidth / (2 * camera.zoom);
-		const centerY = camera.y + viewportHeight / (2 * camera.zoom);
-		startCameraAnimation(makeCamera(centerX, centerY, nextZoom));
-	}
-
-	function handleViewportPointerDown(event: PointerEvent) {
-		if (activeTool !== 'pan' || event.button !== 0) {
-			return;
-		}
-
-		const target = event.target as HTMLElement | null;
-		if (target?.closest('.graph-editor-page__toolbar')) {
-			return;
-		}
-
-		isViewportDragging = true;
-		viewportDragStartClientX = event.clientX;
-		viewportDragStartClientY = event.clientY;
-		viewportDragStartCameraX = camera.x;
-		viewportDragStartCameraY = camera.y;
-		(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-	}
-
-	function handleViewportPointerMove(event: PointerEvent) {
-		if (!isViewportDragging || activeTool !== 'pan') {
-			return;
-		}
-
-		const deltaX = (event.clientX - viewportDragStartClientX) / camera.zoom;
-		const deltaY = (event.clientY - viewportDragStartClientY) / camera.zoom;
-
-		camera = createClampedCamera(
-			viewportDragStartCameraX - deltaX,
-			viewportDragStartCameraY - deltaY,
-			camera.zoom
-		);
-	}
-
-	function handleViewportPointerUp(event: PointerEvent) {
-		if (!isViewportDragging) {
-			return;
-		}
-
-		if ((event.currentTarget as HTMLElement).hasPointerCapture(event.pointerId)) {
-			(event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId);
-		}
-
-		isViewportDragging = false;
-	}
-
-	function handleViewportWheel(event: WheelEvent) {
-		event.preventDefault();
-
-		const shell = event.currentTarget as HTMLElement;
-		const rect = shell.getBoundingClientRect();
-		const pointerX = event.clientX - rect.left;
-		const pointerY = event.clientY - rect.top;
-		const worldX = camera.x + pointerX / camera.zoom;
-		const worldY = camera.y + pointerY / camera.zoom;
-		const delta = event.deltaY < 0 ? 1 : -1;
-		const nextZoom = clamp(camera.zoom + delta * 0.12, 0.32, 2.4);
-		const nextX = worldX - pointerX / nextZoom;
-		const nextY = worldY - pointerY / nextZoom;
-
-		camera = createClampedCamera(nextX, nextY, nextZoom);
-	}
-
-	function focusNode(nodeId: string) {
-		const node = nodeLayouts.find((entry) => entry.id === nodeId);
-		if (!node) {
-			return;
-		}
-
-		selectedNodeId = nodeId;
-		startCameraAnimation(makeCamera(node.x + node.width / 2, node.y + node.height / 2, 1.18));
-	}
-
-	function slugify(value: string): string {
-		return value
-			.toLowerCase()
-			.trim()
-			.replace(/[^a-z0-9]+/g, '-')
-			.replace(/^-+|-+$/g, '');
-	}
-
-	function createUniqueNodeId(title: string): string {
-		const base = slugify(title) || 'node';
-		let nextId = base;
-		let counter = 1;
-
-		while (nodeLayouts.some((node) => node.id === nextId)) {
-			counter += 1;
-			nextId = `${base}-${counter}`;
-		}
-
-		return nextId;
-	}
-
-	function getNodeCenter(nodeId: string) {
-		const node = nodeLayouts.find((entry) => entry.id === nodeId);
-		if (!node) {
-			return null;
-		}
-
-		return {
-			x: node.x + node.width / 2,
-			y: node.y + node.height / 2
-		};
-	}
-
-	function getConnectionPoints(startId: string, endId: string) {
-		const start = getNodeCenter(startId);
-		const end = getNodeCenter(endId);
-
-		if (!start || !end) {
-			return null;
-		}
-
-		return {
-			startX: start.x,
-			startY: start.y,
-			endX: end.x,
-			endY: end.y
-		};
-	}
-
-	function updateNode(nodeId: string, updater: (node: GraphWorkspaceNode) => GraphWorkspaceNode) {
-		nodeLayouts = nodeLayouts.map((node) => (node.id === nodeId ? updater(node) : node));
-	}
-
-	function updateSelectedNodeField<K extends keyof GraphWorkspaceNode>(
-		field: K,
-		value: GraphWorkspaceNode[K]
-	) {
-		if (!selectedNodeId) {
-			return;
-		}
-
-		updateNode(selectedNodeId, (node) => ({
-			...node,
-			[field]: value
-		}));
-	}
-
-	function updateSelectedNodeNumber(field: 'x' | 'y' | 'width' | 'height', value: string) {
-		const nextValue = Number(value);
-		if (!Number.isFinite(nextValue) || !selectedNodeId) {
-			return;
-		}
-
-		updateNode(selectedNodeId, (node) => {
-			const bounded =
-				field === 'width' || field === 'height'
-					? Math.max(80, Math.round(nextValue))
-					: Math.round(nextValue);
-
-			return {
-				...node,
-				[field]: bounded
-			};
-		});
-	}
-
-	function updateSelectedNodeDetails(value: string) {
-		updateSelectedNodeField(
-			'details',
-			value
-				.split('\n')
-				.map((item) => item.trim())
-				.filter(Boolean)
-		);
-	}
-
-	function addNode() {
-		const zoomCenterX = camera.x + viewportWidth / (2 * camera.zoom);
-		const zoomCenterY = camera.y + viewportHeight / (2 * camera.zoom);
-		const id = createUniqueNodeId(nodeDraft.title);
-		const nextNode: GraphWorkspaceNode = {
-			id,
-			title: nodeDraft.title.trim() || 'New Node',
-			category: nodeDraft.category,
-			x: clamp(
-				Math.round(zoomCenterX - nodeDraft.width / 2),
-				0,
-				worldBounds.width - nodeDraft.width
-			),
-			y: clamp(
-				Math.round(zoomCenterY - nodeDraft.height / 2),
-				0,
-				worldBounds.height - nodeDraft.height
-			),
-			width: Math.max(80, Math.round(nodeDraft.width)),
-			height: Math.max(80, Math.round(nodeDraft.height)),
-			color: nodeDraft.color,
-			accent: nodeDraft.accent,
-			summary: nodeDraft.summary.trim() || 'Editable node',
-			details: nodeDraft.details
-				.split('\n')
-				.map((item) => item.trim())
-				.filter(Boolean),
-			shape: 'rounded'
-		};
-
-		nodeLayouts = [...nodeLayouts, nextNode];
-		selectedNodeId = nextNode.id;
-		pendingConnectionTargetId = '';
-		nodeDraft = defaultNodeDraft();
-	}
-
-	function duplicateSelectedNode() {
-		if (!selectedNode) {
-			return;
-		}
-
-		const duplicateId = createUniqueNodeId(`${selectedNode.title} Copy`);
-		const duplicateNode: GraphWorkspaceNode = {
-			...selectedNode,
-			id: duplicateId,
-			title: `${selectedNode.title} Copy`,
-			x: clamp(selectedNode.x + 60, 0, worldBounds.width - selectedNode.width),
-			y: clamp(selectedNode.y + 60, 0, worldBounds.height - selectedNode.height)
-		};
-
-		nodeLayouts = [...nodeLayouts, duplicateNode];
-		selectedNodeId = duplicateId;
-	}
-
-	function deleteSelectedNode() {
-		if (!selectedNodeId) {
-			return;
-		}
-
-		const nextNodes = nodeLayouts.filter((node) => node.id !== selectedNodeId);
-		nodeLayouts = nextNodes;
-		connections = connections.filter(
-			(connection) => connection.startId !== selectedNodeId && connection.endId !== selectedNodeId
-		);
-
-		selectedNodeId = nextNodes[0]?.id ?? '';
-		pendingConnectionTargetId = '';
-	}
-
-	function addConnection() {
-		if (
-			!selectedNodeId ||
-			!pendingConnectionTargetId ||
-			selectedNodeId === pendingConnectionTargetId
-		) {
-			return;
-		}
-
-		const exists = connections.some(
-			(connection) =>
-				connection.startId === selectedNodeId && connection.endId === pendingConnectionTargetId
-		);
-		if (exists) {
-			return;
-		}
-
-		connections = [
-			...connections,
-			{
-				id: `connection-${Date.now()}`,
-				startId: selectedNodeId,
-				endId: pendingConnectionTargetId
-			}
-		];
-		pendingConnectionTargetId = '';
-	}
-
-	function removeConnection(connectionId: string) {
-		connections = connections.filter((connection) => connection.id !== connectionId);
-	}
-
-	function updateNodePosition(nodeId: string, nextX: number, nextY: number) {
-		updateNode(nodeId, (node) => ({
-			...node,
-			x: clamp(Math.round(nextX), 0, worldBounds.width - node.width),
-			y: clamp(Math.round(nextY), 0, worldBounds.height - node.height)
-		}));
-	}
-
-	function handleNodeActivate(nodeId: string) {
-		if (suppressClickNodeId === nodeId) {
-			suppressClickNodeId = null;
-			return;
-		}
-
-		selectedNodeId = nodeId;
-
-		if (activeTool === 'frame') {
-			focusNode(nodeId);
-		}
-
-		if (activeTool === 'inspect') {
-			showDebug = true;
-		}
-	}
-
-	function handleNodePointerDown(event: PointerEvent, nodeId: string) {
-		if (activeTool !== 'select' || event.button !== 0) {
-			return;
-		}
-
-		const node = nodeLayouts.find((entry) => entry.id === nodeId);
-		if (!node) {
-			return;
-		}
-
-		draggedNodeId = nodeId;
-		dragStartClientX = event.clientX;
-		dragStartClientY = event.clientY;
-		dragNodeStartX = node.x;
-		dragNodeStartY = node.y;
-		dragMoved = false;
-		selectedNodeId = nodeId;
-		(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-	}
-
-	function handleNodePointerMove(event: PointerEvent, nodeId: string) {
-		if (activeTool !== 'select' || draggedNodeId !== nodeId) {
-			return;
-		}
-
-		const deltaX = (event.clientX - dragStartClientX) / camera.zoom;
-		const deltaY = (event.clientY - dragStartClientY) / camera.zoom;
-
-		if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
-			dragMoved = true;
-		}
-
-		updateNodePosition(nodeId, dragNodeStartX + deltaX, dragNodeStartY + deltaY);
-	}
-
-	function handleNodePointerUp(event: PointerEvent, nodeId: string) {
-		if (draggedNodeId !== nodeId) {
-			return;
-		}
-
-		if ((event.currentTarget as HTMLElement).hasPointerCapture(event.pointerId)) {
-			(event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId);
-		}
-
-		if (dragMoved) {
-			suppressClickNodeId = nodeId;
-		}
-
-		draggedNodeId = null;
-		dragMoved = false;
-	}
+	const state = createStylistGraphWorkspaceComponentState(() => ({
+		initialNodes: initialNodes,
+		initialConnections: initialConnections,
+		worldBounds: worldBounds
+	}));
 </script>
 
-<section class={`graph-editor-page graph-editor-page--${selectedTheme}`}>
+<section class={`graph-editor-page graph-editor-page--${state.selectedTheme}`}>
 	<div class="graph-editor-page__layout">
 		<aside class="workspace-panel workspace-panel--left">
 			<section class="workspace-card">
 				<div class="workspace-card__header">
-					<h2>{t('graph')}</h2>
-					<span>{t('nodes', { count: nodeLayouts.length })}</span>
+					<h2>{state.t('graph')}</h2>
+					<span>{state.t('nodes', { count: state.nodeLayouts.length })}</span>
 				</div>
 				<div class="workspace-list">
-					{#each nodeLayouts as node (node.id)}
+					{#each state.nodeLayouts as node (node.id)}
 						<button
 							type="button"
-							class={`workspace-list__item ${node.id === selectedNodeId ? 'workspace-list__item--active' : ''}`}
+							class={`workspace-list__item ${node.id === state.selectedNodeId ? 'workspace-list__item--active' : ''}`}
 							onclick={() => {
-								selectedNodeId = node.id;
-								if (activeTool === 'frame') {
-									focusNode(node.id);
+								state.selectedNodeId = node.id;
+								if (state.activeTool === 'frame') {
+									state.focusNode(node.id);
 								}
 							}}
 						>
 							<div>
 								<strong>{node.title}</strong>
-								<span>{t(node.category)}</span>
+								<span>{state.t(node.category)}</span>
 							</div>
 							<small>{node.x}, {node.y}</small>
 						</button>
@@ -635,118 +54,122 @@
 
 			<section class="workspace-card">
 				<div class="workspace-card__header">
-					<h2>{t('addNodeTitle')}</h2>
-					<span>{t('center')}</span>
+					<h2>{state.t('addNodeTitle')}</h2>
+					<span>{state.t('center')}</span>
 				</div>
 				<div class="field-grid">
 					<label class="field">
-						<span>{t('title')}</span>
+						<span>{state.t('title')}</span>
 						<input
-							value={nodeDraft.title}
+							value={state.nodeDraft.title}
 							oninput={(event) => {
-								nodeDraft = {
-									...nodeDraft,
+								state.nodeDraft = {
+									...state.nodeDraft,
 									title: (event.target as HTMLInputElement).value
 								};
 							}}
 						/>
 					</label>
 					<label class="field">
-						<span>{t('category')}</span>
+						<span>{state.t('category')}</span>
 						<select
-							value={nodeDraft.category}
+							value={state.nodeDraft.category}
 							onchange={(event) => {
-								nodeDraft = {
-									...nodeDraft,
+								state.nodeDraft = {
+									...state.nodeDraft,
 									category: (event.target as HTMLSelectElement).value as GraphNodeCategory
 								};
 							}}
 						>
-							<option value="cluster">{t('cluster')}</option>
-							<option value="signal">{t('signal')}</option>
-							<option value="insight">{t('insight')}</option>
-							<option value="delivery">{t('delivery')}</option>
-							<option value="narrative">{t('narrative')}</option>
+							<option value="cluster">{state.t('cluster')}</option>
+							<option value="signal">{state.t('signal')}</option>
+							<option value="insight">{state.t('insight')}</option>
+							<option value="delivery">{state.t('delivery')}</option>
+							<option value="narrative">{state.t('narrative')}</option>
 						</select>
 					</label>
 					<label class="field field--full">
-						<span>{t('summary')}</span>
+						<span>{state.t('summary')}</span>
 						<input
-							value={nodeDraft.summary}
+							value={state.nodeDraft.summary}
 							oninput={(event) => {
-								nodeDraft = {
-									...nodeDraft,
+								state.nodeDraft = {
+									...state.nodeDraft,
 									summary: (event.target as HTMLInputElement).value
 								};
 							}}
 						/>
 					</label>
 					<label class="field">
-						<span>{t('accent')}</span>
+						<span>{state.t('accent')}</span>
 						<input
-							value={nodeDraft.accent}
+							value={state.nodeDraft.accent}
 							oninput={(event) => {
-								nodeDraft = {
-									...nodeDraft,
+								state.nodeDraft = {
+									...state.nodeDraft,
 									accent: (event.target as HTMLInputElement).value
 								};
 							}}
 						/>
 					</label>
 					<label class="field">
-						<span>{t('color')}</span>
+						<span>{state.t('color')}</span>
 						<input
-							value={nodeDraft.color}
+							value={state.nodeDraft.color}
 							oninput={(event) => {
-								nodeDraft = {
-									...nodeDraft,
+								state.nodeDraft = {
+									...state.nodeDraft,
 									color: (event.target as HTMLInputElement).value
 								};
 							}}
 						/>
 					</label>
 					<label class="field">
-						<span>{t('width')}</span>
+						<span>{state.t('width')}</span>
 						<input
 							type="number"
-							value={String(nodeDraft.width)}
+							value={String(state.nodeDraft.width)}
 							oninput={(event) => {
-								nodeDraft = {
-									...nodeDraft,
-									width: Number((event.target as HTMLInputElement).value) || nodeDraft.width
+								state.nodeDraft = {
+									...state.nodeDraft,
+									width: Number((event.target as HTMLInputElement).value) || state.nodeDraft.width
 								};
 							}}
 						/>
 					</label>
 					<label class="field">
-						<span>{t('height')}</span>
+						<span>{state.t('height')}</span>
 						<input
 							type="number"
-							value={String(nodeDraft.height)}
+							value={String(state.nodeDraft.height)}
 							oninput={(event) => {
-								nodeDraft = {
-									...nodeDraft,
-									height: Number((event.target as HTMLInputElement).value) || nodeDraft.height
+								state.nodeDraft = {
+									...state.nodeDraft,
+									height: Number((event.target as HTMLInputElement).value) || state.nodeDraft.height
 								};
 							}}
 						/>
 					</label>
 					<label class="field field--full">
-						<span>{t('details')}</span>
+						<span>{state.t('details')}</span>
 						<textarea
 							rows="4"
-							value={nodeDraft.details}
+							value={state.nodeDraft.details}
 							oninput={(event) => {
-								nodeDraft = {
-									...nodeDraft,
+								state.nodeDraft = {
+									...state.nodeDraft,
 									details: (event.target as HTMLTextAreaElement).value
 								};
 							}}></textarea>
 					</label>
 				</div>
 				<div class="action-row">
-					<button type="button" class="action-button action-button--primary" onclick={addNode}>
-						{t('addNode')}
+					<button
+						type="button"
+						class="action-button action-button--primary"
+						onclick={state.addNode}
+					>
+						{state.t('addNode')}
 					</button>
 				</div>
 			</section>
@@ -754,28 +177,28 @@
 
 		<div
 			role="application"
-			aria-label={t('viewportLabel')}
-			class={`graph-editor-page__viewport-shell ${activeTool === 'pan' ? 'graph-editor-page__viewport-shell--pan' : ''} ${isViewportDragging ? 'graph-editor-page__viewport-shell--dragging' : ''}`}
-			bind:clientWidth={viewportWidth}
-			bind:clientHeight={viewportHeight}
-			onpointerdown={handleViewportPointerDown}
-			onpointermove={handleViewportPointerMove}
-			onpointerup={handleViewportPointerUp}
-			onpointercancel={handleViewportPointerUp}
-			onwheel={handleViewportWheel}
+			aria-label={state.t('viewportLabel')}
+			class={`graph-editor-page__viewport-shell ${state.activeTool === 'pan' ? 'graph-editor-page__viewport-shell--pan' : ''} ${state.isViewportDragging ? 'graph-editor-page__viewport-shell--dragging' : ''}`}
+			bind:clientWidth={state.viewportWidth}
+			bind:clientHeight={state.viewportHeight}
+			onpointerdown={state.handleViewportPointerDown}
+			onpointermove={state.handleViewportPointerMove}
+			onpointerup={state.handleViewportPointerUp}
+			onpointercancel={state.handleViewportPointerUp}
+			onwheel={state.handleViewportWheel}
 		>
 			<div class="graph-editor-page__toolbar">
-				<div class="workspace-toolbar" role="toolbar" aria-label={t('controls')}>
+				<div class="workspace-toolbar" role="toolbar" aria-label={state.t('controls')}>
 					<div class="workspace-toolbar__group">
-						{#each TOOL_OPTIONS as tool (tool.mode)}
+						{#each state.TOOL_OPTIONS as tool (tool.mode)}
 							<button
 								type="button"
-								class={`workspace-toolbar__button ${activeTool === tool.mode ? 'workspace-toolbar__button--active' : ''}`}
+								class={`workspace-toolbar__button ${state.activeTool === tool.mode ? 'workspace-toolbar__button--active' : ''}`}
 								onclick={() => {
-									activeTool = tool.mode;
+									state.activeTool = tool.mode;
 								}}
 							>
-								{t(tool.mode)}
+								{state.t(tool.mode)}
 							</button>
 						{/each}
 					</div>
@@ -783,14 +206,22 @@
 					<div class="workspace-toolbar__separator"></div>
 
 					<div class="workspace-toolbar__group">
-						<button type="button" class="workspace-toolbar__button" onclick={() => adjustZoom(-1)}>
-							{t('zoomOut')}
+						<button
+							type="button"
+							class="workspace-toolbar__button"
+							onclick={() => state.adjustZoom(-1)}
+						>
+							{state.t('zoomOut')}
 						</button>
-						<button type="button" class="workspace-toolbar__button" onclick={() => adjustZoom(1)}>
-							{t('zoomIn')}
+						<button
+							type="button"
+							class="workspace-toolbar__button"
+							onclick={() => state.adjustZoom(1)}
+						>
+							{state.t('zoomIn')}
 						</button>
-						<button type="button" class="workspace-toolbar__button" onclick={resetViewport}>
-							{t('reset')}
+						<button type="button" class="workspace-toolbar__button" onclick={state.resetViewport}>
+							{state.t('reset')}
 						</button>
 					</div>
 
@@ -798,38 +229,38 @@
 
 					<div class="workspace-toolbar__group">
 						<label class="workspace-toolbar__field">
-							<span>{t('theme')}</span>
+							<span>{state.t('theme')}</span>
 							<select
-								value={selectedTheme}
+								value={state.selectedTheme}
 								onchange={(event) => {
-									selectedTheme = (event.target as HTMLSelectElement)
+									state.selectedTheme = (event.target as HTMLSelectElement)
 										.value as (typeof TOKEN_THEME_MODE)[number];
 								}}
 							>
-								{#each THEME_OPTIONS as theme (theme)}
+								{#each state.THEME_OPTIONS as theme (theme)}
 									<option value={theme}>{theme}</option>
 								{/each}
 							</select>
 						</label>
 						<button
 							type="button"
-							class={`workspace-toolbar__button ${showDebug ? 'workspace-toolbar__button--active' : ''}`}
+							class={`workspace-toolbar__button ${state.showDebug ? 'workspace-toolbar__button--active' : ''}`}
 							onclick={() => {
-								showDebug = !showDebug;
+								state.showDebug = !state.showDebug;
 							}}
 						>
-							{t('debug')}
+							{state.t('debug')}
 						</button>
 					</div>
 				</div>
 			</div>
 
 			<Viewport
-				{camera}
+				camera={state.camera}
 				worldWidth={worldBounds.width}
 				worldHeight={worldBounds.height}
 				showGrid={true}
-				interactive={activeTool === 'pan'}
+				interactive={state.activeTool === 'pan'}
 			>
 				<div class="workspace-grid"></div>
 
@@ -839,8 +270,8 @@
 					width={worldBounds.width}
 					height={worldBounds.height}
 				>
-					{#each connections as connection, index (connection.id)}
-						{@const points = getConnectionPoints(connection.startId, connection.endId)}
+					{#each state.connections as connection, index (connection.id)}
+						{@const points = state.getConnectionPoints(connection.startId, connection.endId)}
 						{#if points}
 							<NodeConnection
 								id={connection.id}
@@ -850,35 +281,36 @@
 								endY={points.endY}
 								type={index % 2 === 0 ? 'straight' : 'curve'}
 								style={index % 2 === 0 ? 'solid' : 'dashed'}
-								width={connection.startId === selectedNodeId || connection.endId === selectedNodeId
+								width={connection.startId === state.selectedNodeId ||
+								connection.endId === state.selectedNodeId
 									? 3
 									: 2}
 								color="color-mix(in srgb, var(--workspace-line) 78%, transparent)"
 								activeColor="var(--workspace-line-active)"
 								hoverColor="var(--workspace-line-hover)"
-								active={connection.startId === selectedNodeId ||
-									connection.endId === selectedNodeId}
+								active={connection.startId === state.selectedNodeId ||
+									connection.endId === state.selectedNodeId}
 								showArrow={true}
-								animated={activeTool === 'frame'}
+								animated={state.activeTool === 'frame'}
 							/>
 						{/if}
 					{/each}
 				</svg>
 
-				{#each nodeLayouts as node (node.id)}
+				{#each state.nodeLayouts as node (node.id)}
 					<button
 						type="button"
-						class={`graph-node ${node.id === selectedNodeId ? 'graph-node--active' : ''} ${activeTool === 'select' ? 'graph-node--select' : ''} ${activeTool === 'frame' ? 'graph-node--frame' : ''} ${activeTool === 'inspect' ? 'graph-node--inspect' : ''}`}
+						class={`graph-node ${node.id === state.selectedNodeId ? 'graph-node--active' : ''} ${state.activeTool === 'select' ? 'graph-node--select' : ''} ${state.activeTool === 'frame' ? 'graph-node--frame' : ''} ${state.activeTool === 'inspect' ? 'graph-node--inspect' : ''}`}
 						style={`left:${node.x}px; top:${node.y}px; width:${node.width}px; height:${node.height}px; --node-accent:${node.accent}; --node-color:${node.color};`}
-						onclick={() => handleNodeActivate(node.id)}
-						onpointerdown={(event) => handleNodePointerDown(event, node.id)}
-						onpointermove={(event) => handleNodePointerMove(event, node.id)}
-						onpointerup={(event) => handleNodePointerUp(event, node.id)}
-						onpointercancel={(event) => handleNodePointerUp(event, node.id)}
+						onclick={() => state.handleNodeActivate(node.id)}
+						onpointerdown={(event) => state.handleNodePointerDown(event, node.id)}
+						onpointermove={(event) => state.handleNodePointerMove(event, node.id)}
+						onpointerup={(event) => state.handleNodePointerUp(event, node.id)}
+						onpointercancel={(event) => state.handleNodePointerUp(event, node.id)}
 					>
 						<div class="graph-node__head">
 							<NodeIcon
-								icon={ICON_BY_CATEGORY[node.category]}
+								icon={state.ICON_BY_CATEGORY[node.category]}
 								accent={node.accent}
 								background="color-mix(in srgb, var(--workspace-panel) 80%, white)"
 							/>
@@ -900,167 +332,177 @@
 		<aside class="workspace-panel workspace-panel--right">
 			<section class="workspace-card">
 				<div class="workspace-card__header">
-					<h2>{t('viewport')}</h2>
-					<span>{cameraSummary}</span>
+					<h2>{state.t('viewport')}</h2>
+					<span>{state.cameraSummary}</span>
 				</div>
 				<div class="status-grid">
 					<div>
-						<span>{t('tool')}</span>
-						<strong>{t(activeTool)}</strong>
+						<span>{state.t('tool')}</span>
+						<strong>{state.t(state.activeTool)}</strong>
 					</div>
 					<div>
-						<span>{t('connections')}</span>
-						<strong>{connections.length}</strong>
+						<span>{state.t('connections')}</span>
+						<strong>{state.connections.length}</strong>
 					</div>
 					<div>
-						<span>{t('categories')}</span>
-						<strong>{nodeCategories.length}</strong>
+						<span>{state.t('categories')}</span>
+						<strong>{state.nodeCategories.length}</strong>
 					</div>
 				</div>
 			</section>
 
 			<section class="workspace-card">
 				<div class="workspace-card__header">
-					<h2>{t('properties')}</h2>
-					<span>{selectedNode ? selectedNode.id : t('noSelection')}</span>
+					<h2>{state.t('properties')}</h2>
+					<span>{state.selectedNode ? state.selectedNode.id : state.t('noSelection')}</span>
 				</div>
 
-				{#if selectedNode}
+				{#if state.selectedNode}
 					<div class="field-grid">
 						<label class="field">
-							<span>{t('title')}</span>
+							<span>{state.t('title')}</span>
 							<input
-								value={selectedNode.title}
+								value={state.selectedNode.title}
 								oninput={(event) =>
-									updateSelectedNodeField('title', (event.target as HTMLInputElement).value)}
+									state.updateSelectedNodeField('title', (event.target as HTMLInputElement).value)}
 							/>
 						</label>
 						<label class="field">
-							<span>{t('category')}</span>
+							<span>{state.t('category')}</span>
 							<select
-								value={selectedNode.category}
+								value={state.selectedNode.category}
 								onchange={(event) =>
-									updateSelectedNodeField(
+									state.updateSelectedNodeField(
 										'category',
 										(event.target as HTMLSelectElement).value as GraphNodeCategory
 									)}
 							>
-								<option value="cluster">{t('cluster')}</option>
-								<option value="signal">{t('signal')}</option>
-								<option value="insight">{t('insight')}</option>
-								<option value="delivery">{t('delivery')}</option>
-								<option value="narrative">{t('narrative')}</option>
+								<option value="cluster">{state.t('cluster')}</option>
+								<option value="signal">{state.t('signal')}</option>
+								<option value="insight">{state.t('insight')}</option>
+								<option value="delivery">{state.t('delivery')}</option>
+								<option value="narrative">{state.t('narrative')}</option>
 							</select>
 						</label>
 						<label class="field field--full">
-							<span>{t('summary')}</span>
+							<span>{state.t('summary')}</span>
 							<input
-								value={selectedNode.summary}
+								value={state.selectedNode.summary}
 								oninput={(event) =>
-									updateSelectedNodeField('summary', (event.target as HTMLInputElement).value)}
+									state.updateSelectedNodeField(
+										'summary',
+										(event.target as HTMLInputElement).value
+									)}
 							/>
 						</label>
 						<label class="field">
-							<span>{t('accent')}</span>
+							<span>{state.t('accent')}</span>
 							<input
-								value={selectedNode.accent}
+								value={state.selectedNode.accent}
 								oninput={(event) =>
-									updateSelectedNodeField('accent', (event.target as HTMLInputElement).value)}
+									state.updateSelectedNodeField('accent', (event.target as HTMLInputElement).value)}
 							/>
 						</label>
 						<label class="field">
-							<span>{t('color')}</span>
+							<span>{state.t('color')}</span>
 							<input
-								value={selectedNode.color}
+								value={state.selectedNode.color}
 								oninput={(event) =>
-									updateSelectedNodeField('color', (event.target as HTMLInputElement).value)}
+									state.updateSelectedNodeField('color', (event.target as HTMLInputElement).value)}
 							/>
 						</label>
 						<label class="field">
-							<span>{t('x')}</span>
+							<span>{state.t('x')}</span>
 							<input
 								type="number"
-								value={String(selectedNode.x)}
+								value={String(state.selectedNode.x)}
 								oninput={(event) =>
-									updateSelectedNodeNumber('x', (event.target as HTMLInputElement).value)}
+									state.updateSelectedNodeNumber('x', (event.target as HTMLInputElement).value)}
 							/>
 						</label>
 						<label class="field">
-							<span>{t('y')}</span>
+							<span>{state.t('y')}</span>
 							<input
 								type="number"
-								value={String(selectedNode.y)}
+								value={String(state.selectedNode.y)}
 								oninput={(event) =>
-									updateSelectedNodeNumber('y', (event.target as HTMLInputElement).value)}
+									state.updateSelectedNodeNumber('y', (event.target as HTMLInputElement).value)}
 							/>
 						</label>
 						<label class="field">
-							<span>{t('width')}</span>
+							<span>{state.t('width')}</span>
 							<input
 								type="number"
-								value={String(selectedNode.width)}
+								value={String(state.selectedNode.width)}
 								oninput={(event) =>
-									updateSelectedNodeNumber('width', (event.target as HTMLInputElement).value)}
+									state.updateSelectedNodeNumber('width', (event.target as HTMLInputElement).value)}
 							/>
 						</label>
 						<label class="field">
-							<span>{t('height')}</span>
+							<span>{state.t('height')}</span>
 							<input
 								type="number"
-								value={String(selectedNode.height)}
+								value={String(state.selectedNode.height)}
 								oninput={(event) =>
-									updateSelectedNodeNumber('height', (event.target as HTMLInputElement).value)}
+									state.updateSelectedNodeNumber(
+										'height',
+										(event.target as HTMLInputElement).value
+									)}
 							/>
 						</label>
 						<label class="field field--full">
-							<span>{t('details')}</span>
+							<span>{state.t('details')}</span>
 							<textarea
 								rows="5"
-								value={selectedNode.details.join('\n')}
+								value={state.selectedNode.details.join('\n')}
 								oninput={(event) =>
-									updateSelectedNodeDetails((event.target as HTMLTextAreaElement).value)}
+									state.updateSelectedNodeDetails((event.target as HTMLTextAreaElement).value)}
 							></textarea>
 						</label>
 					</div>
 
 					<div class="action-row">
-						<button type="button" class="action-button" onclick={() => focusNode(selectedNode.id)}>
-							{t('focus')}
+						<button
+							type="button"
+							class="action-button"
+							onclick={() => state.focusNode(state.selectedNode.id)}
+						>
+							{state.t('focus')}
 						</button>
-						<button type="button" class="action-button" onclick={duplicateSelectedNode}>
-							{t('duplicate')}
+						<button type="button" class="action-button" onclick={state.duplicateSelectedNode}>
+							{state.t('duplicate')}
 						</button>
 						<button
 							type="button"
 							class="action-button action-button--danger"
-							onclick={deleteSelectedNode}
+							onclick={state.deleteSelectedNode}
 						>
-							{t('delete')}
+							{state.t('delete')}
 						</button>
 					</div>
 				{:else}
-					<p class="empty-state">{t('selectToEdit')}</p>
+					<p class="empty-state">{state.t('selectToEdit')}</p>
 				{/if}
 			</section>
 
 			<section class="workspace-card">
 				<div class="workspace-card__header">
-					<h2>{t('connections')}</h2>
-					<span>{selectedNodeConnections.length}</span>
+					<h2>{state.t('connections')}</h2>
+					<span>{state.selectedNodeConnections.length}</span>
 				</div>
 
-				{#if selectedNode}
+				{#if state.selectedNode}
 					<div class="field-grid">
 						<label class="field field--full">
-							<span>{t('addOutgoing')}</span>
+							<span>{state.t('addOutgoing')}</span>
 							<select
-								value={pendingConnectionTargetId}
+								value={state.pendingConnectionTargetId}
 								onchange={(event) => {
-									pendingConnectionTargetId = (event.target as HTMLSelectElement).value;
+									state.pendingConnectionTargetId = (event.target as HTMLSelectElement).value;
 								}}
 							>
-								<option value="">{t('selectTarget')}</option>
-								{#each availableConnectionTargets as target (target.id)}
+								<option value="">{state.t('selectTarget')}</option>
+								{#each state.availableConnectionTargets as target (target.id)}
 									<option value={target.id}>{target.title}</option>
 								{/each}
 							</select>
@@ -1070,14 +512,14 @@
 						<button
 							type="button"
 							class="action-button action-button--primary"
-							onclick={addConnection}
+							onclick={state.addConnection}
 						>
-							{t('addConnection')}
+							{state.t('addConnection')}
 						</button>
 					</div>
 
 					<div class="workspace-list workspace-list--compact">
-						{#each selectedNodeConnections as connection (connection.id)}
+						{#each state.selectedNodeConnections as connection (connection.id)}
 							<div class="workspace-list__entry">
 								<div>
 									<strong>{connection.startId}</strong>
@@ -1086,35 +528,35 @@
 								<button
 									type="button"
 									class="inline-remove"
-									onclick={() => removeConnection(connection.id)}
+									onclick={() => state.removeConnection(connection.id)}
 								>
-									{t('remove')}
+									{state.t('remove')}
 								</button>
 							</div>
 						{/each}
-						{#if selectedNodeConnections.length === 0}
-							<p class="empty-state">{t('noConnections')}</p>
+						{#if state.selectedNodeConnections.length === 0}
+							<p class="empty-state">{state.t('noConnections')}</p>
 						{/if}
 					</div>
 				{:else}
-					<p class="empty-state">{t('selectToConnect')}</p>
+					<p class="empty-state">{state.t('selectToConnect')}</p>
 				{/if}
 			</section>
 
-			{#if showDebug}
+			{#if state.showDebug}
 				<section class="workspace-card">
 					<div class="workspace-card__header">
-						<h2>{t('debug')}</h2>
-						<span>{t('live')}</span>
+						<h2>{state.t('debug')}</h2>
+						<span>{state.t('live')}</span>
 					</div>
 					<pre class="debug-block">{JSON.stringify(
 							{
-								tool: activeTool,
-								camera,
-								selectedNodeId,
-								nodeCount: nodeLayouts.length,
-								connectionCount: connections.length,
-								draggedNodeId
+								tool: state.activeTool,
+								camera: state.camera,
+								selectedNodeId: state.selectedNodeId,
+								nodeCount: state.nodeLayouts.length,
+								connectionCount: state.connections.length,
+								draggedNodeId: state.draggedNodeId
 							},
 							null,
 							2

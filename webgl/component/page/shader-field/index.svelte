@@ -8,59 +8,59 @@
 	import HtmlSmall from '$stylist/html/component/atom/small/index.svelte';
 	import HtmlSection from '$stylist/html/component/organism/section/index.svelte';
 	import InterferenceFieldScene from '$stylist/webgl/component/molecule/interference-field-scene/index.svelte';
-	import { WEBGL_SHADER_FIELD_MESSAGE } from '$stylist/webgl/const/record/shader-field-message';
-	import { useMessage } from '$stylist/localization/function/hook/use-message';
+
 	import type { RecipeShaderField } from '$stylist/webgl/interface/recipe/shader-field';
+	import createShaderFieldComponentState from '$stylist/webgl/component/page/shader-field/state.svelte';
 
 	let { element = $bindable(null), title, class: className, ...rest }: RecipeShaderField = $props();
 
-	const t = useMessage('shader-field', WEBGL_SHADER_FIELD_MESSAGE);
-
-	let speed = $state(1);
-	let color = $state('#80b7eb');
-	let supported = $state(true);
+	const state = createShaderFieldComponentState();
 </script>
 
 <HtmlSection
 	bind:element
 	{...rest}
 	class={['c-shader-field', className]}
-	aria-label={title ?? t('title')}
+	aria-label={title ?? state.t('title')}
 >
 	<HtmlSection
 		class="c-shader-field__stage"
-		data-renderer={supported ? 'webgl' : 'fallback'}
-		aria-label={t('stage')}
+		data-renderer={state.supported ? 'webgl' : 'fallback'}
+		aria-label={state.t('stage')}
 	>
-		{#if supported}
-			<InterferenceFieldScene {speed} {color} onUnsupported={() => (supported = false)} />
+		{#if state.supported}
+			<InterferenceFieldScene
+				speed={state.speed}
+				color={state.color}
+				onUnsupported={() => (state.supported = false)}
+			/>
 		{/if}
 		<HtmlSmall role="status" class="c-shader-field__status">
-			{supported ? t('renderer') : t('unsupported')}
+			{state.supported ? state.t('renderer') : state.t('unsupported')}
 		</HtmlSmall>
 	</HtmlSection>
 	<HtmlSection class="c-shader-field__panel">
-		<HtmlH2 class="c-shader-field__title">{t('panel')}</HtmlH2>
+		<HtmlH2 class="c-shader-field__title">{state.t('panel')}</HtmlH2>
 		<HtmlLabel class="c-shader-field__field">
-			{t('speed')}
-			<HtmlInputRange min="0" max="3" step="0.1" bind:value={speed} />
-			{speed}
+			{state.t('speed')}
+			<HtmlInputRange min="0" max="3" step="0.1" bind:value={state.speed} />
+			{state.speed}
 		</HtmlLabel>
 		<HtmlLabel class="c-shader-field__field">
-			{t('color')}
-			<HtmlInputColor bind:value={color} />
+			{state.t('color')}
+			<HtmlInputColor bind:value={state.color} />
 		</HtmlLabel>
 		<HtmlButton
 			type="button"
 			class="c-shader-field__button"
-			onclick={() => (speed = speed === 0 ? 1 : 0)}
+			onclick={() => (state.speed = state.speed === 0 ? 1 : 0)}
 		>
-			{speed === 0 ? t('resume') : t('pause')}
+			{state.speed === 0 ? state.t('resume') : state.t('pause')}
 		</HtmlButton>
 		<HtmlP>
-			{t('resize')}
+			{state.t('resize')}
 		</HtmlP>
-		<HtmlP>{t('native')}</HtmlP>
+		<HtmlP>{state.t('native')}</HtmlP>
 	</HtmlSection>
 </HtmlSection>
 

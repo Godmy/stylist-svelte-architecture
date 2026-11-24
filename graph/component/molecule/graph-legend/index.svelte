@@ -1,20 +1,17 @@
 <script lang="ts">
-	import { ZWICKY_DOMAIN_COLOR } from '$stylist/graph/const/record/zwicky-domain-color';
 	import GraphDot from '$stylist/graph/component/atom/graph-dot/index.svelte';
 	import type { RecipeGraphLegend } from '$stylist/graph/interface/recipe/graph-legend';
+	import createGraphLegendComponentState from '$stylist/graph/component/molecule/graph-legend/state.svelte';
 
 	let { activeDomains, onDomainClick, domains, title }: RecipeGraphLegend = $props();
 
-	// Own domains, or every library domain with its colour.
-	const entries = $derived(
-		domains ?? Object.entries(ZWICKY_DOMAIN_COLOR).map(([id, color]) => ({ id, label: id, color }))
-	);
+	const state = createGraphLegendComponentState(() => ({ domains: domains }));
 </script>
 
 <aside class="graph-legend">
 	<p class="graph-legend__title">{title ?? 'Domains'}</p>
 	<ul class="graph-legend__list">
-		{#each entries as { id: domain, label, color } (domain)}
+		{#each state.entries as { id: domain, label, color } (domain)}
 			<li>
 				<button
 					class="graph-legend__item"
