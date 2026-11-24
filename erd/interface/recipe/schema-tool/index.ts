@@ -1,2 +1,4 @@
-import type { SlotErdTool } from '$stylist/erd/interface/slot/erd-tool';
-export interface RecipeSchemaTool extends SlotErdTool {}
+import type { SlotSchemaTool } from '$stylist/erd/interface/slot/schema-tool';
+import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-all';
+
+export interface RecipeSchemaTool extends ComputeIntersectAll<[SlotSchemaTool]> {}

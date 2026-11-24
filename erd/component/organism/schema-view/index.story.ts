@@ -1,5 +1,5 @@
 import SchemaView from '$stylist/erd/component/organism/schema-view/index.svelte';
-import type { RecipeErdSchemaView } from '$stylist/erd/interface/recipe/erd-schema-view';
+import type { RecipeSchemaView } from '$stylist/erd/interface/recipe/schema-view';
 import type { ContractStory } from '$stylist/html/interface/contract/story';
 import { DEFAULT_SCHEMA_TEXT } from '$stylist/erd/const/value/schema-text';
 import { schemaTextToDocument } from '$stylist/erd/function/transform/schema-text-to-document';
@@ -30,4 +30,4 @@ export default {
 		'Profile active': { activeTableId: 'profile' },
 		'Without relations': { showRelations: false }
 	}
-} satisfies ContractStory<RecipeErdSchemaView>;
+} satisfies ContractStory<RecipeSchemaView>;

@@ -2,10 +2,10 @@
 	import SchemaDependency from '$stylist/erd/component/atom/schema-dependency/index.svelte';
 	import SchemaTable from '$stylist/erd/component/molecule/schema-table/index.svelte';
 	import SchemaGravity from '$stylist/erd/component/molecule/schema-gravity/index.svelte';
-	import type { RecipeErdSchemaView } from '$stylist/erd/interface/recipe/erd-schema-view';
+	import type { RecipeSchemaView } from '$stylist/erd/interface/recipe/schema-view';
 	import createSchemaViewState from '$stylist/erd/component/organism/schema-view/state.svelte';
 
-	let props: RecipeErdSchemaView = $props();
+	let props: RecipeSchemaView = $props();
 
 	// `props` itself is a stable reactive proxy -- handing the reference to
 	// the factory doesn't need to re-run when a prop changes, only the
@@ -30,10 +30,20 @@
 	{@attach state.attachNavigation}
 >
 	<div class="schema-view__gravity-dock">
-		<SchemaGravity radius={state.gravityRadius} strength={state.gravityStrength} zones={state.gravityZones}
-			selectedId={state.selectedGravityZoneId} onRadiusChange={state.setGravityRadius}
-			onStrengthChange={state.setGravityStrength} onAdd={state.addGravityZone} onSelect={state.selectGravityZone}
-			onUpdate={state.updateGravityZone} onRemove={state.removeGravityZone} onToggle={state.setGravityEditing} onReset={state.resetGravity} />
+		<SchemaGravity
+			radius={state.gravityRadius}
+			strength={state.gravityStrength}
+			zones={state.gravityZones}
+			selectedId={state.selectedGravityZoneId}
+			onRadiusChange={state.setGravityRadius}
+			onStrengthChange={state.setGravityStrength}
+			onAdd={state.addGravityZone}
+			onSelect={state.selectGravityZone}
+			onUpdate={state.updateGravityZone}
+			onRemove={state.removeGravityZone}
+			onToggle={state.setGravityEditing}
+			onReset={state.resetGravity}
+		/>
 	</div>
 	<div
 		class="schema-view__scaled-space"
@@ -45,13 +55,22 @@
 		>
 			{#if state.gravityEditing}
 				<div class="schema-view__gravity-layer">
-					{#each state.gravityZones as zone,i (zone.id)}
-						<div class="schema-view__gravity-zone" class:schema-view__gravity-zone--selected={zone.id===state.selectedGravityZoneId}
-							style={`left:${zone.x-zone.radius}px;top:${zone.y-zone.radius}px;width:${zone.radius*2}px;height:${zone.radius*2}px`}
-							data-gravity-zone={zone.id}>
-							<button type="button" aria-label={`Move gravity zone ${i+1}`} onclick={()=>state.selectGravityZone(zone.id)}
-								onpointerdown={(event)=>state.startGravityDrag(event,zone.id)} onpointermove={(event)=>state.moveGravityDrag(event,zone.id)}
-								onpointerup={(event)=>state.stopGravityDrag(event,zone.id)} onpointercancel={(event)=>state.stopGravityDrag(event,zone.id)}>{i+1}</button>
+					{#each state.gravityZones as zone, i (zone.id)}
+						<div
+							class="schema-view__gravity-zone"
+							class:schema-view__gravity-zone--selected={zone.id === state.selectedGravityZoneId}
+							style={`left:${zone.x - zone.radius}px;top:${zone.y - zone.radius}px;width:${zone.radius * 2}px;height:${zone.radius * 2}px`}
+							data-gravity-zone={zone.id}
+						>
+							<button
+								type="button"
+								aria-label={`Move gravity zone ${i + 1}`}
+								onclick={() => state.selectGravityZone(zone.id)}
+								onpointerdown={(event) => state.startGravityDrag(event, zone.id)}
+								onpointermove={(event) => state.moveGravityDrag(event, zone.id)}
+								onpointerup={(event) => state.stopGravityDrag(event, zone.id)}
+								onpointercancel={(event) => state.stopGravityDrag(event, zone.id)}>{i + 1}</button
+							>
 						</div>
 					{/each}
 				</div>
@@ -102,7 +121,7 @@
 								y2={points.y2}
 								pathData={points.pathData}
 								active={!dimmed && (state.highlightRelations || focused)}
-								onHover={(hovered) => state.setHoveredDependency(dependency.id,hovered)}
+								onHover={(hovered) => state.setHoveredDependency(dependency.id, hovered)}
 								{dimmed}
 							/>
 						{/if}
@@ -159,11 +178,47 @@
 </section>
 
 <style>
-	.schema-view__gravity-dock {position:sticky;left:0;top:0;height:0;width:100%;z-index:20;pointer-events:none;}
-	.schema-view__gravity-layer {position:absolute;inset:0;pointer-events:none;z-index:5;}
-	.schema-view__gravity-zone {position:absolute;border:1px dashed #dda45280;border-radius:50%;background:#dda45208;pointer-events:none;}
-	.schema-view__gravity-zone--selected {border-color:#e3ab54;background:#dda45210;}
-	.schema-view__gravity-zone button {position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border:1px solid #e3ab54;border-radius:50%;background:#65431f;color:#fff;pointer-events:auto;cursor:move;touch-action:none;}
+	.schema-view__gravity-dock {
+		position: sticky;
+		left: 0;
+		top: 0;
+		height: 0;
+		width: 100%;
+		z-index: 20;
+		pointer-events: none;
+	}
+	.schema-view__gravity-layer {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		z-index: 5;
+	}
+	.schema-view__gravity-zone {
+		position: absolute;
+		border: 1px dashed #dda45280;
+		border-radius: 50%;
+		background: #dda45208;
+		pointer-events: none;
+	}
+	.schema-view__gravity-zone--selected {
+		border-color: #e3ab54;
+		background: #dda45210;
+	}
+	.schema-view__gravity-zone button {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		width: 32px;
+		height: 32px;
+		border: 1px solid #e3ab54;
+		border-radius: 50%;
+		background: #65431f;
+		color: #fff;
+		pointer-events: auto;
+		cursor: move;
+		touch-action: none;
+	}
 	.schema-view {
 		cursor: grab;
 	}

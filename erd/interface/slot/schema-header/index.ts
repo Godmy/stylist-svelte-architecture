@@ -1,6 +1,6 @@
 import type { SchemaMode } from '$stylist/erd/type/alias/schema-mode';
 import type { SlotErdSettings } from '$stylist/erd/interface/slot/erd-settings';
-export interface SlotErdHeader extends SlotErdSettings {
+export interface SlotSchemaHeader extends SlotErdSettings {
 	stats?: {
 		tables: number;
 		relations: number;

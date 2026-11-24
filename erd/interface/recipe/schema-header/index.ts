@@ -1,2 +1,4 @@
-import type { SlotErdHeader } from '$stylist/erd/interface/slot/erd-header';
-export interface RecipeSchemaHeader extends SlotErdHeader {}
+import type { SlotSchemaHeader } from '$stylist/erd/interface/slot/schema-header';
+import type { ComputeIntersectAll } from '$stylist/theme/type/compute/intersect-all';
+
+export interface RecipeSchemaHeader extends ComputeIntersectAll<[SlotSchemaHeader]> {}

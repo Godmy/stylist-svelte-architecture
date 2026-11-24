@@ -1,4 +1,4 @@
-export interface SlotErdText {
+export interface SlotSchemaText {
 	value?: string;
 	placeholder?: string;
 }

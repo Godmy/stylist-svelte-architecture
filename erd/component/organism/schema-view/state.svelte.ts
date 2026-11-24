@@ -2,7 +2,7 @@ import { tick, untrack } from 'svelte';
 import type { SchemaGravityZone } from '$stylist/erd/type/object/schema-gravity-zone';
 import type { SchemaDependency as SchemaDependencyData } from '$stylist/erd/type/object/schema-dependency';
 import type { SchemaTablePosition } from '$stylist/erd/type/object/schema-table-position';
-import type { RecipeErdSchemaView } from '$stylist/erd/interface/recipe/erd-schema-view';
+import type { RecipeSchemaView } from '$stylist/erd/interface/recipe/schema-view';
 import { createSchemaDependencyRoutes } from '$stylist/erd/function/create/schema-dependency-routes';
 import { orderDomainsByConnectionStrength } from '$stylist/erd/function/transform/order-domains-by-connection';
 import { groupBy } from '$stylist/theme/function/script/collection/group-by';
@@ -11,7 +11,7 @@ import { toMap } from '$stylist/theme/function/script/collection/to-map';
 import { toSet } from '$stylist/theme/function/script/collection/to-set';
 import { unique } from '$stylist/theme/function/script/collection/unique';
 
-export function createSchemaViewState(getProps: () => RecipeErdSchemaView) {
+export function createSchemaViewState(getProps: () => RecipeSchemaView) {
 	const props = $derived(getProps());
 	// A floor, not a target: keeps tiny documents from collapsing to near-zero
 	// canvas. Previously fixed at 4800x3200 regardless of content, which for a
