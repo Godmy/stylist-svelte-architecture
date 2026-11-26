@@ -60,5 +60,3 @@ export function schemaDocumentToText(document: SchemaDocument): string {
 
 	return lines.join('\n').trim() + '\n';
 }
-
-export default schemaDocumentToText;
