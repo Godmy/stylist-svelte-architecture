@@ -208,6 +208,17 @@ export function createSharedCanvasState(getContract: () => RecipeSharedCanvas) {
 		contract.onChange?.(CanvasManager.cloneCanvasObjects(after));
 	}
 
+	/** Whether the current gesture has reported live positions. */
+	let liveReported = false;
+
+	/** Reports objects changing in the current gesture to `onLiveUpdate`. */
+	function reportLive(ids: ReadonlySet<string>): void {
+		if (!contract.onLiveUpdate) return;
+		liveReported = true;
+		const moving = objects.filter((object) => ids.has(object.id));
+		if (moving.length) contract.onLiveUpdate(CanvasManager.cloneCanvasObjects(moving));
+	}
+
 	/** Records `next` as a history step and notifies listeners. */
 	function commit(next: CanvasObject[]): void {
 		const before = history.present;
@@ -585,6 +596,7 @@ export function createSharedCanvasState(getContract: () => RecipeSharedCanvas) {
 					selectedIds = [hit.id];
 				}
 				if (!readonly && selectedIds.length) {
+					liveReported = false;
 					gesture = { kind: 'move', start: world, base: objects, ids: getMoveIds() };
 				}
 				return;
@@ -614,6 +626,7 @@ export function createSharedCanvasState(getContract: () => RecipeSharedCanvas) {
 		if (readonly || !singleSelected || singleSelected.locked || event.button !== 0) return;
 		event.stopPropagation();
 		element.setPointerCapture?.(event.pointerId);
+		liveReported = false;
 		gesture = { kind: 'resize', handle, original: singleSelected, base: objects };
 	}
 
@@ -654,6 +667,7 @@ export function createSharedCanvasState(getContract: () => RecipeSharedCanvas) {
 					world.x - gesture.start.x,
 					world.y - gesture.start.y
 				);
+				reportLive(gesture.ids);
 				break;
 			case 'resize': {
 				const { original, handle } = gesture;
@@ -661,6 +675,7 @@ export function createSharedCanvasState(getContract: () => RecipeSharedCanvas) {
 				const keepRatio = original.type === 'image' ? !event.shiftKey : event.shiftKey;
 				const resized = CanvasGeometryManager.resize(original, handle, world, keepRatio);
 				objects = gesture.base.map((object) => (object.id === original.id ? resized : object));
+				reportLive(new Set([original.id]));
 				break;
 			}
 			case 'draw':
@@ -709,6 +724,13 @@ export function createSharedCanvasState(getContract: () => RecipeSharedCanvas) {
 				break;
 			case 'move':
 			case 'resize':
+				// The last live position: when the objects end where they started, no `onChange`
+				// follows, and others must not keep the intermediate one.
+				if (liveReported)
+					reportLive(current.kind === 'move' ? current.ids : new Set([current.original.id]));
+				liveReported = false;
+				commit(objects);
+				break;
 			case 'erase':
 				commit(objects);
 				break;

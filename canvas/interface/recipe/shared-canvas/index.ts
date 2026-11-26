@@ -26,6 +26,12 @@ export interface RecipeSharedCanvas extends ComputeIntersectAll<
 	onObjectAdd?: (object: CanvasObject) => void;
 	onObjectUpdate?: (object: CanvasObject) => void;
 	onObjectDelete?: (id: string) => void;
+	/**
+	 * Objects being moved or resized, on every pointer move of the gesture, so others can
+	 * watch them move. Not a history step: `onChange` still follows when the gesture ends.
+	 * Called often; throttle before sending over the network.
+	 */
+	onLiveUpdate?: (objects: CanvasObject[]) => void;
 	/** Pointer position of the current user in world coordinates, for sharing cursors. */
 	onCursorMove?: (point: Point2D) => void;
 	/** Disables editing: only the hand tool, zoom and selection remain. */

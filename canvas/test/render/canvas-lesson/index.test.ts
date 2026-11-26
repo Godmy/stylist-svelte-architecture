@@ -93,6 +93,28 @@ describe('SharedCanvas lessons', () => {
 		expect(names).toEqual(['Select', 'Pen', 'Eraser']);
 	});
 
+	it('reports objects while they move, and their final place even when nothing changed', async () => {
+		const onChange = vi.fn<(objects: CanvasObject[]) => void>();
+		const onLiveUpdate = vi.fn<(objects: CanvasObject[]) => void>();
+		const free = { ...card, locked: undefined };
+		render(SharedCanvas, { objects: [free], onChange, onLiveUpdate });
+
+		await fireEvent.pointerDown(board(), pointer(150, 150));
+		await fireEvent.pointerMove(board(), pointer(170, 160));
+		expect(onLiveUpdate.mock.lastCall?.[0]).toEqual([expect.objectContaining({ id: 'card', x: 120, y: 110 })]);
+		expect(onChange).not.toHaveBeenCalled();
+		await fireEvent.pointerMove(board(), pointer(150, 150));
+		await fireEvent.pointerUp(board(), pointer(150, 150));
+		// Back where it started: no history step, but the others get the final place.
+		expect(onChange).not.toHaveBeenCalled();
+		expect(onLiveUpdate.mock.lastCall?.[0]).toEqual([expect.objectContaining({ x: 100, y: 100 })]);
+
+		onLiveUpdate.mockClear();
+		await fireEvent.pointerDown(board(), pointer(150, 150));
+		await fireEvent.pointerUp(board(), pointer(150, 150));
+		expect(onLiveUpdate, 'a click is not a movement').not.toHaveBeenCalled();
+	});
+
 	it('merges changes of others without losing the local undo history', async () => {
 		const onChange = vi.fn<(objects: CanvasObject[]) => void>();
 		const { rerender } = render(SharedCanvas, { objects: [], onChange });
